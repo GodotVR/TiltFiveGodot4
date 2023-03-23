@@ -1,14 +1,16 @@
-# TiltFiveGodot
+# TiltFiveGodot4
 
-TiltFiveGodot is **GDExtension** for the Godot engine to connect to the [Tilt Five](https://www.tiltfive.com/) 
+TiltFiveGodot4 is **GDExtension** for the Godot 4 engine to connect to the [Tilt Five](https://www.tiltfive.com/) 
 system. It extends Godot's **XRInterface** and has functions to connect glasses and signals for connection events.
 
 This extension is not ready for general use yet. It is incomplete and currently requires a custom build of Godot.
 
+Godot must be run with the Compatibility renderer because Tilt Five does not currently support Vulcan.
+
 ## Platforms
 
-Currently only Windows 10/11 is supported because that is the only platform supported by Tilt Five. T5 linux support
-is supposed to come at some point in the future and support for that platform will revisited when it becomes available. 
+Currently only Windows 10/11 is supported. Tilt Five Linux and Android support are recent additions and and support 
+for those platforms will investigated. 
 
 ## Build
 
@@ -21,9 +23,11 @@ Things you will need to know how to do.
 * [Build the C++ bindings](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html) for GDExtensions
 * [Build GDExtensions](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html)
 
-
-
 ### Building the extension
+
+Get godot source and patch from the patches directory.
+
+For the extension godot_cpp will need to be built with the extension api json file dumps from the custom godot build.
 
 Scons should be run from an environment that has the Microsoft x64 development tools setup.
 
@@ -33,11 +37,9 @@ Scons should be run from an environment that has the Microsoft x64 development t
 
 ## Basic usage 
 
-Use the custom built version of Godot.
-
-After building the example you should be able to open the Godot project in the example directory
-and run the default scene.
-
+- Open the custom version of Godot
+- Open the project in the examples directory
+- Run the default scene
 
 ## Dependencies
 
@@ -48,6 +50,7 @@ and run the default scene.
 
 - Wand tacking
 - Input
+- Support for multiple glasses
 - Better docs and examples
 
 ## Acknowledgments

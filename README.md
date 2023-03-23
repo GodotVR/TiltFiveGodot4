@@ -1,8 +1,9 @@
 # TiltFiveGodot
 
-TiltFiveGodot is **GDNative** extension for the Godot engine to connect to the [Tilt Five](https://www.tiltfive.com/) 
-system. It implements Godot's **ARVRinterface** and has GDNative class called TiltFiveManager for scripts to connect 
-glasses and handle connection events.
+TiltFiveGodot is **GDExtension** for the Godot engine to connect to the [Tilt Five](https://www.tiltfive.com/) 
+system. It extends Godot's **XRInterface** and has functions to connect glasses and signals for connection events.
+
+This extension is not ready for general use yet. It is incomplete and currently requires a custom build of Godot.
 
 ## Platforms
 
@@ -13,20 +14,14 @@ is supposed to come at some point in the future and support for that platform wi
 
 ### Prerequisites
 
-Make sure you have [SCons](https://scons.org/) installed and a C++20 compatible 
-compiler like Visual C++ 2022. 
+Things you will need to know how to do.
+* Use [scons](https://scons.org/) 
+* Apply patches
+* [Build a custom version of Godot](https://docs.godotengine.org/en/stable/contributing/development/compiling/index.html)
+* [Build the C++ bindings](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html) for GDExtensions
+* [Build GDExtensions](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html)
 
-After cloning this repository be sure to get and build the submodules
 
-```
-git submodule init
-git submodule update
-cd godot-cpp
-git submodule init
-git submodule update
-scons
-scons target=release
-```
 
 ### Building the extension
 
@@ -36,22 +31,13 @@ Scons should be run from an environment that has the Microsoft x64 development t
 
 > `scons example target=[debug | release]` Copy build products to the `example\addons\tilt-five`
 
-> `scons zip target=[debug | release]` Create a zip archive of `example\addons`
-
-Note that currently due to bugs the zip archive is not compatible with godot's import function.
-
 ## Basic usage 
+
+Use the custom built version of Godot.
 
 After building the example you should be able to open the Godot project in the example directory
 and run the default scene.
 
-If you want to use the extension in your own project follow these steps.
-
-1) Copy `example\addons` to your own projects root directory. 
-
-2) From `addons\tilt-five\scenes` load the `t5-scene` and run. 
-
-3) From here you should be able to follow documentation for usage of Godot's AR/VR system.
 
 ## Dependencies
 
@@ -60,6 +46,8 @@ If you want to use the extension in your own project follow these steps.
 
 ## TODO
 
+- Wand tacking
+- Input
 - Better docs and examples
 
 ## Acknowledgments

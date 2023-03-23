@@ -1,8 +1,9 @@
 # Godot 4+ specific ignores
 .godot/
-build/*
+build
 .sconsign*.dblite
 .vscode
+.vs
 
 # Binaries
 *.o
@@ -22,5 +23,5 @@ build/*
 *.idb
 *.exp
 
-
+example/addons/tiltfive/libgdtiltfive.windows.template_debug.dev.x86_64.dll
 !extension/TiltFiveNDK/lib/*/*

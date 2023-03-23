@@ -1,9 +1,12 @@
-extends Node
+extends Node3D
 
 
-func _ready():
-	$TiltFiveManager.add(10)
-	$TiltFiveManager.add(20)
-	$TiltFiveManager.add(30)
-	print($TiltFiveManager.get_total())
-	
+
+func _on_node_glasses_available():
+	$T5Manager.reserve_glasses()
+
+
+func _on_node_glasses_reserved(success):
+	if success:
+		print("Got glasses")
+		get_viewport().use_xr = true

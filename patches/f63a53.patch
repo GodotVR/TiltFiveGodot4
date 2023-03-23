@@ -1,0 +1,187 @@
+diff --git a/doc/classes/RenderingServer.xml b/doc/classes/RenderingServer.xml
+index 03248b7..c5d210f 100644
+--- a/doc/classes/RenderingServer.xml
++++ b/doc/classes/RenderingServer.xml
+@@ -3061,6 +3061,14 @@
+ 			<description>
+ 			</description>
+ 		</method>
++		<method name="texture_get_native_handle" qualifiers="const">
++			<return type="int" />
++			<param index="0" name="texture" type="RID" />
++			<param index="1" name="srgb" type="bool" default="false" />
++			<description>
++				Returns the internal graphics handle for this texture object. For use when communicating with 3rd party APIs mostly with GDExternal.
++			</description>
++		</method>
+ 		<method name="texture_get_path" qualifiers="const">
+ 			<return type="String" />
+ 			<param index="0" name="texture" type="RID" />
+diff --git a/drivers/gles3/storage/texture_storage.cpp b/drivers/gles3/storage/texture_storage.cpp
+index b4dea0d..9c33ad0 100644
+--- a/drivers/gles3/storage/texture_storage.cpp
++++ b/drivers/gles3/storage/texture_storage.cpp
+@@ -1140,6 +1140,13 @@ RID TextureStorage::texture_get_rd_texture(RID p_texture, bool p_srgb) const {
+ 	return RID();
+ }
+ 
++uint64_t TextureStorage::texture_get_native_handle(RID p_texture, bool p_srgb) const {
++	const Texture *texture = texture_owner.get_or_null(p_texture);
++	ERR_FAIL_COND_V(!texture, 0);
++
++	return texture->tex_id;
++}
++
+ void TextureStorage::texture_set_data(RID p_texture, const Ref<Image> &p_image, int p_layer) {
+ 	Texture *texture = texture_owner.get_or_null(p_texture);
+ 
+diff --git a/drivers/gles3/storage/texture_storage.h b/drivers/gles3/storage/texture_storage.h
+index c702904..e7c9fa4 100644
+--- a/drivers/gles3/storage/texture_storage.h
++++ b/drivers/gles3/storage/texture_storage.h
+@@ -536,6 +536,7 @@ public:
+ 	virtual Size2 texture_size_with_proxy(RID p_proxy) override;
+ 
+ 	virtual RID texture_get_rd_texture(RID p_texture, bool p_srgb = false) const override;
++	virtual uint64_t texture_get_native_handle(RID p_texture, bool p_srgb = false) const override;
+ 
+ 	void texture_set_data(RID p_texture, const Ref<Image> &p_image, int p_layer = 0);
+ 	void texture_set_data_partial(RID p_texture, const Ref<Image> &p_image, int src_x, int src_y, int src_w, int src_h, int dst_x, int dst_y, int p_dst_mip, int p_layer = 0);
+diff --git a/drivers/vulkan/rendering_device_vulkan.cpp b/drivers/vulkan/rendering_device_vulkan.cpp
+index 2166d12..0b3b4e7 100644
+--- a/drivers/vulkan/rendering_device_vulkan.cpp
++++ b/drivers/vulkan/rendering_device_vulkan.cpp
+@@ -2882,6 +2882,15 @@ Size2i RenderingDeviceVulkan::texture_size(RID p_texture) {
+ 	return Size2i(tex->width, tex->height);
+ }
+ 
++uint64_t RenderingDeviceVulkan::texture_native_handle(RID p_texture) {
++	_THREAD_SAFE_METHOD_
++
++	Texture *tex = texture_owner.get_or_null(p_texture);
++	ERR_FAIL_COND_V(!tex, 0);
++
++	return (uint64_t)tex->image;
++}
++
+ Error RenderingDeviceVulkan::texture_copy(RID p_from_texture, RID p_to_texture, const Vector3 &p_from, const Vector3 &p_to, const Vector3 &p_size, uint32_t p_src_mipmap, uint32_t p_dst_mipmap, uint32_t p_src_layer, uint32_t p_dst_layer, BitField<BarrierMask> p_post_barrier) {
+ 	_THREAD_SAFE_METHOD_
+ 
+diff --git a/drivers/vulkan/rendering_device_vulkan.h b/drivers/vulkan/rendering_device_vulkan.h
+index 91a09fa..bb6ed78 100644
+--- a/drivers/vulkan/rendering_device_vulkan.h
++++ b/drivers/vulkan/rendering_device_vulkan.h
+@@ -1055,6 +1055,7 @@ public:
+ 	virtual bool texture_is_shared(RID p_texture);
+ 	virtual bool texture_is_valid(RID p_texture);
+ 	virtual Size2i texture_size(RID p_texture);
++	virtual uint64_t texture_native_handle(RID p_texture);
+ 
+ 	virtual Error texture_copy(RID p_from_texture, RID p_to_texture, const Vector3 &p_from, const Vector3 &p_to, const Vector3 &p_size, uint32_t p_src_mipmap, uint32_t p_dst_mipmap, uint32_t p_src_layer, uint32_t p_dst_layer, BitField<BarrierMask> p_post_barrier = BARRIER_MASK_ALL_BARRIERS);
+ 	virtual Error texture_clear(RID p_texture, const Color &p_color, uint32_t p_base_mipmap, uint32_t p_mipmaps, uint32_t p_base_layer, uint32_t p_layers, BitField<BarrierMask> p_post_barrier = BARRIER_MASK_ALL_BARRIERS);
+diff --git a/servers/rendering/dummy/storage/texture_storage.h b/servers/rendering/dummy/storage/texture_storage.h
+index e880cac..768b1ba 100644
+--- a/servers/rendering/dummy/storage/texture_storage.h
++++ b/servers/rendering/dummy/storage/texture_storage.h
+@@ -128,6 +128,7 @@ public:
+ 	virtual Size2 texture_size_with_proxy(RID p_proxy) override { return Size2(); };
+ 
+ 	virtual RID texture_get_rd_texture(RID p_texture, bool p_srgb = false) const override { return RID(); };
++	virtual uint64_t texture_get_native_handle(RID p_texture, bool p_srgb = false) const override { return 0; };
+ 
+ 	/* DECAL API */
+ 	virtual RID decal_allocate() override { return RID(); }
+diff --git a/servers/rendering/renderer_rd/storage_rd/texture_storage.cpp b/servers/rendering/renderer_rd/storage_rd/texture_storage.cpp
+index 8808d63..3d6092a 100644
+--- a/servers/rendering/renderer_rd/storage_rd/texture_storage.cpp
++++ b/servers/rendering/renderer_rd/storage_rd/texture_storage.cpp
+@@ -1442,6 +1442,17 @@ RID TextureStorage::texture_get_rd_texture(RID p_texture, bool p_srgb) const {
+ 	return (p_srgb && tex->rd_texture_srgb.is_valid()) ? tex->rd_texture_srgb : tex->rd_texture;
+ }
+ 
++uint64_t TextureStorage::texture_get_native_handle(RID p_texture, bool p_srgb) const {
++	Texture *tex = texture_owner.get_or_null(p_texture);
++	ERR_FAIL_COND_V(!tex, 0);
++
++	if (p_srgb && tex->rd_texture_srgb.is_valid()) {
++		return RD::get_singleton()->texture_native_handle(tex->rd_texture_srgb);
++	} else {
++		return RD::get_singleton()->texture_native_handle(tex->rd_texture);
++	}
++}
++
+ Ref<Image> TextureStorage::_validate_texture_format(const Ref<Image> &p_image, TextureToRDFormat &r_format) {
+ 	Ref<Image> image = p_image->duplicate();
+ 
+diff --git a/servers/rendering/renderer_rd/storage_rd/texture_storage.h b/servers/rendering/renderer_rd/storage_rd/texture_storage.h
+index 3e4ac3b..8f021f3 100644
+--- a/servers/rendering/renderer_rd/storage_rd/texture_storage.h
++++ b/servers/rendering/renderer_rd/storage_rd/texture_storage.h
+@@ -499,6 +499,7 @@ public:
+ 	virtual Size2 texture_size_with_proxy(RID p_proxy) override;
+ 
+ 	virtual RID texture_get_rd_texture(RID p_texture, bool p_srgb = false) const override;
++	virtual uint64_t texture_get_native_handle(RID p_texture, bool p_srgb = false) const override;
+ 
+ 	//internal usage
+ 	_FORCE_INLINE_ TextureType texture_get_type(RID p_texture) {
+diff --git a/servers/rendering/rendering_device.h b/servers/rendering/rendering_device.h
+index 447627b..b28ac9b 100644
+--- a/servers/rendering/rendering_device.h
++++ b/servers/rendering/rendering_device.h
+@@ -539,6 +539,7 @@ public:
+ 	virtual bool texture_is_shared(RID p_texture) = 0;
+ 	virtual bool texture_is_valid(RID p_texture) = 0;
+ 	virtual Size2i texture_size(RID p_texture) = 0;
++	virtual uint64_t texture_native_handle(RID p_texture) = 0;
+ 
+ 	virtual Error texture_copy(RID p_from_texture, RID p_to_texture, const Vector3 &p_from, const Vector3 &p_to, const Vector3 &p_size, uint32_t p_src_mipmap, uint32_t p_dst_mipmap, uint32_t p_src_layer, uint32_t p_dst_layer, BitField<BarrierMask> p_post_barrier = BARRIER_MASK_ALL_BARRIERS) = 0;
+ 	virtual Error texture_clear(RID p_texture, const Color &p_color, uint32_t p_base_mipmap, uint32_t p_mipmaps, uint32_t p_base_layer, uint32_t p_layers, BitField<BarrierMask> p_post_barrier = BARRIER_MASK_ALL_BARRIERS) = 0;
+diff --git a/servers/rendering/rendering_server_default.h b/servers/rendering/rendering_server_default.h
+index 249e5c2..66cf32b 100644
+--- a/servers/rendering/rendering_server_default.h
++++ b/servers/rendering/rendering_server_default.h
+@@ -214,6 +214,7 @@ public:
+ 
+ 	FUNC2(texture_set_force_redraw_if_visible, RID, bool)
+ 	FUNC2RC(RID, texture_get_rd_texture, RID, bool)
++	FUNC2RC(uint64_t, texture_get_native_handle, RID, bool)
+ 
+ 	/* SHADER API */
+ 
+diff --git a/servers/rendering/storage/texture_storage.h b/servers/rendering/storage/texture_storage.h
+index 0a59c70..93b32bd 100644
+--- a/servers/rendering/storage/texture_storage.h
++++ b/servers/rendering/storage/texture_storage.h
+@@ -101,6 +101,7 @@ public:
+ 	virtual Size2 texture_size_with_proxy(RID p_proxy) = 0;
+ 
+ 	virtual RID texture_get_rd_texture(RID p_texture, bool p_srgb = false) const = 0;
++	virtual uint64_t texture_get_native_handle(RID p_texture, bool p_srgb = false) const = 0;
+ 
+ 	/* Decal API */
+ 	virtual RID decal_allocate() = 0;
+diff --git a/servers/rendering_server.cpp b/servers/rendering_server.cpp
+index d88cbec..260835a 100644
+--- a/servers/rendering_server.cpp
++++ b/servers/rendering_server.cpp
+@@ -1698,6 +1698,7 @@ void RenderingServer::_bind_methods() {
+ 
+ 	ClassDB::bind_method(D_METHOD("texture_set_force_redraw_if_visible", "texture", "enable"), &RenderingServer::texture_set_force_redraw_if_visible);
+ 	ClassDB::bind_method(D_METHOD("texture_get_rd_texture", "texture", "srgb"), &RenderingServer::texture_get_rd_texture, DEFVAL(false));
++	ClassDB::bind_method(D_METHOD("texture_get_native_handle", "texture", "srgb"), &RenderingServer::texture_get_native_handle, DEFVAL(false));
+ 
+ 	BIND_ENUM_CONSTANT(TEXTURE_LAYERED_2D_ARRAY);
+ 	BIND_ENUM_CONSTANT(TEXTURE_LAYERED_CUBEMAP);
+diff --git a/servers/rendering_server.h b/servers/rendering_server.h
+index a283744..3fe3e18 100644
+--- a/servers/rendering_server.h
++++ b/servers/rendering_server.h
+@@ -157,6 +157,7 @@ public:
+ 	virtual void texture_set_force_redraw_if_visible(RID p_texture, bool p_enable) = 0;
+ 
+ 	virtual RID texture_get_rd_texture(RID p_texture, bool p_srgb = false) const = 0;
++	virtual uint64_t texture_get_native_handle(RID p_texture, bool p_srgb = false) const = 0;
+ 
+ 	/* SHADER API */
+ 

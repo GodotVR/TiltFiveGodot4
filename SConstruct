@@ -11,6 +11,7 @@ VariantDir("build/T5Integration","extension/T5Integration", duplicate=False)
 
 env = SConscript("godot-cpp/SConstruct")
 env['CXXFLAGS'].remove('/std:c++17')
+env.Append(CXXFLAGS=['/std:c++20'])
 
 # For the reference:
 # - CCFLAGS are compilation flags shared between C and C++
@@ -29,7 +30,7 @@ env.Append(LIBPATH=[tilt_five_library_path])
 env.Append(LIBS=[tilt_five_library, "Opengl32"])
 
 if env['platform'] == "windows":
-    env.Append(CXXFLAGS=['/std:c++20', '/Zc:__cplusplus'])
+    env.Append(CXXFLAGS=['/Zc:__cplusplus'])
     library = env.SharedLibrary(
         "build/bin/libgdtiltfive{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
         source=sources,

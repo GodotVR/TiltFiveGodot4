@@ -1,7 +1,7 @@
-#ifndef SUMMATOR_REGISTER_TYPES_H
-#define SUMMATOR_REGISTER_TYPES_H
+#ifndef TILT_FIVE_REGISTER_TYPES_H
+#define TILT_FIVE_REGISTER_TYPES_H
 
-void initialize_summator_types();
-void uninitialize_summator_types();
+void initialize_tiltfive_types();
+void uninitialize_tiltfive_types();
 
-#endif // SUMMATOR_REGISTER_TYPES_H
+#endif // TILT_FIVE_REGISTER_TYPES_H

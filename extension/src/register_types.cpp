@@ -1,9 +1,10 @@
 #include "register_types.h"
-#include "TiltFiveManager.h"
+#include "TiltFiveXRInterface.h"
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
+#include <godot_cpp/classes/xr_server.hpp>
 
 using namespace godot;
 
@@ -12,7 +13,8 @@ void initialize_tiltfive_types(ModuleInitializationLevel p_level)
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
-	ClassDB::register_class<TiltFiveManager>();
+	ClassDB::register_class<TiltFiveXRInterface>();
+
 }
 
 void uninitialize_tiltfive_types(ModuleInitializationLevel p_level) {

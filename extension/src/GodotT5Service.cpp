@@ -1,19 +1,24 @@
 #include "GodotT5Service.h"
 #include <assert.h>
 #include <Logging.h>
+#include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/quaternion.hpp>
 #include <godot_cpp/classes/texture_layered.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/xr_server.hpp>
 #include <godot_cpp/core/defs.hpp> 
 
+using godot::Variant;
 using godot::Quaternion;
 using godot::Image;
 using godot::RenderingServer;
 using godot::TypedArray;
 using godot::Error;
+using godot::XRServer;
 using TextureLayeredType = godot::RenderingServer::TextureLayeredType;
 using T5Integration::Glasses;
 using T5Integration::WandButtons;
+
 
 namespace WandState = T5Integration::WandState;
 
@@ -140,57 +145,88 @@ void GodotT5Service::tracking_updated()
 	if (!_active_glasses) return;
 
     auto num_wands = _active_glasses->get_num_wands();
-    while(_wand_controller_id.size() < num_wands) {
-        auto new_idx = _wand_controller_id.size();
-        _wand_controller_id.push_back(-1);
-        _wand_name.push_back(_active_glasses->get_id() + ":" + std::to_string(new_idx) + '\0');
-    }
+    if(_tracker_list.size() != num_wands)
+        sync_wand_tracker_list();
 
     for(int wand_idx = 0; wand_idx < num_wands; ++wand_idx) {
         update_wand(wand_idx);
     }
 }
 
+void GodotT5Service::sync_wand_tracker_list() {
+
+    auto num_wands = _active_glasses->get_num_wands();
+    while(_tracker_list.size() < num_wands) {
+        int new_idx = _tracker_list.size();
+        auto wand_id = _active_glasses->get_id() + ":" + std::to_string(new_idx);
+        auto wand_name = "Wand " + godot::String(wand_id.c_str());
+        
+        Ref<XRPositionalTracker> positional_tracker;
+        positional_tracker.instantiate();
+
+        if (new_idx == 0) {
+            positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
+            positional_tracker->set_tracker_name("left_hand");
+            positional_tracker->set_tracker_desc(wand_name);
+            positional_tracker->set_tracker_hand(XRPositionalTracker::TRACKER_HAND_LEFT);
+        } else if (new_idx == 1) {
+            positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
+            positional_tracker->set_tracker_name("right_hand");
+            positional_tracker->set_tracker_desc(wand_name);
+            positional_tracker->set_tracker_hand(XRPositionalTracker::TRACKER_HAND_RIGHT);
+        } else {
+            positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
+            positional_tracker->set_tracker_name(godot::String("wand_") + wand_id.c_str() );
+            positional_tracker->set_tracker_desc(wand_name);
+        }
+
+        _tracker_list.push_back(positional_tracker);
+    }
+}
+
 void GodotT5Service::update_wand(size_t wand_idx) {
-    /*
+
+    auto xr_server = XRServer::get_singleton();
+
+    auto tracker = _tracker_list[wand_idx];
+
     auto controller_id = _wand_controller_id[wand_idx];
     int hand = wand_idx < 2 ? wand_idx + 1 : 0;
     if(_active_glasses->is_wand_state_changed(wand_idx, WandState::CONNECTED)) {
         if(_active_glasses->is_wand_state_set(wand_idx, WandState::CONNECTED)) {
-            controller_id = godot::arvr_api->godot_arvr_add_controller(&(_wand_name[wand_idx][0]), hand, true, true);
-            _wand_controller_id[wand_idx] = controller_id;
-        }
-        else if(controller_id > 0) {
-            godot::arvr_api->godot_arvr_remove_controller(controller_id);
+            xr_server->add_tracker(tracker);
+        } else  {
+            xr_server->remove_tracker(tracker);
             return;
         }
     }
     if(_active_glasses->is_wand_state_set(wand_idx, WandState::POSE_VALID)) {
-        auto wand_transform = as_c_struct(get_wand_transform(wand_idx));
-        godot::arvr_api->godot_arvr_set_controller_transform(controller_id, &wand_transform, true, true);
+        auto wand_transform = get_wand_transform(wand_idx);
+        tracker->set_pose("default", wand_transform, Vector3(), Vector3(), godot::XRPose::XR_TRACKING_CONFIDENCE_HIGH);
+    } else  {
+        tracker->invalidate_pose("default");
     }
     if(_active_glasses->is_wand_state_set(wand_idx, WandState::ANALOG_VALID)) {
         float trigger_value;
         _active_glasses->get_wand_trigger(wand_idx, trigger_value);
-        godot::arvr_api->godot_arvr_set_controller_axis(controller_id, WAND_ANALOG_TRIGGER, trigger_value, true);
+        tracker->set_input("trigger", Variant(trigger_value));
         Vector2 stick;
         _active_glasses->get_wand_stick(wand_idx, stick.x, stick.y);
-        godot::arvr_api->godot_arvr_set_controller_axis(controller_id, WAND_ANALOG_X, stick.x, true);
-        godot::arvr_api->godot_arvr_set_controller_axis(controller_id, WAND_ANALOG_Y, stick.y, true);
+        tracker->set_input("stick", Variant(stick));
     }
     if(_active_glasses->is_wand_state_set(wand_idx, WandState::BUTTONS_VALID)) {
         WandButtons buttons;
         _active_glasses->get_wand_buttons(wand_idx, buttons);
-        godot::arvr_api->godot_arvr_set_controller_button(controller_id, WAND_BUTTON_A,     buttons.a);
-        godot::arvr_api->godot_arvr_set_controller_button(controller_id, WAND_BUTTON_B,	    buttons.b);
-        godot::arvr_api->godot_arvr_set_controller_button(controller_id, WAND_BUTTON_X,	    buttons.x);
-        godot::arvr_api->godot_arvr_set_controller_button(controller_id, WAND_BUTTON_Y,	    buttons.y);
-        godot::arvr_api->godot_arvr_set_controller_button(controller_id, WAND_BUTTON_1,	    buttons.one);
-        godot::arvr_api->godot_arvr_set_controller_button(controller_id, WAND_BUTTON_2,	    buttons.two);
-        godot::arvr_api->godot_arvr_set_controller_button(controller_id, WAND_BUTTON_STICK, buttons.three);
-        godot::arvr_api->godot_arvr_set_controller_button(controller_id, WAND_BUTTON_T5,	buttons.t5);
+
+        tracker->set_input("button_a", Variant(buttons.a));
+        tracker->set_input("button_b", Variant(buttons.b));
+        tracker->set_input("button_x", Variant(buttons.x));
+        tracker->set_input("button_y", Variant(buttons.y));
+        tracker->set_input("button_1", Variant(buttons.one));
+        tracker->set_input("button_2", Variant(buttons.two));
+        tracker->set_input("button_3", Variant(buttons.three));
+        tracker->set_input("button_t5", Variant(buttons.t5)); 
     }
-    */
 }
 
 void GodotT5Service::send_frame()
@@ -217,20 +253,10 @@ void GodotT5Service::create_textures(Glasses::Ptr glasses) {
     int width;
     int height;
     glasses->get_display_size(width, height);
-
-    //godot::Color bg(0,0,0,1);
-
-    //Ref<Image> image = Image::create(width, height, false, Image::FORMAT_RGBA8);
-
-    //TypedArray<Image> image_layers;
-    //image_layers.append(image);
-    //image_layers.append(image);
     
     auto render_server = RenderingServer::get_singleton();
 
     _render_texture = render_server->texture_create_render_texture(width, height, 2);
-    //_render_texture = render_server->texture_3d_create(Image::Format::FORMAT_RGBA8, width, height, 2, false, image_layers);
-    //_render_texture = render_server->texture_2d_layered_create(image_layers, TextureLayeredType::TEXTURE_LAYERED_2D_ARRAY);
     _left_eye_texture = render_server->texture_create_render_texture(width, height, 1);
     _right_eye_texture = render_server->texture_create_render_texture(width, height, 1);
 }

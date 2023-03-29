@@ -3,6 +3,7 @@
 #include <Glasses.h>
 #include <godot_cpp/variant/transform3d.hpp>
 #include <godot_cpp/classes/ref.hpp>   
+#include <godot_cpp/classes/xr_positional_tracker.hpp>  
 #include <godot_cpp/classes/global_constants.hpp> 
 
 namespace GodotT5Integration {
@@ -12,6 +13,7 @@ using godot::Vector2;
 using godot::Vector3;
 using godot::Ref;
 using godot::RID;
+using godot::XRPositionalTracker;
 
 using T5Integration::Glasses;
 
@@ -44,6 +46,7 @@ protected:
 	virtual void connection_updated() override;
 	virtual void tracking_updated() override;
 
+	void sync_wand_tracker_list();
     void update_wand(size_t wand_idx);
 
 public:
@@ -79,6 +82,7 @@ private:
 	RID _left_eye_texture;
     RID _right_eye_texture;
 
+	std::vector<Ref<XRPositionalTracker>> _tracker_list;
     std::vector<uint32_t> _wand_controller_id;
     std::vector<std::string> _wand_name;
 };

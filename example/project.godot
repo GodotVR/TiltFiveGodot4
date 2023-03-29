@@ -17,9 +17,10 @@ config/icon="res://icon.png"
 
 [input]
 
-move_left={
+trigger={
 "deadzone": 0.5,
-"events": []
+"events": [Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":5,"axis_value":1.0,"script":null)
+]
 }
 
 [rendering]

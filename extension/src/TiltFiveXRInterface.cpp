@@ -210,6 +210,27 @@ void TiltFiveXRInterface::_end_frame() {
 	t5_service->send_frame();
 }
 
+PackedStringArray TiltFiveXRInterface::_get_suggested_tracker_names() const {
+	PackedStringArray tracker_names;
+	
+	tracker_names.append("tilt_five_wand_1");
+	tracker_names.append("tilt_five_wand_2");
+	tracker_names.append("tilt_five_wand_3");
+	tracker_names.append("tilt_five_wand_4");
+
+	return tracker_names;
+}
+
+PackedStringArray TiltFiveXRInterface::_get_suggested_pose_names(const StringName &tracker_name) const {
+	PackedStringArray tracker_names;
+	
+	tracker_names.append("aim");
+	tracker_names.append("grip");
+	tracker_names.append("finger");
+
+	return tracker_names;
+}
+
 void TiltFiveXRInterface::_process() {
 
     if(!t5_service) return;

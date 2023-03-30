@@ -18,6 +18,7 @@ using godot::XRServer;
 using TextureLayeredType = godot::RenderingServer::TextureLayeredType;
 using T5Integration::Glasses;
 using T5Integration::WandButtons;
+using T5Integration::log_message;
 
 
 namespace WandState = T5Integration::WandState;
@@ -158,27 +159,18 @@ void GodotT5Service::sync_wand_tracker_list() {
     auto num_wands = _active_glasses->get_num_wands();
     while(_tracker_list.size() < num_wands) {
         int new_idx = _tracker_list.size();
-        auto wand_id = _active_glasses->get_id() + ":" + std::to_string(new_idx);
+        int new_id = new_idx + 1;
+        auto wand_id = _active_glasses->get_id() + ":" + std::to_string(new_id);
+        auto tracker_name = std::string("tilt_five_wand_") + std::to_string(new_id);
         auto wand_name = "Wand " + godot::String(wand_id.c_str());
         
         Ref<XRPositionalTracker> positional_tracker;
         positional_tracker.instantiate();
 
-        if (new_idx == 0) {
-            positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
-            positional_tracker->set_tracker_name("left_hand");
-            positional_tracker->set_tracker_desc(wand_name);
-            positional_tracker->set_tracker_hand(XRPositionalTracker::TRACKER_HAND_LEFT);
-        } else if (new_idx == 1) {
-            positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
-            positional_tracker->set_tracker_name("right_hand");
-            positional_tracker->set_tracker_desc(wand_name);
-            positional_tracker->set_tracker_hand(XRPositionalTracker::TRACKER_HAND_RIGHT);
-        } else {
-            positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
-            positional_tracker->set_tracker_name(godot::String("wand_") + wand_id.c_str() );
-            positional_tracker->set_tracker_desc(wand_name);
-        }
+        positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
+        positional_tracker->set_tracker_name(godot::String(tracker_name.c_str()));
+        log_message("Adding wand ", tracker_name);
+        positional_tracker->set_tracker_desc(wand_name);
 
         _tracker_list.push_back(positional_tracker);
     }

@@ -47,7 +47,7 @@ world_scale = 16.0
 [node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
 
 [node name="XRController3D" type="XRController3D" parent="XROrigin3D"]
-tracker = &"left_hand"
+tracker = &"tilt_five_wand_1"
 script = ExtResource("3_8ts3i")
 selected_mat = SubResource("StandardMaterial3D_cgatm")
 unselected_mat = SubResource("StandardMaterial3D_vjp8o")

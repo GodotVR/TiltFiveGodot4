@@ -5,6 +5,7 @@
 
 #include <godot_cpp/core/binder_common.hpp>
 #include <godot_cpp/classes/xr_server.hpp>
+#include <godot_cpp/variant/packed_string_array.hpp>
 
 #include <GodotT5Service.h>
 
@@ -17,6 +18,7 @@ using godot::Transform3D;
 using godot::PackedFloat64Array;
 using godot::Rect2;
 using godot::RID;
+using godot::PackedStringArray;
 using GodotT5Integration::GodotT5Service;
 
 class TiltFiveXRInterface : public XRInterfaceExtension {
@@ -75,6 +77,9 @@ public:
 	
 	virtual void _post_draw_viewport(const RID &render_target, const Rect2 &screen_rect) override;	
 	virtual void _end_frame() override;
+
+	virtual PackedStringArray _get_suggested_tracker_names() const override;
+	virtual PackedStringArray _get_suggested_pose_names(const StringName &tracker_name) const override;
 
 	virtual void _process() override;
 

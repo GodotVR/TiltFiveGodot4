@@ -23,5 +23,5 @@ build
 *.idb
 *.exp
 
-example/addons/tiltfive/libgdtiltfive.windows.template_debug.dev.x86_64.dll
+example/addons/tiltfive/*.dll
 !extension/TiltFiveNDK/lib/*/*

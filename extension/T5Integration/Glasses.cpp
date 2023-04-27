@@ -9,23 +9,27 @@ using TaskSystem::run_now;
 
 namespace T5Integration {
 
+	Glasses::SwapChainFrame::SwapChainFrame() {
+		glasses_pose.posGLS_GBD.x = 0;
+		glasses_pose.posGLS_GBD.y = 0;
+		glasses_pose.posGLS_GBD.z = 0;
+		glasses_pose.rotToGLS_GBD.x = 0;
+		glasses_pose.rotToGLS_GBD.y = 0;
+		glasses_pose.rotToGLS_GBD.z = 0;
+		glasses_pose.rotToGLS_GBD.w = 1;
+		left_eye_handle = 0;
+		right_eye_handle = 0;
+	}
 
-	Glasses::Glasses( const std::string& id)
+	Glasses::Glasses(const std::string_view id)
 	:	_id(id) {
 
 		_scheduler = ObjectRegistry::scheduler();
 		_math = ObjectRegistry::math();
 
-		_glasses_pose.posGLS_GBD.x = 0;
-		_glasses_pose.posGLS_GBD.y = 0;
-		_glasses_pose.posGLS_GBD.z = 0;
-		_glasses_pose.rotToGLS_GBD.x = 0;
-		_glasses_pose.rotToGLS_GBD.y = 0;
-		_glasses_pose.rotToGLS_GBD.z = 0;
-		_glasses_pose.rotToGLS_GBD.w = 1;
-
 		_state.reset(GlassesState::UNAVAILABLE, true);
 
+		set_swap_chain_size(1);
 	}
 
 	Glasses::~Glasses() {
@@ -33,22 +37,27 @@ namespace T5Integration {
 	}
 
 	void Glasses::get_pose(T5_Vec3& out_position, T5_Quat& out_orientation) {
-		out_position = _glasses_pose.posGLS_GBD;
-		out_orientation = _glasses_pose.rotToGLS_GBD;
+		auto& pose = _swap_chain_frames[_current_frame_idx].glasses_pose;
+
+		out_position = pose.posGLS_GBD;
+		out_orientation = pose.rotToGLS_GBD;
 	}
 
-
 	void Glasses::get_glasses_position(float& out_pos_x, float& out_pos_y, float& out_pos_z) {
-		out_pos_x = _glasses_pose.posGLS_GBD.x;
-		out_pos_y = _glasses_pose.posGLS_GBD.y;
-		out_pos_z = _glasses_pose.posGLS_GBD.z;
+		auto& pose = _swap_chain_frames[_current_frame_idx].glasses_pose;
+
+		out_pos_x = pose.posGLS_GBD.x;
+		out_pos_y = pose.posGLS_GBD.y;
+		out_pos_z = pose.posGLS_GBD.z;
 	}
 
 	void Glasses::get_glasses_orientation(float& out_quat_x, float& out_quat_y, float& out_quat_z, float& out_quat_w) {
-		out_quat_x = _glasses_pose.rotToGLS_GBD.x;
-		out_quat_y = _glasses_pose.rotToGLS_GBD.y;
-		out_quat_z = _glasses_pose.rotToGLS_GBD.z;
-		out_quat_w = _glasses_pose.rotToGLS_GBD.w;
+		auto& pose = _swap_chain_frames[_current_frame_idx].glasses_pose;
+
+		out_quat_x = pose.rotToGLS_GBD.x;
+		out_quat_y = pose.rotToGLS_GBD.y;
+		out_quat_z = pose.rotToGLS_GBD.z;
+		out_quat_w = pose.rotToGLS_GBD.w;
 	}    
 	
 	bool Glasses::is_wand_state_set(size_t wand_num, uint8_t flags) {
@@ -114,6 +123,16 @@ namespace T5Integration {
 			buttons = _wand_list[wand_num]._buttons;
 		}
 	}
+
+    void Glasses::set_swap_chain_size(int size) {		
+		_swap_chain_frames.resize(size);
+	}
+
+    void Glasses::set_swap_chain_texture_handles(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle) {
+		_swap_chain_frames[swap_chain_idx].left_eye_handle = left_eye_handle;
+		_swap_chain_frames[swap_chain_idx].right_eye_handle = right_eye_handle;
+	}
+
 
 	bool Glasses::allocate_handle(T5_Context context) {
 		T5_Result result; 
@@ -385,7 +404,7 @@ namespace T5Integration {
 	}
 
 
-	void Glasses::connect(std::string application_name) {
+	void Glasses::connect(const std::string_view application_name) {
 		if (_glasses_handle) {
 			_application_name = application_name;
 
@@ -406,7 +425,8 @@ namespace T5Integration {
 				LOG_T5_ERROR(result);
 			}
 		}
-		_state.clear(GlassesState::READY);
+		_state.clear(GlassesState::READY | GlassesState::GRAPHICS_INIT | GlassesState::SUSTAIN_CONNECTION);
+		on_glasses_released();
 	}
 
 	bool Glasses::initialize_graphics() {
@@ -425,7 +445,6 @@ namespace T5Integration {
 		return true;
 	}
 
-
 	void Glasses::update_pose() {
 		if (!_state.is_current(GlassesState::CONNECTED))
 			return;
@@ -433,7 +452,7 @@ namespace T5Integration {
 		T5_Result result;
 		{
 			std::lock_guard lock(g_t5_exclusivity_group_1);
-			result = t5GetGlassesPose(_glasses_handle, kT5_GlassesPoseUsage_GlassesPresentation,  &_glasses_pose);
+			result = t5GetGlassesPose(_glasses_handle, kT5_GlassesPoseUsage_GlassesPresentation,  &_swap_chain_frames[_current_frame_idx].glasses_pose);
 		}
 		bool isTracking = (result == T5_SUCCESS);
 
@@ -465,27 +484,32 @@ namespace T5Integration {
 		pos.y = 0.0f;
 		pos.z = 0.0f;
 
+		auto& pose = _swap_chain_frames[_current_frame_idx].glasses_pose;
+
 		_math->rotate_vector(
-			_glasses_pose.rotToGLS_GBD.x, 
-			_glasses_pose.rotToGLS_GBD.y, 
-			_glasses_pose.rotToGLS_GBD.z, 
-			_glasses_pose.rotToGLS_GBD.w,
+			pose.rotToGLS_GBD.x, 
+			pose.rotToGLS_GBD.y, 
+			pose.rotToGLS_GBD.z, 
+			pose.rotToGLS_GBD.w,
 			pos.x,
 			pos.y,
 			pos.z);
 
-		pos.x += _glasses_pose.posGLS_GBD.x;
-		pos.y += _glasses_pose.posGLS_GBD.y;
-		pos.z += _glasses_pose.posGLS_GBD.z;
+		pos.x += pose.posGLS_GBD.x;
+		pos.y += pose.posGLS_GBD.y;
+		pos.z += pose.posGLS_GBD.z;
 	}
 
-	void Glasses::send_frame(intptr_t leftEyeTexture, intptr_t rightEyeTexture) {
+	void Glasses::send_frame() {
 		if (_state.is_current(GlassesState::TRACKING | GlassesState::CONNECTED)) {
+			
+			on_send_frame(_current_frame_idx);
+			
 			T5_FrameInfo frameInfo;
 
 			int width;
 			int height;
-			get_display_size(width, height);
+			Glasses::get_display_size(width, height);
 
 			frameInfo.vci.startY_VCI = static_cast<float>(-tan((get_fov() * 3.1415926535 / 180.0) * 0.5f));
 			frameInfo.vci.startX_VCI = frameInfo.vci.startY_VCI * (float)width / (float)height;
@@ -495,14 +519,16 @@ namespace T5Integration {
 			frameInfo.texWidth_PIX = width;
 			frameInfo.texHeight_PIX = height;
 
-			frameInfo.leftTexHandle = (void*)leftEyeTexture;
-			frameInfo.rightTexHandle = (void*)rightEyeTexture;
+			frameInfo.leftTexHandle = (void*)_swap_chain_frames[_current_frame_idx].left_eye_handle;
+			frameInfo.rightTexHandle = (void*)_swap_chain_frames[_current_frame_idx].right_eye_handle;
+
+			auto& pose = _swap_chain_frames[_current_frame_idx].glasses_pose;
 
 			get_eye_position(Left, frameInfo.posLVC_GBD);
-			frameInfo.rotToLVC_GBD = _glasses_pose.rotToGLS_GBD;
+			frameInfo.rotToLVC_GBD = pose.rotToGLS_GBD;
 
 			get_eye_position(Right, frameInfo.posRVC_GBD);
-			frameInfo.rotToRVC_GBD = _glasses_pose.rotToGLS_GBD;
+			frameInfo.rotToRVC_GBD = pose.rotToGLS_GBD;
 
 			frameInfo.isUpsideDown = _is_upside_down_texture;
 			frameInfo.isSrgb = true;
@@ -524,18 +550,87 @@ namespace T5Integration {
 			else {
 				_state.reset(GlassesState::ERROR);
 			}
+
+			_current_frame_idx = (_current_frame_idx + 1) % _swap_chain_frames.size();
 		}
 	}
 
+
 	bool Glasses::update_connection() {
+		static GlassesFlags::FlagType prev_changes = 0;
+		static GlassesFlags::FlagType prev_current = 0;
+
+		auto changes = _state.get_changes();
+		auto current_state = _state.get_current();
+		
+		if(changes != prev_changes || current_state != prev_current) {
+			log_message("Glasses::update_connection changes ", changes, " Current ", current_state);
+			prev_changes = changes;
+			prev_current = current_state;
+		}
+
+		if((changes & GlassesState::CONNECTED) == GlassesState::CONNECTED) {
+			if(current_state & GlassesState::CONNECTED) {
+				on_glasses_reserved();
+			} else {
+				on_glasses_dropped();
+
+			}
+		}
 
 		return true;
 	}
 
 	bool Glasses::update_tracking() {
 		update_pose();
-
+		on_tracking_updated();
 		return true;
+	}
+
+   	void Glasses::get_events(int index, std::vector<GlassesEvent>& out_events) {
+		
+		static GlassesFlags::FlagType prev_changes = 0;
+		static GlassesFlags::FlagType prev_current = 0;
+
+		auto changes = _state.get_changes();
+		auto current_state = _state.get_current();
+		
+		if(changes != prev_changes || current_state != prev_current) {
+			log_message("T5Service::get_events ", changes, " Current ", current_state);
+			prev_changes = changes;
+			prev_current = current_state;
+		}
+		if((changes & GlassesState::CREATED) == GlassesState::CREATED) {
+			if(current_state & GlassesState::CREATED) {
+				out_events.push_back(GlassesEvent(index, GlassesEvent::E_ADDED));
+
+			} else {
+				out_events.push_back(GlassesEvent(index, GlassesEvent::E_LOST));
+			}
+		}
+		if((changes & GlassesState::UNAVAILABLE) == GlassesState::UNAVAILABLE) {
+			if(current_state & GlassesState::UNAVAILABLE) {
+				out_events.push_back(GlassesEvent(index, GlassesEvent::E_UNAVAILABLE));
+			} else {
+				out_events.push_back(GlassesEvent(index, GlassesEvent::E_AVAILABLE));
+			}
+		}
+		if((changes & GlassesState::CONNECTED) == GlassesState::CONNECTED) {
+			if(current_state & GlassesState::CONNECTED) {
+				out_events.push_back(GlassesEvent(index, GlassesEvent::E_CONNECTED)); 
+			} else {
+				out_events.push_back(GlassesEvent(index, GlassesEvent::E_DISCONNECTED));
+
+			}
+		}
+		if((changes & GlassesState::TRACKING) == GlassesState::TRACKING) {
+			out_events.push_back(GlassesEvent(index, current_state & GlassesState::TRACKING ? GlassesEvent::E_TRACKING : GlassesEvent::E_NOT_TRACKING));
+		}
+		if((changes & GlassesState::ERROR) == GlassesState::ERROR) {
+			// There is currently no way to recover from the error state
+			out_events.push_back(GlassesEvent(index, current_state & GlassesState::ERROR ? GlassesEvent::E_STOPPED_ON_ERROR : GlassesEvent::E_AVAILABLE));
+		}
+		_state.reset_changes();
 	}
 
 }

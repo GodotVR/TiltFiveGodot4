@@ -17,12 +17,12 @@ T5Service::~T5Service() {
 	stop_service();
 }
 
-bool T5Service::start_service(const char* application_id, const char* application_version) {
+bool T5Service::start_service(const std::string_view application_id, std::string_view application_version) {
 	if(_is_started) return true;
 
 	T5_ClientInfo clientInfo;
-	clientInfo.applicationId = application_id;
-	clientInfo.applicationVersion = application_version;
+	clientInfo.applicationId = application_id.data();
+	clientInfo.applicationVersion = application_version.data();
 	
 	auto result = t5CreateContext(&_context, &clientInfo, nullptr);
 
@@ -46,13 +46,12 @@ void T5Service::stop_service() {
 	_is_started = false;
 
 	_scheduler->stop();
-
-	for(Glasses::Ptr glasses : _glasses_list) {
-		glasses->disconnect();
-		glasses_were_disconnected(glasses);
-		glasses->destroy_handle();
+	for(int i = 0; i < _glasses_list.size(); i++) {
+		_glasses_list[i]->disconnect();
+		_glasses_list[i]->destroy_handle();
 	}
 	_glasses_list.clear();
+
 	if(_context)
 	{
 		std::lock_guard lock(g_t5_exclusivity_group_1);
@@ -61,37 +60,12 @@ void T5Service::stop_service() {
 	_context = nullptr;
 }
 
-const std::vector<GlassesEvent> T5Service::get_events() {
-	_events.clear();
+std::optional<int> T5Service::find_glasses_idx(const std::string_view glasses_id) {
 	for(int i = 0; i < _glasses_list.size(); ++i) {
-		auto changes = _glasses_list[i]->get_changed_state();
-		auto current_state = _glasses_list[i]->get_current_state();
-		if((changes & GlassesState::CREATED) == GlassesState::CREATED) {
-			_events.push_back(GlassesEvent(i, current_state & GlassesState::CREATED ? GlassesEvent::E_ADDED : GlassesEvent::E_LOST));
-		}
-		if((changes & GlassesState::UNAVAILABLE) == GlassesState::UNAVAILABLE) {
-			_events.push_back(GlassesEvent(i, current_state & GlassesState::UNAVAILABLE ? GlassesEvent::E_UNAVAILABLE : GlassesEvent::E_AVAILABLE));
-		}
-		if((changes & GlassesState::CONNECTED) == GlassesState::CONNECTED) {
-			if(current_state & GlassesState::CONNECTED) {
-				glasses_were_connected(_glasses_list[i]);
-				_events.push_back(GlassesEvent(i, GlassesEvent::E_CONNECTED)); 
-			}
-			else {
-				glasses_were_disconnected(_glasses_list[i]);
-				_events.push_back(GlassesEvent(i, GlassesEvent::E_DISCONNECTED));
-
-			}
-		}
-		if((changes & GlassesState::TRACKING) == GlassesState::TRACKING) {
-			_events.push_back(GlassesEvent(i, current_state & GlassesState::TRACKING ? GlassesEvent::E_TRACKING : GlassesEvent::E_NOT_TRACKING));
-		}
-		if((changes & GlassesState::ERROR) == GlassesState::ERROR) {
-			// There is currently no way to recover from the error state
-			_events.push_back(GlassesEvent(i, current_state & GlassesState::ERROR ? GlassesEvent::E_STOPPED_ON_ERROR : GlassesEvent::E_AVAILABLE));
-		}
+		if(_glasses_list[i]->get_id() == glasses_id)
+			return i;
 	}
-	return _events;
+	return {};
 }
 
 CotaskPtr T5Service::query_ndk_version() {
@@ -176,9 +150,9 @@ CotaskPtr T5Service::query_glasses_list() {
 				[id](auto& gls) {return gls->get_id() == id; });
 
 			if(found == _glasses_list.cend()) {
-				auto new_glasses = std::make_shared<Glasses>(std::string(id));
+				auto new_glasses = create_glasses(id);
 				if(new_glasses->allocate_handle(_context))
-					_glasses_list.push_back(new_glasses);
+					_glasses_list.emplace_back(std::move(new_glasses));
 			}
 		}
 
@@ -186,21 +160,33 @@ CotaskPtr T5Service::query_glasses_list() {
 	}
 }
 
+std::unique_ptr<Glasses> T5Service::create_glasses(const std::string_view id) {
+	return std::make_unique<Glasses>(id);
+}
+
 bool T5Service::is_service_started() {
 	return _is_started;
 }
 
-void T5Service::connect_glasses(int glasses_num, std::string display_name) {
+void T5Service::reserve_glasses(int glasses_num, const std::string_view display_name) {
 	if(glasses_num < 0 || glasses_num >= _glasses_list.size()) return;
 
-	if(should_glasses_be_connected(_glasses_list[glasses_num]))
+	if(should_glasses_be_reserved(glasses_num))
 		_glasses_list[glasses_num]->connect(display_name);
 }
 
-void T5Service::disconnect_glasses(int glasses_num) {
+void T5Service::release_glasses(int glasses_num) {
 	if(glasses_num < 0 || glasses_num >= _glasses_list.size()) return;
 
 	_glasses_list[glasses_num]->disconnect();
+}
+
+void T5Service::connect_glasses(int glasses_num, std::string display_name) {
+	reserve_glasses(glasses_num, display_name);
+}
+
+void T5Service::disconnect_glasses(int glasses_num) {
+	release_glasses(glasses_num);
 }
 
 void T5Service::update_connection() {
@@ -228,4 +214,11 @@ void T5Service::update_tracking() {
 
 	tracking_updated();
 }
+
+void T5Service::get_events(std::vector<GlassesEvent>& out_events) {
+	for(int i = 0; i < _glasses_list.size(); ++i) {
+		_glasses_list[i]->get_events(i, out_events);
+	}
+}
+
 } // T5Integration

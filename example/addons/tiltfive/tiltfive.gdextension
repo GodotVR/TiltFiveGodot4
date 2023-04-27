@@ -4,5 +4,5 @@ entry_symbol = "tiltfive_library_init"
 
 [libraries]
 
-windows.x86_64.debug = "res://addons/tiltfive/libgdtiltfive.windows.template_debug.x86_64.dll"
+windows.x86_64.debug = "res://addons/tiltfive/libgdtiltfive.windows.template_debug.dev.x86_64.dll"
 windows.x86_64.release = "res://addons/tiltfive/libgdtiltfive.windows.template_release.x86_64.dll"

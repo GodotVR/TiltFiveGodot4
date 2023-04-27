@@ -16,7 +16,6 @@ enum GlassesEvent {
 	E_STOPPED_ON_ERROR = 9
 }
 
-@onready
 var tilt_five_xr_interface: TiltFiveXRInterface 
 
 @export var automatically_start : bool = true
@@ -34,6 +33,9 @@ func _ready():
 	tilt_five_xr_interface.glasses_event.connect(on_glasses_event)
 	if automatically_start:
 		start_service()
+		
+func _exit_tree():
+	pass
 	
 func start_service() -> bool:
 	return tilt_five_xr_interface.start_service(application_id, application_version)
@@ -44,14 +46,14 @@ func has_reserved_glasses() -> bool:
 			return true
 	return false
 
-func reserve_glasses(display_name := "") -> void:
+func reserve_glasses(viewport : Viewport, display_name := "") -> void:
 	if has_reserved_glasses():
 		print("Warning: Tilt Five glasses already reserved")
 		return
 	if display_name.length() == 0:
 		display_name = default_display_name
 	for try_glasses_id in reserved_glasses:
-		tilt_five_xr_interface.reserve_glasses(try_glasses_id, display_name)
+		tilt_five_xr_interface.reserve_glasses(try_glasses_id, display_name, viewport.get_viewport_rid())
 		while true:
 			var result = await tilt_five_xr_interface.glasses_event
 			if result[0] != try_glasses_id: 

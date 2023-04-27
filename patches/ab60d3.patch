@@ -1,0 +1,84 @@
+diff --git a/doc/classes/RenderingServer.xml b/doc/classes/RenderingServer.xml
+index fd4172f..34aa88e 100644
+--- a/doc/classes/RenderingServer.xml
++++ b/doc/classes/RenderingServer.xml
+@@ -3179,6 +3179,13 @@
+ 			<description>
+ 			</description>
+ 		</method>
++		<method name="viewport_get_render_target" qualifiers="const">
++			<return type="RID" />
++			<param index="0" name="viewport" type="RID" />
++			<description>
++				Returns the render target for the viewport.
++			</description>
++		</method>
+ 		<method name="viewport_get_texture" qualifiers="const">
+ 			<return type="RID" />
+ 			<param index="0" name="viewport" type="RID" />
+diff --git a/servers/rendering/renderer_viewport.cpp b/servers/rendering/renderer_viewport.cpp
+index f609fa6..8813c2e 100644
+--- a/servers/rendering/renderer_viewport.cpp
++++ b/servers/rendering/renderer_viewport.cpp
+@@ -962,6 +962,13 @@ void RendererViewport::viewport_set_update_mode(RID p_viewport, RS::ViewportUpda
+ 	viewport->update_mode = p_mode;
+ }
+ 
++RID RendererViewport::viewport_get_render_target(RID p_viewport) const {
++	const Viewport *viewport = viewport_owner.get_or_null(p_viewport);
++	ERR_FAIL_COND_V(!viewport, RID());
++
++	return viewport->render_target;
++}
++
+ RID RendererViewport::viewport_get_texture(RID p_viewport) const {
+ 	const Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+ 	ERR_FAIL_COND_V(!viewport, RID());
+diff --git a/servers/rendering/renderer_viewport.h b/servers/rendering/renderer_viewport.h
+index c24275d..2f9537a 100644
+--- a/servers/rendering/renderer_viewport.h
++++ b/servers/rendering/renderer_viewport.h
+@@ -231,6 +231,7 @@ public:
+ 
+ 	void viewport_set_clear_mode(RID p_viewport, RS::ViewportClearMode p_clear_mode);
+ 
++	RID viewport_get_render_target(RID p_viewport) const;
+ 	RID viewport_get_texture(RID p_viewport) const;
+ 	RID viewport_get_occluder_debug_texture(RID p_viewport) const;
+ 
+diff --git a/servers/rendering/rendering_server_default.h b/servers/rendering/rendering_server_default.h
+index 249e5c2..d39bec8 100644
+--- a/servers/rendering/rendering_server_default.h
++++ b/servers/rendering/rendering_server_default.h
+@@ -606,6 +606,7 @@ public:
+ 
+ 	FUNC2(viewport_set_update_mode, RID, ViewportUpdateMode)
+ 
++	FUNC1RC(RID, viewport_get_render_target, RID)
+ 	FUNC1RC(RID, viewport_get_texture, RID)
+ 
+ 	FUNC2(viewport_set_disable_2d, RID, bool)
+diff --git a/servers/rendering_server.cpp b/servers/rendering_server.cpp
+index d88cbec..f2058e0 100644
+--- a/servers/rendering_server.cpp
++++ b/servers/rendering_server.cpp
+@@ -2198,6 +2198,7 @@ void RenderingServer::_bind_methods() {
+ 	ClassDB::bind_method(D_METHOD("viewport_set_texture_mipmap_bias", "viewport", "mipmap_bias"), &RenderingServer::viewport_set_texture_mipmap_bias);
+ 	ClassDB::bind_method(D_METHOD("viewport_set_update_mode", "viewport", "update_mode"), &RenderingServer::viewport_set_update_mode);
+ 	ClassDB::bind_method(D_METHOD("viewport_set_clear_mode", "viewport", "clear_mode"), &RenderingServer::viewport_set_clear_mode);
++	ClassDB::bind_method(D_METHOD("viewport_get_render_target", "viewport"), &RenderingServer::viewport_get_render_target);
+ 	ClassDB::bind_method(D_METHOD("viewport_get_texture", "viewport"), &RenderingServer::viewport_get_texture);
+ 	ClassDB::bind_method(D_METHOD("viewport_set_disable_3d", "viewport", "disable"), &RenderingServer::viewport_set_disable_3d);
+ 	ClassDB::bind_method(D_METHOD("viewport_set_disable_2d", "viewport", "disable"), &RenderingServer::viewport_set_disable_2d);
+diff --git a/servers/rendering_server.h b/servers/rendering_server.h
+index a283744..6206088 100644
+--- a/servers/rendering_server.h
++++ b/servers/rendering_server.h
+@@ -837,6 +837,7 @@ public:
+ 
+ 	virtual void viewport_set_clear_mode(RID p_viewport, ViewportClearMode p_clear_mode) = 0;
+ 
++	virtual RID viewport_get_render_target(RID p_viewport) const = 0;
+ 	virtual RID viewport_get_texture(RID p_viewport) const = 0;
+ 
+ 	enum ViewportEnvironmentMode {

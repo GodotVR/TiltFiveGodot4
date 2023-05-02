@@ -11,15 +11,13 @@ using Eye = GodotT5Integration::Glasses::Eye;
 
 void TiltFiveXRInterface::_bind_methods() {
 	// Methods.
-	// ClassDB::bind_method(D_METHOD("simple_func"), &Example::simple_func);
-
-	// Properties.
 
 	ClassDB::bind_method(D_METHOD("start_service", "application_id", "application_version"), &TiltFiveXRInterface::start_service);
 	ClassDB::bind_method(D_METHOD("stop_service"), &TiltFiveXRInterface::stop_service);
 	ClassDB::bind_method(D_METHOD("reserve_glasses", "glasses_id", "display_name", "viewport"), &TiltFiveXRInterface::reserve_glasses);
 	ClassDB::bind_method(D_METHOD("release_glasses", "glasses_id"), &TiltFiveXRInterface::release_glasses);
 
+	// Properties.
 
 	// Signals.
 	ADD_SIGNAL(MethodInfo("glasses_event", PropertyInfo(Variant::STRING, "glasses_id"), PropertyInfo(Variant::INT, "event")));
@@ -86,8 +84,14 @@ void TiltFiveXRInterface::release_glasses(const String glasses_id)
 	t5_service->release_glasses(glasses_id);
 }
 
+void TiltFiveXRInterface::set_viewport_origin(RID viewport, Transform3D origin) {
+	auto glasses = t5_service->find_glasses_by_viewport(viewport);
+	ERR_FAIL_COND_MSG(!glasses, "Viewport does not have registered glasses");
+
+	glasses->set_world_origin(origin);
+}
+
 StringName TiltFiveXRInterface::_get_name() const {
-	// this currently fails to return because we loose our data before it ends up in the callers hands...
 	StringName name("TiltFive");
 	return name;
 }
@@ -168,7 +172,7 @@ Transform3D TiltFiveXRInterface::_get_transform_for_view(uint32_t view, const Tr
 	auto eye_transform = _render_glasses->get_eye_transform(view == 0 ? Eye::Left : Eye::Right);
 	eye_transform.scale(Vector3(world_scale, world_scale, world_scale));
 
-	return eye_transform * origin_transform;
+	return origin_transform * eye_transform;
 }
 
 PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view, double aspect, double z_near, double z_far) {
@@ -200,11 +204,16 @@ PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view
 bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
 	ERR_FAIL_COND_V_MSG(_render_glasses, "Rendering viewport already set", false);
 	
-	_render_glasses = t5_service->find_godot_glasses(render_target);
+	_render_glasses = t5_service->find_glasses_by_render_target(render_target);
 
 	ERR_FAIL_COND_V_MSG(!_render_glasses, "Viewport does not have registered glasses", false);
 
-    return _render_glasses->is_reserved();
+    if(! _render_glasses->is_reserved()) 
+		return false;
+
+	xr_server->set_world_origin(_render_glasses->get_world_origin());
+	
+	return true;
 }
 
 void TiltFiveXRInterface::_post_draw_viewport(const RID &render_target, const Rect2 &screen_rect) {

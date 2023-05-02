@@ -39,6 +39,8 @@ public:
 	void reserve_glasses(const String glasses_id, const String display_name, RID viewport); 
 	void release_glasses(const String glasses_id);
 
+	void set_viewport_origin(RID viewport, Transform3D origin);
+
 	// Overriden from XRInterfaceExtension
 	virtual StringName _get_name() const override;
 	virtual uint32_t _get_capabilities() const override;

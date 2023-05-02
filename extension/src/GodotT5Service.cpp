@@ -65,13 +65,27 @@ GodotT5Glasses::Ptr GodotT5Service::find_godot_glasses(GD::String glasses_id) {
     return get_glasses(glasses_idx.value());
 }
 
-GodotT5Glasses::Ptr GodotT5Service::find_godot_glasses(RID test_render_target) {
+GodotT5Glasses::Ptr GodotT5Service::find_glasses_by_render_target(RID test_render_target) {
 	auto render_server = RenderingServer::get_singleton();
 
     for(size_t glasses_idx = 0; glasses_idx < get_glasses_count(); glasses_idx++) {
         auto godot_glasses = get_glasses(glasses_idx);
-        auto elem_render_target = render_server->viewport_get_render_target(godot_glasses->get_viewport());   
-        if(test_render_target == elem_render_target) {    
+        auto glasses_render_target = render_server->viewport_get_render_target(godot_glasses->get_viewport());   
+        if(test_render_target == glasses_render_target) {    
+            return godot_glasses;
+        }
+    }
+
+    return GodotT5Glasses::Ptr();
+}
+
+GodotT5Glasses::Ptr GodotT5Service::find_glasses_by_viewport(RID test_viewport) {
+	auto render_server = RenderingServer::get_singleton();
+
+    for(size_t glasses_idx = 0; glasses_idx < get_glasses_count(); glasses_idx++) {
+        auto godot_glasses = get_glasses(glasses_idx);
+        auto glasses_viewport = godot_glasses->get_viewport();   
+        if(test_viewport == glasses_viewport) {    
             return godot_glasses;
         }
     }

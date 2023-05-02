@@ -1,4 +1,5 @@
 #include "register_types.h"
+#include "TiltFiveXROrigin.h"
 #include "TiltFiveXRInterface.h"
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
@@ -13,6 +14,7 @@ void initialize_tiltfive_types(ModuleInitializationLevel p_level)
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+	ClassDB::register_class<TiltFiveXROrigin>();
 	ClassDB::register_class<TiltFiveXRInterface>();
 
 }

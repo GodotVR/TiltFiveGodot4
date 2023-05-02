@@ -42,9 +42,8 @@ public:
 
 	GodotT5Glasses::Ptr find_godot_glasses(int glasses_idx);
 	GodotT5Glasses::Ptr find_godot_glasses(GD::String glasses_id);
-	GodotT5Glasses::Ptr find_godot_glasses(RID render_target);
-
-
+	GodotT5Glasses::Ptr find_glasses_by_render_target(RID render_target);
+	GodotT5Glasses::Ptr find_glasses_by_viewport(RID render_target);
 };
 
 class GodotT5Math : public T5Integration::T5Math {

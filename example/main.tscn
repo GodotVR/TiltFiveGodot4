@@ -42,45 +42,50 @@ script = ExtResource("1_ptcg0")
 [node name="T5Manager" type="Node" parent="."]
 script = ExtResource("2_dibvp")
 
-[node name="XROrigin3D" type="TiltFiveXROrigin" parent="."]
+[node name="T5GlassesViewport" type="SubViewport" parent="."]
+use_xr = true
+size = Vector2i(0, 0)
+render_target_update_mode = 4
+
+[node name="XROrigin3D" type="TiltFiveXROrigin" parent="T5GlassesViewport"]
 world_scale = 16.0
 script = ExtResource("3_5iafk")
 
-[node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
+[node name="XRCamera3D" type="XRCamera3D" parent="T5GlassesViewport/XROrigin3D"]
 
-[node name="XRController3D" type="XRController3D" parent="XROrigin3D"]
+[node name="XRController3D" type="XRController3D" parent="T5GlassesViewport/XROrigin3D"]
 tracker = &"tilt_five_wand_1"
 script = ExtResource("3_8ts3i")
 selected_mat = SubResource("StandardMaterial3D_cgatm")
 unselected_mat = SubResource("StandardMaterial3D_vjp8o")
 
-[node name="Controls" parent="XROrigin3D/XRController3D" instance=ExtResource("3_1g85m")]
+[node name="Controls" parent="T5GlassesViewport/XROrigin3D/XRController3D" instance=ExtResource("3_1g85m")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0.583, -0.002, 0.01)
 
-[node name="Center" type="MeshInstance3D" parent="XROrigin3D/XRController3D"]
+[node name="Center" type="MeshInstance3D" parent="T5GlassesViewport/XROrigin3D/XRController3D"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_iuako")
 
-[node name="Positive Y" type="MeshInstance3D" parent="XROrigin3D/XRController3D"]
+[node name="Positive Y" type="MeshInstance3D" parent="T5GlassesViewport/XROrigin3D/XRController3D"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0.2, 0)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_70r0u")
 
-[node name="Positive Z" type="MeshInstance3D" parent="XROrigin3D/XRController3D"]
+[node name="Positive Z" type="MeshInstance3D" parent="T5GlassesViewport/XROrigin3D/XRController3D"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0.2)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_dji1h")
 
-[node name="Positive X" type="MeshInstance3D" parent="XROrigin3D/XRController3D"]
+[node name="Positive X" type="MeshInstance3D" parent="T5GlassesViewport/XROrigin3D/XRController3D"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0.2, 0, 0)
 mesh = SubResource("BoxMesh_qm7rn")
 surface_material_override/0 = SubResource("StandardMaterial3D_0arwu")
 
-[node name="OriginBased" type="MeshInstance3D" parent="XROrigin3D"]
+[node name="OriginBased" type="MeshInstance3D" parent="T5GlassesViewport/XROrigin3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.77558, 0)
 mesh = SubResource("BoxMesh_gbwc2")
-skeleton = NodePath("../../Boxes")
+skeleton = NodePath("../../../Boxes")
 surface_material_override/0 = SubResource("StandardMaterial3D_iuako")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
@@ -124,5 +129,5 @@ surface_material_override/0 = SubResource("StandardMaterial3D_qrhlq")
 
 [connection signal="glasses_available" from="T5Manager" to="." method="_on_node_glasses_available"]
 [connection signal="glasses_reserved" from="T5Manager" to="." method="_on_node_glasses_reserved"]
-[connection signal="button_pressed" from="XROrigin3D/XRController3D" to="XROrigin3D/XRController3D" method="_on_button_pressed"]
-[connection signal="button_released" from="XROrigin3D/XRController3D" to="XROrigin3D/XRController3D" method="_on_button_released"]
+[connection signal="button_pressed" from="T5GlassesViewport/XROrigin3D/XRController3D" to="T5GlassesViewport/XROrigin3D/XRController3D" method="_on_button_pressed"]
+[connection signal="button_released" from="T5GlassesViewport/XROrigin3D/XRController3D" to="T5GlassesViewport/XROrigin3D/XRController3D" method="_on_button_released"]

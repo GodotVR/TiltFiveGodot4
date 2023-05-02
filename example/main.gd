@@ -3,10 +3,10 @@ extends Node3D
 
 
 func _on_node_glasses_available():
-	$T5Manager.reserve_glasses(get_viewport())
+	$T5Manager.reserve_glasses($T5GlassesViewport)
 
 
 func _on_node_glasses_reserved(success):
 	if success:
 		print("Got glasses")
-		get_viewport().use_xr = true
+		$T5GlassesViewport.use_xr = true

@@ -1,4 +1,4 @@
-extends TiltFiveXROrigin
+extends XROrigin3D
 
 var elapsed = 0.0
 

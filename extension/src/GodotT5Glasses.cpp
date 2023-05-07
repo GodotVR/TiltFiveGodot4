@@ -22,8 +22,6 @@ namespace GodotT5Integration {
 
 GodotT5Glasses::GodotT5Glasses(std::string_view id) 
 : Glasses(id) {
-    _glasses_id = id.data(); 
-
     set_swap_chain_size(g_swap_chain_length);
     _swap_chain_textures.resize(g_swap_chain_length);
 }
@@ -86,12 +84,10 @@ void GodotT5Glasses::on_glasses_reserved() {
 }
 
 void GodotT5Glasses::on_glasses_released() {
-    set_viewport(RID());
     deallocate_textures();
 }
 
 void GodotT5Glasses::on_glasses_dropped() {
-    set_viewport(RID());
     deallocate_textures();
 }
 
@@ -182,14 +178,11 @@ void GodotT5Glasses::add_tracker() {
     Ref<XRPositionalTracker> positional_tracker;
     positional_tracker.instantiate();
 
-    
-
-
-    auto tracker_name = _glasses_id + godot::String("/tilt_five_wand_{0}").format( godot::Array::make(new_id));
-
+    auto tracker_name = std::format("{}/tilt_five_wand{}", get_id(), new_id);
+ 
     positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
-    positional_tracker->set_tracker_name(tracker_name);
-    positional_tracker->set_tracker_desc(tracker_name);
+    positional_tracker->set_tracker_name(tracker_name.c_str());
+    positional_tracker->set_tracker_desc(tracker_name.c_str());
 
     _wand_trackers.push_back(positional_tracker);    
 }

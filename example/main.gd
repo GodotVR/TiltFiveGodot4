@@ -1,12 +1,14 @@
 extends Node3D
 
 
-
-func _on_node_glasses_available():
-	$T5Manager.reserve_glasses($T5GlassesViewport)
+var glasses_rig = preload("res://T5Glasses.tscn")
 
 
-func _on_node_glasses_reserved(success):
-	if success:
-		print("Got glasses")
-		$T5GlassesViewport.use_xr = true
+func _on_t5_manager_glasses_available(glasses_id):
+	$T5Manager.reserve_glasses(glasses_id)
+
+func _on_t5_manager_glasses_reserved(glasses_id):
+	var gview = glasses_rig.instantiate()
+	add_child(gview)
+	$T5Manager.start_display(glasses_id, gview)
+

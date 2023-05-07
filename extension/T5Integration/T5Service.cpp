@@ -138,7 +138,8 @@ CotaskPtr T5Service::query_glasses_list() {
 			if(pos == 0 || pos == std::string_view::npos)
 				break;
 			parsed_id_list.emplace_back(str_view.substr(0, pos));
-			str_view.remove_prefix(pos);
+			str_view.remove_prefix(pos + 1);
+
 		}
 
 		co_await run_in_foreground;

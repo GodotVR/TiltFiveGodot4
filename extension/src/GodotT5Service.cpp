@@ -27,42 +27,62 @@ namespace GodotT5Integration {
 
 GodotT5ObjectRegistry g_godot_t5_services;
 
-
-
 GodotT5Service::GodotT5Service()
 	: T5Service()
 {}
 
+/*
+void GodotT5Service::reserve_glasses(StringName glasses_id, GD::String display_name) {
+    size_t glasses_idx;
+    GodotT5Glasses::Ptr glasses;
+    ERR_FAIL_COND_MSG(!find_godot_glasses(glasses_id, glasses_idx, glasses), "Glasses id not found");
 
-void GodotT5Service::reserve_glasses(GD::String glasses_id, GD::String display_name, RID viewport) {
-    auto glasses_idx = find_glasses_idx(glasses_id.ascii().get_data());
-    ERR_FAIL_COND_MSG(!glasses_idx, "Glasses id not found");
-
-    get_glasses(glasses_idx.value())->set_viewport(viewport);
-
-    T5Service::reserve_glasses(glasses_idx.value(), display_name.ascii().get_data());
+    T5Service::reserve_glasses(glasses_idx, display_name.ascii().get_data());
 }
 
-void GodotT5Service::release_glasses(GD::String glasses_id) {
-    auto glasses_idx = find_glasses_idx(glasses_id.ascii().get_data());
-    ERR_FAIL_COND_MSG(!glasses_idx, "Glasses id not found");
 
-    get_glasses(glasses_idx.value())->set_viewport(RID());
-
-    T5Service::release_glasses(glasses_idx.value());
+bool GodotT5Service::is_ready_to_render(StringName glasses_id) {
+    size_t glasses_idx;
+    GodotT5Glasses::Ptr glasses;
+    if(!find_godot_glasses(glasses_id, glasses_idx, glasses))    
+        return glasses->is_reserved();
+    return false;
 }
 
-GodotT5Glasses::Ptr GodotT5Service::find_godot_glasses(int glasses_idx) {
+void GodotT5Service::display_viewport(StringName glasses_id, RID viewport) {
+    size_t glasses_idx;
+    GodotT5Glasses::Ptr glasses;
+    ERR_FAIL_COND_MSG(!find_godot_glasses(glasses_id, glasses_idx, glasses), "Glasses id not found");
+    ERR_FAIL_COND_MSG(!glasses->is_reserved(), "Glasses must be reserved prior to rendering");
+
+    glasses->set_viewport(viewport);
+}
+
+void GodotT5Service::release_glasses(StringName glasses_id) {
+    size_t glasses_idx;
+    GodotT5Glasses::Ptr glasses;
+    ERR_FAIL_COND_MSG(!find_godot_glasses(glasses_id, glasses_idx, glasses), "Glasses id not found");
+    glasses->set_viewport(RID());
+
+    T5Service::release_glasses(glasses_idx);
+}
+
+GodotT5Glasses::Ptr GodotT5Service::get_godot_glasses(int glasses_idx) {
     ERR_FAIL_INDEX_V(glasses_idx, _glasses_list.size(), GodotT5Glasses::Ptr());
 
     return get_glasses(glasses_idx);
 }
 
-GodotT5Glasses::Ptr GodotT5Service::find_godot_glasses(GD::String glasses_id) {
-    auto glasses_idx = find_glasses_idx(glasses_id.ascii().get_data());
-    ERR_FAIL_COND_V_MSG(!glasses_idx, GodotT5Glasses::Ptr(), "Glasses id not found");
+bool GodotT5Service::find_godot_glasses(StringName glasses_id, size_t& out_glasses_idx, GodotT5Glasses::Ptr& out_glasses) {
 
-    return get_glasses(glasses_idx.value());
+    for(out_glasses_idx = 0; out_glasses_idx < get_glasses_count(); out_glasses_idx++) {
+        auto godot_glasses = get_glasses(out_glasses_idx);  
+        if(godot_glasses->_glasses_id == glasses_id) {  
+            out_glasses = godot_glasses;
+            return true;
+        }
+    }
+    return false;
 }
 
 GodotT5Glasses::Ptr GodotT5Service::find_glasses_by_render_target(RID test_render_target) {
@@ -92,6 +112,7 @@ GodotT5Glasses::Ptr GodotT5Service::find_glasses_by_viewport(RID test_viewport) 
 
     return GodotT5Glasses::Ptr();
 }
+*/
 
 std::unique_ptr<Glasses> GodotT5Service::create_glasses(const std::string_view id) {
     

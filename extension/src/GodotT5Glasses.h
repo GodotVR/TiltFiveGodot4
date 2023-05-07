@@ -11,6 +11,7 @@ using godot::Ref;
 using godot::XRPositionalTracker;
 using godot::Vector2;
 using godot::Transform3D;
+using godot::StringName;
 
 using T5Integration::Glasses;
 
@@ -50,15 +51,11 @@ namespace GodotT5Integration {
         GodotT5Glasses(std::string_view id);
 		virtual ~GodotT5Glasses() {  }
 
-        void set_viewport(RID viewport);
-        RID get_viewport();
-
         void set_world_origin(Transform3D origin);
         Transform3D get_world_origin();
 
         bool is_in_use();
         bool is_reserved();
-        const godot::String& get_id();
 
         Vector2 get_display_size();
         Transform3D get_head_transform();
@@ -74,37 +71,12 @@ namespace GodotT5Integration {
         void add_tracker() ;
         void update_wand(size_t wand_idx);
 
-		godot::String _glasses_id;
-
-        bool _is_trying_to_reserve = false;
-		RID _viewport;
-        Transform3D _world_origin;
-		std::vector<SwapChainTextures> _swap_chain_textures;
+    	std::vector<SwapChainTextures> _swap_chain_textures;
 		std::vector<Ref<XRPositionalTracker>> _wand_trackers;
 	};
 
-    inline void GodotT5Glasses::set_viewport(RID viewport) {
-        _viewport = viewport;
-    }
-
-    inline RID GodotT5Glasses::get_viewport() {
-        return _viewport;
-    }
-
     inline bool GodotT5Glasses::is_reserved() {
         return is_connected();
-    }
-
-    inline const godot::String& GodotT5Glasses::get_id() { 
-        return _glasses_id; 
-    }
-
-    inline void GodotT5Glasses::set_world_origin(Transform3D origin) {
-        _world_origin = origin;
-    }
-
-    inline Transform3D GodotT5Glasses::get_world_origin() {
-        return _world_origin;
     }
 
 }

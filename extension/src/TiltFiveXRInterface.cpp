@@ -14,7 +14,9 @@ void TiltFiveXRInterface::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("start_service", "application_id", "application_version"), &TiltFiveXRInterface::start_service);
 	ClassDB::bind_method(D_METHOD("stop_service"), &TiltFiveXRInterface::stop_service);
-	ClassDB::bind_method(D_METHOD("reserve_glasses", "glasses_id", "display_name", "viewport"), &TiltFiveXRInterface::reserve_glasses);
+	ClassDB::bind_method(D_METHOD("reserve_glasses", "glasses_id", "display_name"), &TiltFiveXRInterface::reserve_glasses);
+	ClassDB::bind_method(D_METHOD("start_display", "glasses_id", "viewport", "xr_origin"), &TiltFiveXRInterface::start_display);
+	ClassDB::bind_method(D_METHOD("stop_display", "glasses_id"), &TiltFiveXRInterface::stop_display);
 	ClassDB::bind_method(D_METHOD("release_glasses", "glasses_id"), &TiltFiveXRInterface::release_glasses);
 
 	// Properties.
@@ -27,6 +29,43 @@ void TiltFiveXRInterface::_bind_methods() {
 	// BIND_ENUM_CONSTANT(FIRST);
 }
 
+
+
+TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_entry(StringName glasses_id) {
+	for(auto& entry : _glasses_index) {
+		if(glasses_id == entry.id) {
+			return &entry;
+		}
+	}	
+	return nullptr;
+}
+
+
+
+TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_by_render_target(RID test_render_target) {
+	auto render_server = RenderingServer::get_singleton();
+
+	for(auto& entry : _glasses_index) {
+		auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
+		if(!viewport) continue;
+        auto glasses_render_target = render_server->viewport_get_render_target(viewport->get_viewport_rid());   
+        if(test_render_target == glasses_render_target) {    
+            return &entry;
+        }
+	}
+	return nullptr;
+}
+
+TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_by_viewport(RID test_viewport) {
+	for(auto& entry : _glasses_index) {
+		auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
+		if(!viewport) continue;
+        if(test_viewport == viewport->get_viewport_rid()) {    
+            return &entry;
+        }
+	}
+	return nullptr;
+}
 
 bool TiltFiveXRInterface::setup() {
 	xr_server = XRServer::get_singleton();
@@ -52,8 +91,11 @@ void TiltFiveXRInterface::teardown() {
 bool TiltFiveXRInterface::start_service(const String application_id, const String application_version)
 {
     if(!setup()) return false;
-	
-    bool is_started = t5_service->start_service(application_id.ascii().get_data(), application_version.ascii().get_data());
+
+	auto ai = application_id.ascii();
+	auto av = application_version.ascii();
+
+    bool is_started = t5_service->start_service(ai.get_data(), av.get_data());
 	if(is_started)
 		initialize();
 	return is_started;
@@ -70,25 +112,67 @@ void TiltFiveXRInterface::stop_service()
 	teardown();
 }
 
-void TiltFiveXRInterface::reserve_glasses(const String glasses_id, const String display_name, RID viewport) {
-
+void TiltFiveXRInterface::reserve_glasses(const StringName glasses_id, const String display_name) {
     if(!t5_service) return;
 
-	t5_service->reserve_glasses(glasses_id, display_name, viewport);
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
+
+	auto dn = display_name.ascii();
+	t5_service->reserve_glasses(entry->idx, dn.get_data());
 }
 
-void TiltFiveXRInterface::release_glasses(const String glasses_id)
-{
+void TiltFiveXRInterface::start_display(const StringName glasses_id, Variant vobj, Variant oobj) {
     if(!t5_service) return;
 
-	t5_service->release_glasses(glasses_id);
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
+
+	auto viewport = Object::cast_to<SubViewport>(vobj);
+	auto xr_origin = Object::cast_to<XROrigin3D>(oobj);
+	ERR_FAIL_NULL_MSG(viewport, "Parameter 2 is not a SubViewport");
+	ERR_FAIL_NULL_MSG(xr_origin, "Parameter 3 is not a XROrigin3D");
+
+	_start_display(*entry, viewport, xr_origin);
 }
 
-void TiltFiveXRInterface::set_viewport_origin(RID viewport, Transform3D origin) {
-	auto glasses = t5_service->find_glasses_by_viewport(viewport);
-	ERR_FAIL_COND_MSG(!glasses, "Viewport does not have registered glasses");
+void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry& entry, SubViewport* viewport, XROrigin3D* xr_origin) {
+	auto glasses = entry.glasses.lock();
+	if(!glasses->is_reserved()) {
+		WARN_PRINT("Glasses need to be reserved to display viewport");
+		return;
+	}
+	entry.viewport_id = viewport->get_instance_id();
+	entry.xr_origin_id = xr_origin->get_instance_id();
 
-	glasses->set_world_origin(origin);
+	viewport->set_use_xr(true);
+	viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_ALWAYS);
+}
+
+void TiltFiveXRInterface::stop_display(const StringName glasses_id) {
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
+	_stop_display(*entry);
+}
+
+
+void TiltFiveXRInterface::_stop_display(GlassesIndexEntry& entry) {
+	auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
+	if(viewport) {
+		viewport->set_use_xr(false);
+		viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_DISABLED);
+	}
+	entry.viewport_id = ObjectID();
+	entry.xr_origin_id = ObjectID();
+}
+
+void TiltFiveXRInterface::release_glasses(const StringName glasses_id) {
+    if(!t5_service) return;
+
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
+	_stop_display(*entry);
+	t5_service->release_glasses(entry->idx);
 }
 
 StringName TiltFiveXRInterface::_get_name() const {
@@ -203,16 +287,21 @@ PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view
 
 bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
 	ERR_FAIL_COND_V_MSG(_render_glasses, "Rendering viewport already set", false);
-	
-	_render_glasses = t5_service->find_glasses_by_render_target(render_target);
+	auto entry = lookup_glasses_by_render_target(render_target);
+	ERR_FAIL_COND_V_MSG(!entry, "Viewport does not have associated glasses", false);
 
-	ERR_FAIL_COND_V_MSG(!_render_glasses, "Viewport does not have registered glasses", false);
+	_render_glasses = entry->glasses.lock();
 
-    if(! _render_glasses->is_reserved()) 
+    if(!_render_glasses->is_reserved()) 
 		return false;
 
-	xr_server->set_world_origin(_render_glasses->get_world_origin());
+	auto xr_origin = Object::cast_to<XROrigin3D>(ObjectDB::get_instance(entry->xr_origin_id));
+	if(!xr_origin)
+		return false;
+
+	xr_server->set_world_origin(xr_origin->get_global_transform());
 	
+	entry->rendering = true;
 	return true;
 }
 
@@ -228,13 +317,17 @@ void TiltFiveXRInterface::_post_draw_viewport(const RID &render_target, const Re
 	Vector2 eye_center(0.0, 0.0);
 
 	//add_blit(render_target, src_rect, screen_rect, true, 0, false, eye_center, 0, 0, 0, 0);
+	_render_glasses.reset();
 }
 
 void TiltFiveXRInterface::_end_frame() {
-	if(!_render_glasses) return;
 
-	_render_glasses->send_frame();
-	_render_glasses.reset();
+	for(auto& entry : _glasses_index) {
+		if(entry.rendering) {
+			entry.glasses.lock()->send_frame();
+			entry.rendering = false;
+		}
+	}	
 }
 
 PackedStringArray TiltFiveXRInterface::_get_suggested_tracker_names() const {
@@ -269,21 +362,42 @@ void TiltFiveXRInterface::_process() {
     t5_service->get_events(_events);
     for(int i = 0; i < _events.size(); i++) 
     {
-        if(_events[i].event == GlassesEvent::E_CONNECTED) {
-            ++reserved_glasses_count;
-			if(reserved_glasses_count > 0 && !is_primary()) {
-				set_primary(true);
-			}
+		auto glasses_idx = _events[i].glasses_num;
+		switch (_events[i].event)
+		{
+			case GlassesEvent::E_ADDED: {
+				if(_glasses_index.size() != glasses_idx) {
+					WARN_PRINT("Glasses index");
+				}
+				_glasses_index.resize(glasses_idx + 1);
+				auto glasses = t5_service->get_glasses(glasses_idx);
+				_glasses_index[glasses_idx].glasses = glasses;
+				_glasses_index[glasses_idx].id = glasses->get_id().c_str();
+				_glasses_index[glasses_idx].idx = glasses_idx;
+				_glasses_index[glasses_idx].rendering = false;
+
+			} break;
+			case GlassesEvent::E_CONNECTED: {
+				++reserved_glasses_count;
+				if(reserved_glasses_count > 0 && !is_primary()) {
+					set_primary(true);
+				}
+			} break;
+			case GlassesEvent::E_DISCONNECTED: {
+				_stop_display(_glasses_index[glasses_idx]);
+				--reserved_glasses_count;
+				if(reserved_glasses_count == 0 && is_primary()) {
+					set_primary(false);
+				}
+			} break;
+			case GlassesEvent::E_LOST:
+			case GlassesEvent::E_UNAVAILABLE: {
+				_stop_display(_glasses_index[glasses_idx]);
+			} break;
+		
+			default: break;
 		}
-        else if(_events[i].event == GlassesEvent::E_DISCONNECTED) {
-            --reserved_glasses_count;
-			if(reserved_glasses_count == 0 && is_primary()) {
-				set_primary(false);
-    		}
-		}
-		auto glasses_id = t5_service->find_godot_glasses(_events[i].glasses_num)->get_id();
-		T5Integration::log_message("Firing ", _events[i].glasses_num, ", ", (int)_events[i].event);
-        emit_signal("glasses_event", glasses_id, (int)_events[i].event);
+	    emit_signal("glasses_event", _glasses_index[_events[i].glasses_num].id, (int)_events[i].event);
     }
 }
 

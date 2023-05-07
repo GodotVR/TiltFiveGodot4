@@ -16,6 +16,7 @@ using GD::Vector2;
 using GD::Vector3;
 using GD::Ref;
 using GD::RID;
+using GD::StringName;
 using GD::XRPositionalTracker;
 
 using T5Integration::Glasses;
@@ -27,23 +28,30 @@ protected:
 
 	std::unique_ptr<Glasses> create_glasses(const std::string_view id) override;
 	
-	GodotT5Glasses::Ptr get_glasses(int glasses_idx) {
-		// Safe to down cast 
-		return std::static_pointer_cast<GodotT5Glasses>(_glasses_list[glasses_idx]);
-	}
 
 public:
 	using Ptr = std::shared_ptr<GodotT5Service>;
 
 	GodotT5Service();
 
-	void reserve_glasses(GD::String glasses_id, GD::String display_name, RID viewport);
-	void release_glasses(GD::String glasses_id);
+	GodotT5Glasses::Ptr get_glasses(int glasses_idx) {
+		// Safe to down cast 
+		return std::static_pointer_cast<GodotT5Glasses>(_glasses_list[glasses_idx]);
+	}
 
-	GodotT5Glasses::Ptr find_godot_glasses(int glasses_idx);
-	GodotT5Glasses::Ptr find_godot_glasses(GD::String glasses_id);
+	/*
+	void reserve_glasses(StringName glasses_id, GD::String display_name);
+	bool is_ready_to_render(StringName glasses_id);
+	void display_viewport(StringName glasses_id, RID viewport);
+	void release_glasses(StringName glasses_id);
+
+	GodotT5Glasses::Ptr get_godot_glasses(int glasses_idx);
+
+	bool find_godot_glasses(StringName glasses_id, size_t& out_glasses_idx, GodotT5Glasses::Ptr& out_glasses);
+
 	GodotT5Glasses::Ptr find_glasses_by_render_target(RID render_target);
 	GodotT5Glasses::Ptr find_glasses_by_viewport(RID render_target);
+	*/
 };
 
 class GodotT5Math : public T5Integration::T5Math {

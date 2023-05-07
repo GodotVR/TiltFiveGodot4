@@ -563,11 +563,11 @@ namespace T5Integration {
 		auto changes = _state.get_changes();
 		auto current_state = _state.get_current();
 		
-		if(changes != prev_changes || current_state != prev_current) {
-			log_message("Glasses::update_connection changes ", changes, " Current ", current_state);
-			prev_changes = changes;
-			prev_current = current_state;
-		}
+		// if(changes != prev_changes || current_state != prev_current) {
+		// 	log_message("Glasses::update_connection changes ", changes, " Current ", current_state);
+		// 	prev_changes = changes;
+		// 	prev_current = current_state;
+		// }
 
 		if((changes & GlassesState::CONNECTED) == GlassesState::CONNECTED) {
 			if(current_state & GlassesState::CONNECTED) {
@@ -595,11 +595,11 @@ namespace T5Integration {
 		auto changes = _state.get_changes();
 		auto current_state = _state.get_current();
 		
-		if(changes != prev_changes || current_state != prev_current) {
-			log_message("T5Service::get_events ", changes, " Current ", current_state);
-			prev_changes = changes;
-			prev_current = current_state;
-		}
+		// if(changes != prev_changes || current_state != prev_current) {
+		// 	log_message("T5Service::get_events ", changes, " Current ", current_state);
+		// 	prev_changes = changes;
+		// 	prev_current = current_state;
+		// }
 		if((changes & GlassesState::CREATED) == GlassesState::CREATED) {
 			if(current_state & GlassesState::CREATED) {
 				out_events.push_back(GlassesEvent(index, GlassesEvent::E_ADDED));

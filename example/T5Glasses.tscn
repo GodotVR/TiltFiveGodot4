@@ -37,31 +37,31 @@ script = ExtResource("1_qprko")
 
 [node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
 
-[node name="XRController3D" type="XRController3D" parent="XROrigin3D"]
-tracker = &"tilt_five_wand_1"
+[node name="Wand_1" type="XRController3D" parent="XROrigin3D"]
+tracker = &"glasses/tilt_five_wand_1"
 script = ExtResource("2_qcruj")
 selected_mat = SubResource("StandardMaterial3D_cgatm")
 unselected_mat = SubResource("StandardMaterial3D_vjp8o")
 
-[node name="Controls" parent="XROrigin3D/XRController3D" instance=ExtResource("3_udc3i")]
+[node name="Controls" parent="XROrigin3D/Wand_1" instance=ExtResource("3_udc3i")]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0.583, -0.002, 0.01)
 
-[node name="Center" type="MeshInstance3D" parent="XROrigin3D/XRController3D"]
+[node name="Center" type="MeshInstance3D" parent="XROrigin3D/Wand_1"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_iuako")
 
-[node name="Positive Y" type="MeshInstance3D" parent="XROrigin3D/XRController3D"]
+[node name="Positive Y" type="MeshInstance3D" parent="XROrigin3D/Wand_1"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0.2, 0)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_70r0u")
 
-[node name="Positive Z" type="MeshInstance3D" parent="XROrigin3D/XRController3D"]
+[node name="Positive Z" type="MeshInstance3D" parent="XROrigin3D/Wand_1"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0.2)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_dji1h")
 
-[node name="Positive X" type="MeshInstance3D" parent="XROrigin3D/XRController3D"]
+[node name="Positive X" type="MeshInstance3D" parent="XROrigin3D/Wand_1"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0.2, 0, 0)
 mesh = SubResource("BoxMesh_qm7rn")
 surface_material_override/0 = SubResource("StandardMaterial3D_0arwu")
@@ -72,5 +72,5 @@ mesh = SubResource("BoxMesh_aaxuw")
 skeleton = NodePath("../../../Boxes")
 surface_material_override/0 = SubResource("StandardMaterial3D_iuako")
 
-[connection signal="button_pressed" from="XROrigin3D/XRController3D" to="XROrigin3D/XRController3D" method="_on_button_pressed"]
-[connection signal="button_released" from="XROrigin3D/XRController3D" to="XROrigin3D/XRController3D" method="_on_button_released"]
+[connection signal="button_pressed" from="XROrigin3D/Wand_1" to="XROrigin3D/Wand_1" method="_on_button_pressed"]
+[connection signal="button_released" from="XROrigin3D/Wand_1" to="XROrigin3D/Wand_1" method="_on_button_released"]

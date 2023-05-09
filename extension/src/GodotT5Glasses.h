@@ -51,9 +51,6 @@ namespace GodotT5Integration {
         GodotT5Glasses(std::string_view id);
 		virtual ~GodotT5Glasses() {  }
 
-        void set_world_origin(Transform3D origin);
-        Transform3D get_world_origin();
-
         bool is_in_use();
         bool is_reserved();
 
@@ -66,6 +63,8 @@ namespace GodotT5Integration {
     
         RID get_color_texture();
 
+        StringName get_wand_tracker_name(size_t wand_idx);
+
         private:
 
         void add_tracker() ;
@@ -77,6 +76,12 @@ namespace GodotT5Integration {
 
     inline bool GodotT5Glasses::is_reserved() {
         return is_connected();
+    }
+
+    inline StringName GodotT5Glasses::get_wand_tracker_name(size_t wand_idx) {
+        ERR_FAIL_INDEX_V(wand_idx, get_num_wands(), StringName());
+
+        return _wand_trackers[wand_idx]->get_tracker_name();
     }
 
 }

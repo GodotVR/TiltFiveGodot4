@@ -178,7 +178,7 @@ void GodotT5Glasses::add_tracker() {
     Ref<XRPositionalTracker> positional_tracker;
     positional_tracker.instantiate();
 
-    auto tracker_name = std::format("{}/tilt_five_wand{}", get_id(), new_id);
+    auto tracker_name = std::format("{}/tilt_five_wand_{}", get_id(), new_id);
  
     positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
     positional_tracker->set_tracker_name(tracker_name.c_str());

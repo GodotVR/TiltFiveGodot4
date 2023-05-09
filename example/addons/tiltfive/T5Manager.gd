@@ -16,6 +16,10 @@ enum GlassesEvent {
 	E_STOPPED_ON_ERROR = 9
 }
 
+const xr_origin_node := ^"XROrigin3D"
+
+const wand_node_list := [^"XROrigin3D/Wand_1", ^"XROrigin3D/Wand_2", ^"XROrigin3D/Wand_3", ^"XROrigin3D/Wand_4"]
+
 var tilt_five_xr_interface: TiltFiveXRInterface 
 
 @export var automatically_start : bool = true
@@ -59,9 +63,14 @@ func reserve_glasses(glasses_id : StringName, display_name := "") -> void:
 			
 
 func start_display(glasses_id : StringName, viewport : SubViewport):
-	var xr_origin = viewport.get_node("XROrigin3D")
+	var xr_origin = viewport.get_node(xr_origin_node)
 	tilt_five_xr_interface.start_display(glasses_id, viewport, xr_origin)
-
+	for wand_node in wand_node_list:
+		var controller = viewport.get_node(wand_node) as XRController3D
+		if controller:
+			var tracker_name = controller.tracker
+			controller.tracker = tracker_name.replace("glasses", glasses_id)
+		
 func on_glasses_event(glasses_id, event_num):
 	print(glasses_id, " ", event_num)
 	match  event_num:

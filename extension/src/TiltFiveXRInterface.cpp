@@ -333,10 +333,10 @@ void TiltFiveXRInterface::_end_frame() {
 PackedStringArray TiltFiveXRInterface::_get_suggested_tracker_names() const {
 	PackedStringArray tracker_names;
 	
-	tracker_names.append("tilt_five_wand_1");
-	tracker_names.append("tilt_five_wand_2");
-	tracker_names.append("tilt_five_wand_3");
-	tracker_names.append("tilt_five_wand_4");
+	tracker_names.append("glasses/tilt_five_wand_1");
+	tracker_names.append("glasses/tilt_five_wand_2");
+	tracker_names.append("glasses/tilt_five_wand_3");
+	tracker_names.append("glasses/tilt_five_wand_4");
 
 	return tracker_names;
 }

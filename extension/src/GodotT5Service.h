@@ -1,4 +1,5 @@
 #pragma once
+#include <GodotT5Glasses.h>
 #include <ObjectRegistry.h>
 #include <Glasses.h>
 #include <godot_cpp/variant/transform3d.hpp>
@@ -8,83 +9,49 @@
 
 namespace GodotT5Integration {
 
-using godot::Transform3D;
-using godot::Vector2;
-using godot::Vector3;
-using godot::Ref;
-using godot::RID;
-using godot::XRPositionalTracker;
+namespace GD = godot;
+
+using GD::Transform3D;
+using GD::Vector2;
+using GD::Vector3;
+using GD::Ref;
+using GD::RID;
+using GD::StringName;
+using GD::XRPositionalTracker;
 
 using T5Integration::Glasses;
 
-/*
-enum ControllerMap {
-	// buttons
-	WAND_BUTTON_A		= GlobalConstants::JOY_BUTTON_0,
-	WAND_BUTTON_B		= GlobalConstants::JOY_BUTTON_1,
-	WAND_BUTTON_X		= GlobalConstants::JOY_BUTTON_2,
-	WAND_BUTTON_Y		= GlobalConstants::JOY_BUTTON_3,
-	WAND_BUTTON_1		= GlobalConstants::JOY_BUTTON_4,
-	WAND_BUTTON_2		= GlobalConstants::JOY_BUTTON_5,
-	WAND_BUTTON_STICK	= GlobalConstants::JOY_BUTTON_6,
-	WAND_BUTTON_T5		= GlobalConstants::JOY_BUTTON_7,
 
-	// AXIS
-	WAND_ANALOG_X = GlobalConstants::JOY_AXIS_0,
-	WAND_ANALOG_Y = GlobalConstants::JOY_AXIS_1,
-	WAND_ANALOG_TRIGGER = GlobalConstants::JOY_AXIS_2,
-};
-*/
 class GodotT5Service : public T5Integration::T5Service {
 
 protected:
 
-	bool should_glasses_be_connected(Glasses::Ptr glasses) override;
-	void glasses_were_connected(Glasses::Ptr glasses) override;
-	void glasses_were_disconnected(Glasses::Ptr glasses) override;
-
-	virtual void connection_updated() override;
-	virtual void tracking_updated() override;
-
-	void sync_wand_tracker_list();
-    void update_wand(size_t wand_idx);
+	std::unique_ptr<Glasses> create_glasses(const std::string_view id) override;
+	
 
 public:
 	using Ptr = std::shared_ptr<GodotT5Service>;
 
 	GodotT5Service();
 
-	bool is_connected();
-	bool is_tracking();
+	GodotT5Glasses::Ptr get_glasses(int glasses_idx) {
+		// Safe to down cast 
+		return std::static_pointer_cast<GodotT5Glasses>(_glasses_list[glasses_idx]);
+	}
 
-    Vector2 get_display_size();
-    float get_fov();
-	Transform3D get_head_transform();
-	Transform3D get_eye_offset(Glasses::Eye eye);
-	Transform3D get_eye_transform(Glasses::Eye eye);
+	/*
+	void reserve_glasses(StringName glasses_id, GD::String display_name);
+	bool is_ready_to_render(StringName glasses_id);
+	void display_viewport(StringName glasses_id, RID viewport);
+	void release_glasses(StringName glasses_id);
 
-	size_t get_num_wands();
-	bool is_wand_pose_valid(size_t wand_num);
-	Transform3D get_wand_transform(size_t wand_num);
+	GodotT5Glasses::Ptr get_godot_glasses(int glasses_idx);
 
-	void send_frame();
+	bool find_godot_glasses(StringName glasses_id, size_t& out_glasses_idx, GodotT5Glasses::Ptr& out_glasses);
 
-    RID get_color_texture();
-
-private:
-
-	Glasses::Ptr _active_glasses;
-
-    void create_textures(Glasses::Ptr glasses);
-    void release_textures(Glasses::Ptr glasses);
-
-	RID _render_texture;
-	RID _left_eye_texture;
-    RID _right_eye_texture;
-
-	std::vector<Ref<XRPositionalTracker>> _tracker_list;
-    std::vector<uint32_t> _wand_controller_id;
-    std::vector<std::string> _wand_name;
+	GodotT5Glasses::Ptr find_glasses_by_render_target(RID render_target);
+	GodotT5Glasses::Ptr find_glasses_by_viewport(RID render_target);
+	*/
 };
 
 class GodotT5Math : public T5Integration::T5Math {

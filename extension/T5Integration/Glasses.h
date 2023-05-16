@@ -17,21 +17,52 @@ using TaskSystem::Scheduler;
 float const g_default_fov = 48.0f;
 
 namespace GlassesState {
-	const uint16_t READY				= 0x00000001;
-	const uint16_t GRAPHICS_INIT		= 0x00000002;
-	const uint16_t SUSTAIN_CONNECTION	= 0x00000004;
+	const uint16_t READY				= 0x00000001; //000000001
+	const uint16_t GRAPHICS_INIT		= 0x00000002; //000000010
+	const uint16_t SUSTAIN_CONNECTION	= 0x00000004; //000000100
 
-	const uint16_t CREATED				= 0x00000008;
-	const uint16_t UNAVAILABLE			= 0x00000010;
-	const uint16_t TRACKING				= 0x00000020;
-	const uint16_t CONNECTED			= 0x00000040;
-	const uint16_t TRACKING_WANDS		= 0x00000080;
-	const uint16_t ERROR				= 0x00000100;
+	const uint16_t CREATED				= 0x00000008; //000001000
+	const uint16_t UNAVAILABLE			= 0x00000010; //000010000
+	const uint16_t TRACKING				= 0x00000020; //000100000
+	const uint16_t CONNECTED			= 0x00000040; //001000000
+	const uint16_t TRACKING_WANDS		= 0x00000080; //010000000
+	const uint16_t ERROR				= 0x00000100; //100000000
 }
+
+struct GlassesEvent {
+    enum EType
+    {
+        E_NONE          = 0,
+        E_ADDED         = 1,
+        E_LOST          = 2,
+        E_AVAILABLE     = 3,
+        E_UNAVAILABLE   = 4,
+        E_CONNECTED     = 5,
+        E_DISCONNECTED  = 6,
+        E_TRACKING      = 7,
+        E_NOT_TRACKING  = 8,
+        E_STOPPED_ON_ERROR = 9
+    };
+    GlassesEvent(int num, EType evt) 
+    : glasses_num(num), event(evt)
+    {}
+
+    int glasses_num;
+    EType event;
+};
+
 
 class Glasses 
 {
     friend T5Service;
+
+    protected:
+    struct SwapChainFrame {
+        SwapChainFrame();
+        T5_GlassesPose glasses_pose;
+        intptr_t left_eye_handle;
+        intptr_t right_eye_handle;
+    };
 
     public:
 	using Ptr = std::shared_ptr<Glasses>;
@@ -43,21 +74,17 @@ class Glasses
         Right
     };
 
-    Glasses(const std::string& id);
-
-    ~Glasses();
+    Glasses(const std::string_view id);
+    virtual ~Glasses();
 
     const std::string get_id();    
     const std::string get_name();
-    bool is_tracking();
     bool is_connected();
+    bool is_tracking();
     
-    uint32_t get_current_state();
-    uint32_t get_changed_state();
-
-    bool allocate_handle(T5_Context context);
+   bool allocate_handle(T5_Context context);
     void destroy_handle();
-    void connect(std::string application_name);
+    void connect(const std::string_view application_name);
     void disconnect();
 
     float get_ipd();
@@ -68,12 +95,16 @@ class Glasses
 
     void get_glasses_position(float& out_pos_x, float& out_pos_y, float& out_pos_z);
     void get_glasses_orientation(float& out_quat_x, float& out_quat_y, float& out_quat_z, float& out_quat_w);
-	void send_frame(intptr_t leftEyeTexture, intptr_t rightEyeTexture);
+
+    int get_current_frame_idx() { return _current_frame_idx; }
+	void send_frame();
 
     void set_upside_down_texture(bool is_upside_down);
 
     bool update_connection();
     bool update_tracking();
+
+   	void get_events(int index, std::vector<GlassesEvent>& out_events);
 
 	size_t get_num_wands() { return _wand_list.size(); }
 
@@ -86,8 +117,17 @@ class Glasses
     void get_wand_stick(size_t wand_num, float& out_stick_x, float& out_stick_y);
     void get_wand_buttons(size_t wand_num, WandButtons& buttons);
 
+protected:
+    void set_swap_chain_size(int size);
+    void set_swap_chain_texture_handles(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle);
 
+    virtual void on_glasses_reserved() {}
+    virtual void on_glasses_released() {}
+    virtual void on_glasses_dropped() {}
+    virtual void on_tracking_updated() {}
+    virtual void on_send_frame(int swap_chain_idx) {}
 
+    GlassesFlags::FlagType get_current_state();
 private:
 
 	CotaskPtr monitor_connection();
@@ -106,6 +146,9 @@ private:
 
 	void get_eye_position(Eye eye, T5_Vec3& pos);
 
+    void begin_reserved_state();
+    void end_reserved_state();
+
 	private:
 
 	Scheduler::Ptr _scheduler; 
@@ -116,7 +159,8 @@ private:
 	std::string _friendly_name;
 	T5_Glasses _glasses_handle = nullptr;
 
-	T5_GlassesPose _glasses_pose;
+    int _current_frame_idx = 0;
+    std::vector<SwapChainFrame> _swap_chain_frames;
 
 	float _ipd = 0.059f;
 
@@ -142,24 +186,14 @@ inline const std::string Glasses::get_name() {
     return _friendly_name;
 }
 
-inline bool Glasses::is_tracking() 
-{ 
-    return _state.is_current(GlassesState::TRACKING); 
-}
-
 inline bool Glasses::is_connected() 
 { 
     return _state.is_current(GlassesState::CONNECTED); 
 }
 
-inline uint32_t Glasses::get_current_state() 
+inline bool Glasses::is_tracking() 
 { 
-    return _state.get_current(); 
-}
-
-inline uint32_t Glasses::get_changed_state() 
-{ 
-    return _state.get_then_update_changes(); 
+    return is_connected() && _state.is_current(GlassesState::TRACKING); 
 }
 
 inline float Glasses::get_ipd()
@@ -182,27 +216,9 @@ inline void Glasses::set_upside_down_texture(bool is_upside_down) {
     _is_upside_down_texture = is_upside_down;
 }
 
-struct GlassesEvent {
-    enum EType
-    {
-        E_NONE          = 0,
-        E_ADDED         = 1,
-        E_LOST          = 2,
-        E_AVAILABLE     = 3,
-        E_UNAVAILABLE   = 4,
-        E_CONNECTED     = 5,
-        E_DISCONNECTED  = 6,
-        E_TRACKING      = 7,
-        E_NOT_TRACKING  = 8,
-        E_STOPPED_ON_ERROR = 9
-    };
-    GlassesEvent(int num, EType evt) 
-    : glasses_num(num), event(evt)
-    {}
-
-    int glasses_num;
-    EType event;
-};
+inline GlassesFlags::FlagType Glasses::get_current_state() {
+    return _state.get_current();
+}
 
 
 }

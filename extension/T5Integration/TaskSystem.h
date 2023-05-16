@@ -6,10 +6,8 @@
 #include <condition_variable>
 #include <memory>
 #include <list>
-#if __cplusplus >= 202002L
 #include <coroutine>
 #include <exception>
-#endif
 
 namespace TaskSystem {
 
@@ -103,7 +101,6 @@ private:
 inline Task::Task()
 	: _status(run_now) {}
 
-#if __cplusplus >= 202002L
 
 class CotaskPtr;
 struct CotaskPromiseType {
@@ -243,8 +240,6 @@ inline TaskStatus Cotask::get_status() {
 		return promise._sub_task->get_status();
 	return promise._status;
 }
-
-#endif // __cplusplus >= 202002L
 
 template<typename T, typename F>
 void splice_if(std::list<T>& from_list, std::list<T>& to_list, F pred) {

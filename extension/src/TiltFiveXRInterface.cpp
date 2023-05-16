@@ -11,14 +11,15 @@ using Eye = GodotT5Integration::Glasses::Eye;
 
 void TiltFiveXRInterface::_bind_methods() {
 	// Methods.
-	// ClassDB::bind_method(D_METHOD("simple_func"), &Example::simple_func);
-
-	// Properties.
 
 	ClassDB::bind_method(D_METHOD("start_service", "application_id", "application_version"), &TiltFiveXRInterface::start_service);
+	ClassDB::bind_method(D_METHOD("stop_service"), &TiltFiveXRInterface::stop_service);
 	ClassDB::bind_method(D_METHOD("reserve_glasses", "glasses_id", "display_name"), &TiltFiveXRInterface::reserve_glasses);
+	ClassDB::bind_method(D_METHOD("start_display", "glasses_id", "viewport", "xr_origin"), &TiltFiveXRInterface::start_display);
+	ClassDB::bind_method(D_METHOD("stop_display", "glasses_id"), &TiltFiveXRInterface::stop_display);
 	ClassDB::bind_method(D_METHOD("release_glasses", "glasses_id"), &TiltFiveXRInterface::release_glasses);
 
+	// Properties.
 
 	// Signals.
 	ADD_SIGNAL(MethodInfo("glasses_event", PropertyInfo(Variant::STRING, "glasses_id"), PropertyInfo(Variant::INT, "event")));
@@ -28,6 +29,43 @@ void TiltFiveXRInterface::_bind_methods() {
 	// BIND_ENUM_CONSTANT(FIRST);
 }
 
+
+
+TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_entry(StringName glasses_id) {
+	for(auto& entry : _glasses_index) {
+		if(glasses_id == entry.id) {
+			return &entry;
+		}
+	}	
+	return nullptr;
+}
+
+
+
+TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_by_render_target(RID test_render_target) {
+	auto render_server = RenderingServer::get_singleton();
+
+	for(auto& entry : _glasses_index) {
+		auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
+		if(!viewport) continue;
+        auto glasses_render_target = render_server->viewport_get_render_target(viewport->get_viewport_rid());   
+        if(test_render_target == glasses_render_target) {    
+            return &entry;
+        }
+	}
+	return nullptr;
+}
+
+TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_by_viewport(RID test_viewport) {
+	for(auto& entry : _glasses_index) {
+		auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
+		if(!viewport) continue;
+        if(test_viewport == viewport->get_viewport_rid()) {    
+            return &entry;
+        }
+	}
+	return nullptr;
+}
 
 bool TiltFiveXRInterface::setup() {
 	xr_server = XRServer::get_singleton();
@@ -46,63 +84,98 @@ void TiltFiveXRInterface::teardown() {
 		xr_server->remove_interface(this);
 
 	t5_service.reset();
+
+	xr_server = nullptr;
 }
 
 bool TiltFiveXRInterface::start_service(const String application_id, const String application_version)
 {
     if(!setup()) return false;
-	
-    bool is_started = t5_service->start_service(application_id.ascii().get_data(), application_version.ascii().get_data());
+
+	auto ai = application_id.ascii();
+	auto av = application_version.ascii();
+
+    bool is_started = t5_service->start_service(ai.get_data(), av.get_data());
 	if(is_started)
 		initialize();
 	return is_started;
 }
 
-void TiltFiveXRInterface::reserve_glasses(const String glasses_id, const String display_name) 
+void TiltFiveXRInterface::stop_service()
 {
+	if(t5_service->is_service_started()) {
+		set_primary(false);
+		uninitialize();
+		t5_service->stop_service();
+	}
+
+	teardown();
+}
+
+void TiltFiveXRInterface::reserve_glasses(const StringName glasses_id, const String display_name) {
     if(!t5_service) return;
 
-    int glasses_idx;
-    if(try_find_glasses_idx(glasses_id, glasses_idx)) {
-        t5_service->connect_glasses(glasses_idx, display_name.ascii().get_data());
-    }
-    else {
-        auto msg = "Unknown glasses id " + glasses_id;
-        LOG_ERROR(msg.ascii().get_data());
-    }
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
+
+	auto dn = display_name.ascii();
+	t5_service->reserve_glasses(entry->idx, dn.get_data());
 }
 
-void TiltFiveXRInterface::release_glasses(const String glasses_id)
-{
+void TiltFiveXRInterface::start_display(const StringName glasses_id, Variant vobj, Variant oobj) {
     if(!t5_service) return;
 
-    int glasses_idx;
-    if(try_find_glasses_idx(glasses_id, glasses_idx)) {
-        t5_service->disconnect_glasses(glasses_idx);
-    }
-    else {
-        auto msg = "Unknown glasses id " + glasses_id;
-        LOG_ERROR(msg.ascii().get_data());
-    }
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
+
+	auto viewport = Object::cast_to<SubViewport>(vobj);
+	auto xr_origin = Object::cast_to<XROrigin3D>(oobj);
+	ERR_FAIL_NULL_MSG(viewport, "Parameter 2 is not a SubViewport");
+	ERR_FAIL_NULL_MSG(xr_origin, "Parameter 3 is not a XROrigin3D");
+
+	_start_display(*entry, viewport, xr_origin);
 }
 
-void TiltFiveXRInterface::add_glasses(int glasses_idx) {
-    if(glasses_ids.size() <= glasses_idx)
-        glasses_ids.resize(glasses_idx + 1);
-    glasses_ids[glasses_idx] = t5_service->get_glasses_id(glasses_idx);
+void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry& entry, SubViewport* viewport, XROrigin3D* xr_origin) {
+	auto glasses = entry.glasses.lock();
+	if(!glasses->is_reserved()) {
+		WARN_PRINT("Glasses need to be reserved to display viewport");
+		return;
+	}
+	entry.viewport_id = viewport->get_instance_id();
+	entry.xr_origin_id = xr_origin->get_instance_id();
+
+	viewport->set_use_xr(true);
+	viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_ALWAYS);
 }
 
-bool TiltFiveXRInterface::try_find_glasses_idx(const String& glasses_id, int& out_glasses_idx) {
-    for(out_glasses_idx = 0; out_glasses_idx < glasses_ids.size(); ++out_glasses_idx)
-    {
-        if(glasses_id == glasses_ids[out_glasses_idx].c_str())
-            return true;
-    }
-    return false;
+void TiltFiveXRInterface::stop_display(const StringName glasses_id) {
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
+	_stop_display(*entry);
+}
+
+
+void TiltFiveXRInterface::_stop_display(GlassesIndexEntry& entry) {
+	auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
+	if(viewport) {
+		viewport->set_use_xr(false);
+		viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_DISABLED);
+	}
+	entry.viewport_id = ObjectID();
+	entry.xr_origin_id = ObjectID();
+}
+
+void TiltFiveXRInterface::release_glasses(const StringName glasses_id) {
+    if(!t5_service) return;
+
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
+	_stop_display(*entry);
+	t5_service->release_glasses(entry->idx);
 }
 
 StringName TiltFiveXRInterface::_get_name() const {
-	// this currently fails to return because we loose our data before it ends up in the callers hands...
 	StringName name("TiltFive");
 	return name;
 }
@@ -112,22 +185,19 @@ uint32_t TiltFiveXRInterface::_get_capabilities() const {
 }
 
 bool TiltFiveXRInterface::_is_initialized() const {
-	return initialised;
+	return _initialised;
 }
 
 bool TiltFiveXRInterface::_initialize() {
-	if (!initialised) {
-		initialised = ((bool)t5_service) && xr_server;
+	if (!_initialised) {
+		_initialised = ((bool)t5_service) && xr_server;
 	}
-	return initialised;
+	return _initialised;
 }
 
 void TiltFiveXRInterface::_uninitialize() {
-	if (initialised) {
-
-		initialised = false;
-		xr_server = nullptr;
-        t5_service.reset();
+	if (_initialised) {
+		_initialised = false;
 	}
 }
 
@@ -140,11 +210,19 @@ XRInterface::PlayAreaMode TiltFiveXRInterface::_get_play_area_mode() const {
 }
 
 XRInterface::TrackingStatus TiltFiveXRInterface::_get_tracking_status() const {
-	return t5_service->is_tracking() ? XRInterface::TrackingStatus::XR_NORMAL_TRACKING : XRInterface::TrackingStatus::XR_NOT_TRACKING;
+	if(!_render_glasses) {
+		WARN_PRINT_ONCE("Glasses not set");
+		return XRInterface::TrackingStatus::XR_NOT_TRACKING;
+	}
+	return _render_glasses->is_tracking() ? XRInterface::TrackingStatus::XR_NORMAL_TRACKING : XRInterface::TrackingStatus::XR_NOT_TRACKING;
 }
 
 Vector2 TiltFiveXRInterface::_get_render_target_size() {
-    return t5_service->get_display_size();
+	if(!_render_glasses) {
+		WARN_PRINT_ONCE("Glasses not set");
+		return Vector2(1216, 768);
+	}
+    return _render_glasses->get_display_size();
 }
 
 uint32_t TiltFiveXRInterface::_get_view_count() {
@@ -152,33 +230,49 @@ uint32_t TiltFiveXRInterface::_get_view_count() {
 }
 
 Transform3D TiltFiveXRInterface::_get_camera_transform() {
-	if (!initialised) {
+	if (!_initialised) {
+		return Transform3D();
+	}
+	if(!_render_glasses) {
+		WARN_PRINT_ONCE("Glasses not set");
 		return Transform3D();
 	}
 
-	auto hmd_transform = t5_service->get_head_transform();
+	auto hmd_transform = _render_glasses->get_head_transform();
 
 	return xr_server->get_reference_frame() * hmd_transform;
 }
 
 Transform3D TiltFiveXRInterface::_get_transform_for_view(uint32_t view, const Transform3D &origin_transform) {
-	if (!initialised) {
+	if (!_initialised) {
+		return Transform3D();
+	}
+	if(!_render_glasses) {
+		WARN_PRINT_ONCE("Glasses not set");
 		return Transform3D();
 	}
 	auto world_scale = xr_server->get_world_scale();
 
-	auto eye_transform = t5_service->get_eye_transform(view == 0 ? Eye::Left : Eye::Right);
+	auto eye_transform = _render_glasses->get_eye_transform(view == 0 ? Eye::Left : Eye::Right);
 	eye_transform.scale(Vector3(world_scale, world_scale, world_scale));
 
-	return eye_transform * origin_transform;
+	return origin_transform * eye_transform;
 }
 
 PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view, double aspect, double z_near, double z_far) {
 	PackedFloat64Array arr;
 	arr.resize(16); // 4x4 matrix
 
+	if (!_initialised) {
+		return arr;
+	}
+	if(!_render_glasses) {
+		WARN_PRINT_ONCE("Glasses not set");
+		return arr;
+	}
+
     Projection cm;
-    cm.set_perspective(t5_service->get_fov(), aspect, z_near, z_far);
+    cm.set_perspective(_render_glasses->get_fov(), aspect, z_near, z_far);
 	//auto offset = t5_service->get_eye_offset(p_view == 0 ? Eye::Left : Eye::Right);
 
 	//cm = cm * offset;
@@ -189,6 +283,26 @@ PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view
 	}
 
     return arr;
+}
+
+bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
+	ERR_FAIL_COND_V_MSG(_render_glasses, "Rendering viewport already set", false);
+	auto entry = lookup_glasses_by_render_target(render_target);
+	ERR_FAIL_COND_V_MSG(!entry, "Viewport does not have associated glasses", false);
+
+	_render_glasses = entry->glasses.lock();
+
+    if(!_render_glasses->is_reserved()) 
+		return false;
+
+	auto xr_origin = Object::cast_to<XROrigin3D>(ObjectDB::get_instance(entry->xr_origin_id));
+	if(!xr_origin)
+		return false;
+
+	xr_server->set_world_origin(xr_origin->get_global_transform());
+	
+	entry->rendering = true;
+	return true;
 }
 
 void TiltFiveXRInterface::_post_draw_viewport(const RID &render_target, const Rect2 &screen_rect) {
@@ -202,21 +316,27 @@ void TiltFiveXRInterface::_post_draw_viewport(const RID &render_target, const Re
 
 	Vector2 eye_center(0.0, 0.0);
 
-	add_blit(render_target, src_rect, screen_rect, true, 0, false, eye_center, 0, 0, 0, 0);
-
+	//add_blit(render_target, src_rect, screen_rect, true, 0, false, eye_center, 0, 0, 0, 0);
+	_render_glasses.reset();
 }
 
 void TiltFiveXRInterface::_end_frame() {
-	t5_service->send_frame();
+
+	for(auto& entry : _glasses_index) {
+		if(entry.rendering) {
+			entry.glasses.lock()->send_frame();
+			entry.rendering = false;
+		}
+	}	
 }
 
 PackedStringArray TiltFiveXRInterface::_get_suggested_tracker_names() const {
 	PackedStringArray tracker_names;
 	
-	tracker_names.append("tilt_five_wand_1");
-	tracker_names.append("tilt_five_wand_2");
-	tracker_names.append("tilt_five_wand_3");
-	tracker_names.append("tilt_five_wand_4");
+	tracker_names.append("glasses/tilt_five_wand_1");
+	tracker_names.append("glasses/tilt_five_wand_2");
+	tracker_names.append("glasses/tilt_five_wand_3");
+	tracker_names.append("glasses/tilt_five_wand_4");
 
 	return tracker_names;
 }
@@ -238,32 +358,52 @@ void TiltFiveXRInterface::_process() {
     t5_service->update_connection();
     t5_service->update_tracking();
 
-    auto& events = t5_service->get_events();
-    for(int i = 0; i < events.size(); i++) 
+	_events.clear();
+    t5_service->get_events(_events);
+    for(int i = 0; i < _events.size(); i++) 
     {
-        if(events[i].event == GlassesEvent::E_CONNECTED) {
-            ++reserved_glasses_count;
-			if(reserved_glasses_count > 0 && !is_primary()) {
-				set_primary(true);
-			}
+		auto glasses_idx = _events[i].glasses_num;
+		switch (_events[i].event)
+		{
+			case GlassesEvent::E_ADDED: {
+				if(_glasses_index.size() != glasses_idx) {
+					WARN_PRINT("Glasses index");
+				}
+				_glasses_index.resize(glasses_idx + 1);
+				auto glasses = t5_service->get_glasses(glasses_idx);
+				_glasses_index[glasses_idx].glasses = glasses;
+				_glasses_index[glasses_idx].id = glasses->get_id().c_str();
+				_glasses_index[glasses_idx].idx = glasses_idx;
+				_glasses_index[glasses_idx].rendering = false;
+
+			} break;
+			case GlassesEvent::E_CONNECTED: {
+				++reserved_glasses_count;
+				if(reserved_glasses_count > 0 && !is_primary()) {
+					set_primary(true);
+				}
+			} break;
+			case GlassesEvent::E_DISCONNECTED: {
+				_stop_display(_glasses_index[glasses_idx]);
+				--reserved_glasses_count;
+				if(reserved_glasses_count == 0 && is_primary()) {
+					set_primary(false);
+				}
+			} break;
+			case GlassesEvent::E_LOST:
+			case GlassesEvent::E_UNAVAILABLE: {
+				_stop_display(_glasses_index[glasses_idx]);
+			} break;
+		
+			default: break;
 		}
-        else if(events[i].event == GlassesEvent::E_DISCONNECTED) {
-            --reserved_glasses_count;
-			if(reserved_glasses_count == 0 && is_primary()) {
-				set_primary(false);
-    		}
-		}
-        else if(events[i].event == GlassesEvent::E_ADDED)
-            add_glasses(events[i].glasses_num);
-        emit_signal("glasses_event", glasses_ids[events[i].glasses_num].c_str(), (int)events[i].event);
+	    emit_signal("glasses_event", _glasses_index[_events[i].glasses_num].id, (int)_events[i].event);
     }
 }
 
 RID TiltFiveXRInterface::_get_color_texture() {
-	RID color_texture;
-	if(t5_service)
-		color_texture = t5_service->get_color_texture();
-	return color_texture;		
+	ERR_FAIL_COND_V_MSG(!_render_glasses, RID(), "Glasses not set");
+	return _render_glasses->get_color_texture();	
 }
 
 	
@@ -272,7 +412,7 @@ bool TiltFiveXRInterface::_get_anchor_detection_is_enabled() const {
 }
 
 void TiltFiveXRInterface::_set_anchor_detection_is_enabled(bool enabled) {
-
+	ERR_FAIL_COND_MSG(enabled, "Tilt Five does not support anchors");
 }
 
 int32_t TiltFiveXRInterface::_get_camera_feed_id() const {
@@ -283,5 +423,5 @@ TiltFiveXRInterface::TiltFiveXRInterface() {
 }
 
 TiltFiveXRInterface::~TiltFiveXRInterface() {
-
+	LOG_CHECK_POINT;
 }

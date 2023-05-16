@@ -43,9 +43,6 @@ TaskStatus Task::get_status() {
 }
 
 
-#if __cplusplus >= 202002L
-
-
 TaskStatus Cotask::run_background_task() {
 	auto& promise = _handle.promise();
 	while(true) {
@@ -94,7 +91,6 @@ TaskStatus Cotask::run_foreground_task() {
 	}
 }
 
-#endif
 
 Scheduler::Scheduler() {}
 
@@ -185,7 +181,7 @@ void Scheduler::do_background_tasks() {
 			std::lock_guard lk(_background_wait_mutex);
 			_background_wait_list.splice(_background_wait_list.end(), to_background);
 		}
-		// move foreground tasks back to the forground list
+		// move foreground tasks back to the foreground list
 		std::list<TaskBase::Ptr> to_foreground;
 		splice_if(do_list, to_foreground, [](const TaskBase::Ptr& task) { return task->is_foreground(); });
 		{
@@ -257,7 +253,7 @@ void Scheduler::do_foreground_tasks() {
 		std::lock_guard lk(_background_wait_mutex);
 		_background_wait_list.splice(_background_wait_list.end(), to_background);
 	}
-	// move foreground tasks back to the forground list
+	// move foreground tasks back to the foreground list
 	std::list<TaskBase::Ptr> to_foreground;
 	splice_if(do_list, to_foreground, [](const TaskBase::Ptr& task) { return task->is_foreground(); });
 	{

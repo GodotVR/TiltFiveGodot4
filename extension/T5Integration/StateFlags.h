@@ -7,15 +7,18 @@ class StateFlags
 {
 	static_assert(std::is_integral_v<T>);
 
-	using FlagType = T;
 	public:
 
-	std::atomic<T> _current;
-	FlagType _previous;
+	using FlagType = T;
 
 	FlagType get_current()
 	{
 		return _current.load();
+	}
+
+	FlagType get_changes() const
+	{
+		return (_current.load() ^ _previous);
 	}
 
 	void set(FlagType state)
@@ -52,23 +55,12 @@ class StateFlags
 		return ((_current.load() ^ _previous) & state) != 0;
 	}
 
-	bool test_then_update_changes(FlagType state)
+	void reset_changes()
 	{
-		FlagType current = _current.load();
-		bool rtn = ((current ^ _previous) & state) != 0;
-		_previous = current & state | _previous & ~state;
-		return rtn;
-	}
-
-	FlagType get_changes() const
-	{
-		return (_current.load() ^ _previous);
-	}
-
-	FlagType get_then_update_changes()
-	{
-		auto ret = get_changes();
 		_previous = _current;
-		return ret;
 	}
+
+	private:
+	std::atomic<FlagType> _current;
+	FlagType _previous;
 };

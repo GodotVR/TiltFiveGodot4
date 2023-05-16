@@ -423,5 +423,4 @@ TiltFiveXRInterface::TiltFiveXRInterface() {
 }
 
 TiltFiveXRInterface::~TiltFiveXRInterface() {
-	LOG_CHECK_POINT;
 }

@@ -31,9 +31,9 @@ For the extension godot_cpp will need to be built with the extension api json fi
 
 Scons should be run from an environment that has the Microsoft x64 development tools setup.
 
-> `scons target=[debug | release]` Build the shared library. Result is in `build\bin`
+> `scons target=[template_debug | template_release]` Build the shared library. Result is in `build\bin`
 
-> `scons example target=[debug | release]` Copy build products to the `example\addons\tilt-five`
+> `scons example target=[template_debug | template_release]` Copy build products to the `example\addons\tilt-five`
 
 ## Basic usage 
 

@@ -1,0 +1,155 @@
+# Workflow to automatically compile a Linux/Windows library on commit/push
+name: Build on push
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events, but only for the master branch we'll create .zip files
+on:
+  [push, pull_request]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This job builds the plugin for our target platforms
+  build:
+    name: Building for ${{ matrix.platform }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # Unsupported platforms are commented out.
+          #- name: 🐧 Linux (GCC)
+          #  os: ubuntu-20.04
+          #  platform: linux
+          #  artifact-name: gdtiltfive.linux
+          #  artifact-path: build/bin/libgdtiltfive.linux.*
+
+          - name: 🏁 Windows (x86_64, MSVC)
+            os: windows-2019
+            platform: windows
+            artifact-name: gdtiltfive.windows
+            artifact-path: |
+              build/bin/libgdtiltfive.windows.template_debug.x86_64.dll
+              build/bin/libgdtiltfive.windows.template_release.x86_64.dll
+              extension/TiltFiveNDK/lib/win64/TiltFiveNative.dll
+
+          #- name: 🍎 macOS (universal)
+          #  os: macos-11
+          #  platform: macos
+          #  flags: arch=universal
+          #  artifact-name: gdtiltfive.macos
+          #  artifact-path: build/bin/libgdtiltfive.macos.*
+
+          #- name: 🤖 Android (arm64)
+          #  os: ubuntu-20.04
+          #  platform: android
+          #  flags: ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64
+          #  artifact-name: gdtiltfive.android
+          #  artifact-path: build/bin/libgdtiltfive.android.*
+
+          #- name: 🍏 iOS (arm64)
+          #  os: macos-11
+          #  platform: ios
+          #  flags: arch=arm64
+          #  artifact-name: gdtiltfive.ios
+          #  artifact-path: build/bin/libgdtiltfive.ios.*
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Setup actions
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Set up Python (for SCons)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Linux dependencies
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qqq build-essential pkg-config
+
+      - name: Install scons
+        run: |
+          python -m pip install scons==4.0.0
+
+      - name: Build debug build
+        run: |
+          scons platform=${{ matrix.platform }} target=template_debug custom_api_file=patches/extension_api.json ${{ matrix.flags }}
+
+      - name: Build release build
+        run: |
+          scons platform=${{ matrix.platform }} target=template_release custom_api_file=patches/extension_api.json ${{ matrix.flags }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-path }}
+          if-no-files-found: error
+
+  # This job collects the build output and assembles the final asset (artifact)
+  asset:
+    name: Assembling the asset (artifact)
+    runs-on: ubuntu-20.04
+    needs: build
+    permissions:
+      contents: write
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags'))
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Setup actions
+        uses: actions/checkout@v3
+        with:
+          path: source
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+      - name: Copy files to destination
+        run: |
+          mkdir plugin
+          mkdir plugin/addons
+          cp -r source/example/addons/tiltfive plugin/addons
+          mkdir plugin/addons/tiltfive/bin
+          # cp gdtiltfive.linux/*.so plugin/addons/tiltfive/bin/
+          cp gdtiltfive.windows/build/bin/*.dll plugin/addons/tiltfive/bin/
+          cp gdtiltfive.windows/extension/TiltFiveNDK/lib/win64/*.dll plugin/addons/tiltfive/bin/
+          # cp gdtiltfive.android/*.so plugin/addons/tiltfive/bin/
+          # cp gdtiltfive.ios/*.dylib plugin/addons/tiltfive/bin/
+          # cp -R gdtiltfive.macos/libgdtiltfive.macos.* plugin/addons/tiltfive/bin/
+      - name: Calculate GIT short ref
+        run: |
+          cd source
+          echo "GITHUB_SHA_SHORT=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
+          cd ..
+        if: github.ref == 'refs/heads/master'
+      - name: Get tag name
+        run: |
+          echo "GITHUB_SHA_SHORT=$(echo ${GITHUB_REF##*/})" >> $GITHUB_ENV
+        if: startsWith(github.ref, 'refs/tags')
+      - name: Clean up extracted files
+        run: |
+          # rm -rf gdtiltfive.linux
+          rm -rf gdtiltfive.windows
+          # rm -rf gdtiltfive.android
+          # rm -rf gdtiltfive.macos
+          # rm -rf gdtiltfive.ios
+          rm -rf source
+          rm -rf .git
+          mv plugin gdtiltfive_${{ env.GITHUB_SHA_SHORT }}
+      - name: Zip asset
+        run: |
+          zip -qq -r gdtiltfive.zip .
+      - name: Create and upload asset
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "gdtiltfive.zip"
+          omitNameDuringUpdate: true
+          omitBodyDuringUpdate: true
+          omitPrereleaseDuringUpdate : true
+          token: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')

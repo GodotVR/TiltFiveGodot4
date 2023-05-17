@@ -48,10 +48,9 @@ Scons should be run from an environment that has the Microsoft x64 development t
 
 ## TODO
 
-- Wand tacking
-- Input
-- Support for multiple glasses
-- Better docs and examples
+- API for tangible camera on the glasses
+- Better docs
+- Examples
 
 ## Acknowledgments
 

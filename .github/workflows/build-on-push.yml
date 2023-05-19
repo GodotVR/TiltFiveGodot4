@@ -113,6 +113,9 @@ jobs:
           mkdir plugin
           mkdir plugin/addons
           cp -r source/example/addons/tiltfive plugin/addons
+          cp source/LICENSE.txt plugin/addons/tiltfive
+          cp source/CONTRIBUTORS.md plugin/addons/tiltfive
+          cp source/CHANGES.md plugin/addons/tiltfive
           mkdir plugin/addons/tiltfive/bin
           # cp gdtiltfive.linux/*.so plugin/addons/tiltfive/bin/
           cp gdtiltfive.windows/build/bin/*.dll plugin/addons/tiltfive/bin/

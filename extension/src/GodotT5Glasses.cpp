@@ -12,13 +12,15 @@ using godot::Vector3;
 using godot::Quaternion;
 using godot::Variant;
 using godot::XRServer;
+using godot::Image;
+using godot::TypedArray;
+using godot::ImageTexture;
 using T5Integration::WandButtons;
 
 namespace GlassesState = T5Integration::GlassesState;
 namespace WandState = T5Integration::WandState;
 
 namespace GodotT5Integration {
-
 
 GodotT5Glasses::GodotT5Glasses(std::string_view id) 
 : Glasses(id) {
@@ -31,27 +33,27 @@ void GodotT5Glasses::SwapChainTextures::allocate_textures(int width, int height)
 
     deallocate_textures();
 
-    render = render_server->texture_create_render_texture(width, height, 2);
-    left_eye = render_server->texture_create_render_texture(width, height, 1);
-    right_eye = render_server->texture_create_render_texture(width, height, 1);
+    Ref<Image> dummy_image = Image::create(width, height, false, godot::Image::FORMAT_RGBA8);
+    godot::Color bg(0,0,0);
+    dummy_image->fill(bg);
+
+    left_eye_tex = ImageTexture::create_from_image(dummy_image);
+    right_eye_tex = ImageTexture::create_from_image(dummy_image);
+
+    TypedArray<Image> image_arr;
+    image_arr.append(dummy_image);
+    image_arr.append(dummy_image);
+
+    render_tex.instantiate();
+    render_tex->create_from_images(image_arr);
 }
 
 void GodotT5Glasses::SwapChainTextures::deallocate_textures() {
     auto render_server = RenderingServer::get_singleton();
     
-    if(right_eye.is_valid()) {
-        render_server->free_rid(right_eye);
-        right_eye = RID();
-    }
-    if(left_eye.is_valid()) {
-        render_server->free_rid(left_eye);
-        left_eye = RID();
-    }
-    if(render.is_valid()){
-        render_server->free_rid(render);
-        render = RID();
-    }
-
+    render_tex.unref();
+    right_eye_tex.unref();
+    left_eye_tex.unref();
 }
 
 void GodotT5Glasses::allocate_textures() {
@@ -63,8 +65,8 @@ void GodotT5Glasses::allocate_textures() {
         _swap_chain_textures[i].allocate_textures(width, height);
         set_swap_chain_texture_handles(
             i,
-            render_server->texture_get_native_handle(_swap_chain_textures[i].left_eye),
-            render_server->texture_get_native_handle(_swap_chain_textures[i].right_eye));
+            render_server->texture_get_native_handle(_swap_chain_textures[i].left_eye_tex->get_rid()),
+            render_server->texture_get_native_handle(_swap_chain_textures[i].right_eye_tex->get_rid()));
     }
 }
 
@@ -104,8 +106,10 @@ void GodotT5Glasses::on_send_frame(int swap_chain_idx) {
     auto rendering_server = RenderingServer::get_singleton();
     auto& textures = _swap_chain_textures[swap_chain_idx];
 
-    rendering_server->texture_copy(textures.render, 0, 0, textures.left_eye, 0, 0);
-    rendering_server->texture_copy(textures.render, 0, 1, textures.right_eye, 0, 0);
+    auto rentex = textures.render_tex->get_rid();
+
+    rendering_server->texture_copy(rentex, 0, 0, textures.left_eye_tex->get_rid(), 0, 0);
+    rendering_server->texture_copy(rentex, 0, 1, textures.right_eye_tex->get_rid(), 0, 0);
 }
 
 bool GodotT5Glasses::is_in_use() {
@@ -167,8 +171,10 @@ Transform3D GodotT5Glasses::get_wand_transform(size_t wand_num) {
  
 RID GodotT5Glasses::get_color_texture() 
 { 
+    auto rendering_server = RenderingServer::get_singleton();
+
     int current_frame = get_current_frame_idx();
-    return _swap_chain_textures[current_frame].render;
+    return _swap_chain_textures[current_frame].render_tex->get_rid();
 }
 
 void GodotT5Glasses::add_tracker() {

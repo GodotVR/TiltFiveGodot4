@@ -3,6 +3,8 @@
 #include <godot_cpp/variant/transform3d.hpp>
 #include <godot_cpp/variant/rid.hpp>
 #include <godot_cpp/classes/ref.hpp>   
+#include <godot_cpp/classes/texture2d_array.hpp>
+#include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/xr_positional_tracker.hpp>  
 #include <godot_cpp/classes/global_constants.hpp> 
 
@@ -12,6 +14,8 @@ using godot::XRPositionalTracker;
 using godot::Vector2;
 using godot::Transform3D;
 using godot::StringName;
+using godot::ImageTexture;
+using godot::Texture2DArray;
 
 using T5Integration::Glasses;
 
@@ -31,9 +35,10 @@ namespace GodotT5Integration {
             void allocate_textures(int width, int height);
             void deallocate_textures();
 
-            RID render;
-            RID left_eye;
-            RID right_eye;
+            Ref<ImageTexture> left_eye_tex;
+            Ref<ImageTexture> right_eye_tex;
+
+            Ref<Texture2DArray> render_tex;
         };
 
         void allocate_textures();

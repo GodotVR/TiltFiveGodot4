@@ -80,6 +80,7 @@ class Glasses
     const std::string get_id();    
     const std::string get_name();
     bool is_connected();
+    bool is_available();
     bool is_tracking();
     
    bool allocate_handle(T5_Context context);
@@ -189,6 +190,11 @@ inline const std::string Glasses::get_name() {
 inline bool Glasses::is_connected() 
 { 
     return _state.is_current(GlassesState::CONNECTED); 
+}
+
+inline bool Glasses::is_available() 
+{ 
+    return !(_state.is_current(GlassesState::SUSTAIN_CONNECTION) || _state.is_current(GlassesState::UNAVAILABLE)); 
 }
 
 inline bool Glasses::is_tracking() 

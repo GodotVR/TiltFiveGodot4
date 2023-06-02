@@ -18,6 +18,8 @@ void TiltFiveXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("start_display", "glasses_id", "viewport", "xr_origin"), &TiltFiveXRInterface::start_display);
 	ClassDB::bind_method(D_METHOD("stop_display", "glasses_id"), &TiltFiveXRInterface::stop_display);
 	ClassDB::bind_method(D_METHOD("release_glasses", "glasses_id"), &TiltFiveXRInterface::release_glasses);
+	ClassDB::bind_method(D_METHOD("get_available_glasses_ids"), &TiltFiveXRInterface::get_available_glasses_ids);
+	ClassDB::bind_method(D_METHOD("get_reserved_glasses_ids"), &TiltFiveXRInterface::get_reserved_glasses_ids);
 
 	// Properties.
 
@@ -173,6 +175,30 @@ void TiltFiveXRInterface::release_glasses(const StringName glasses_id) {
 	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
 	_stop_display(*entry);
 	t5_service->release_glasses(entry->idx);
+}
+
+PackedStringArray TiltFiveXRInterface::get_available_glasses_ids() {
+    if(!t5_service) return PackedStringArray();
+	
+	PackedStringArray available_list;
+	for(int i = 0; i < t5_service->get_glasses_count(); i++) {
+		auto glasses = t5_service->get_glasses(i);
+		if(glasses->is_available())
+			available_list.append(glasses->get_id().c_str());
+	}
+	return available_list;
+}
+
+PackedStringArray TiltFiveXRInterface::get_reserved_glasses_ids() {
+    if(!t5_service) return PackedStringArray();
+	
+	PackedStringArray reserved_list;
+	for(int i = 0; i < t5_service->get_glasses_count(); i++) {
+		auto glasses = t5_service->get_glasses(i);
+		if(glasses->is_in_use())
+			reserved_list.append(glasses->get_id().c_str());
+	}
+	return reserved_list;
 }
 
 StringName TiltFiveXRInterface::_get_name() const {

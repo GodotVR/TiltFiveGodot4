@@ -78,11 +78,11 @@ jobs:
 
       - name: Build debug build
         run: |
-          scons platform=${{ matrix.platform }} target=template_debug custom_api_file=patches/extension_api.json ${{ matrix.flags }}
+          scons platform=${{ matrix.platform }} target=template_debug ${{ matrix.flags }}
 
       - name: Build release build
         run: |
-          scons platform=${{ matrix.platform }} target=template_release custom_api_file=patches/extension_api.json ${{ matrix.flags }}
+          scons platform=${{ matrix.platform }} target=template_release ${{ matrix.flags }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3

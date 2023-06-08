@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/xr_server.hpp>
 #include <godot_cpp/core/error_macros.hpp> 
 #include <Wand.h>
+#include <ObjectRegistry.h>
 
 using godot::RenderingServer;
 using godot::Vector3;
@@ -58,15 +59,20 @@ void GodotT5Glasses::SwapChainTextures::deallocate_textures() {
 
 void GodotT5Glasses::allocate_textures() {
     auto render_server = RenderingServer::get_singleton();
+    auto service = T5Integration::ObjectRegistry::service();
 
     int width, height;
     Glasses::get_display_size(width, height);
     for(int i = 0; i < _swap_chain_textures.size(); i++) {
         _swap_chain_textures[i].allocate_textures(width, height);
-        set_swap_chain_texture_handles(
+        if(service->is_image_texture_array()) {
+            set_swap_chain_texture_array(i, render_server->texture_get_native_handle(_swap_chain_textures[i].render_tex->get_rid()));
+        } else {
+            set_swap_chain_texture_pair(
             i,
             render_server->texture_get_native_handle(_swap_chain_textures[i].left_eye_tex->get_rid()),
             render_server->texture_get_native_handle(_swap_chain_textures[i].right_eye_tex->get_rid()));
+        }
     }
 }
 
@@ -77,7 +83,7 @@ void GodotT5Glasses::deallocate_textures() {
     Glasses::get_display_size(width, height);
     for(int i = 0; i < _swap_chain_textures.size(); i++) {
         _swap_chain_textures[i].deallocate_textures();
-        set_swap_chain_texture_handles(i, 0, 0);
+        set_swap_chain_texture_pair(i, 0, 0);
     }
 }
 
@@ -103,14 +109,17 @@ void GodotT5Glasses::on_tracking_updated() {
 }
 
 void GodotT5Glasses::on_send_frame(int swap_chain_idx) {
-    auto rendering_server = RenderingServer::get_singleton();
+/*     auto rendering_server = RenderingServer::get_singleton();
     auto& textures = _swap_chain_textures[swap_chain_idx];
 
+    auto service = T5Integration::ObjectRegistry::service();
+    if(!service->is_image_texture_array()) {
     auto rentex = textures.render_tex->get_rid();
 
     rendering_server->texture_copy(rentex, 0, 0, textures.left_eye_tex->get_rid(), 0, 0);
     rendering_server->texture_copy(rentex, 0, 1, textures.right_eye_tex->get_rid(), 0, 0);
-}
+    }
+ */}
 
 bool GodotT5Glasses::is_in_use() {
     auto current_state = get_current_state();

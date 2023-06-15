@@ -16,9 +16,9 @@ enum GlassesEvent {
 	E_STOPPED_ON_ERROR = 9
 }
 
-const xr_origin_node := ^"XROrigin3D"
+const xr_origin_node := ^"Gameboard"
 
-const wand_node_list := [^"XROrigin3D/Wand_1", ^"XROrigin3D/Wand_2", ^"XROrigin3D/Wand_3", ^"XROrigin3D/Wand_4"]
+const wand_node_list := [^"Gameboard/Wand_1", ^"Gameboard/Wand_2", ^"Gameboard/Wand_3", ^"Gameboard/Wand_4"]
 
 var tilt_five_xr_interface: TiltFiveXRInterface 
 

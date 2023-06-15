@@ -1,8 +1,10 @@
-extends XROrigin3D
+extends TiltFiveGameboard
 
 var elapsed = 0.0
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _init():
+	print(gameboard_scale)
+
 func _process(delta):
 	elapsed += delta
 	position.x = sin(elapsed) * 1

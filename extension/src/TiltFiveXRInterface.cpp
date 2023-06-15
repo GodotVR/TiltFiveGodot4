@@ -1,5 +1,5 @@
 #include "TiltFiveXRInterface.h"
-
+#include "TiltFiveGameboard.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
@@ -322,13 +322,13 @@ bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
     if(!_render_glasses->is_reserved()) 
 		return false;
 
-	auto xr_origin = Object::cast_to<XROrigin3D>(ObjectDB::get_instance(entry->xr_origin_id));
+	auto xr_origin = Object::cast_to<TiltFiveGameboard>(ObjectDB::get_instance(entry->xr_origin_id));
 	if(!xr_origin)
 		return false;
 
 	xr_server->set_world_origin(xr_origin->get_global_transform());
-	xr_server->set_world_scale(xr_origin->get_world_scale());
-	
+	xr_server->set_world_scale(xr_origin->get_gameboard_scale());
+	 
 	entry->rendering = true;
 	return true;
 }

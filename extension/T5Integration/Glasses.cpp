@@ -128,11 +128,15 @@ namespace T5Integration {
 		_swap_chain_frames.resize(size);
 	}
 
-    void Glasses::set_swap_chain_texture_handles(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle) {
+    void Glasses::set_swap_chain_texture_pair(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle) {
 		_swap_chain_frames[swap_chain_idx].left_eye_handle = left_eye_handle;
 		_swap_chain_frames[swap_chain_idx].right_eye_handle = right_eye_handle;
 	}
 
+    void Glasses::set_swap_chain_texture_array(int swap_chain_idx, intptr_t array_handle) {
+		_swap_chain_frames[swap_chain_idx].right_eye_handle = 0;
+		_swap_chain_frames[swap_chain_idx].left_eye_handle = array_handle;
+	}
 
 	bool Glasses::allocate_handle(T5_Context context) {
 		T5_Result result; 
@@ -431,8 +435,11 @@ namespace T5Integration {
 
 	bool Glasses::initialize_graphics() {
 
+		auto service = ObjectRegistry::service();
+		auto graphics_api = service->get_graphics_api();
+		auto graphics_context = service->get_graphics_context_handle();
 		// t5 exclusivity group 3 - serialized in main thread
-		auto result = t5InitGlassesGraphicsContext(_glasses_handle, kT5_GraphicsApi_GL, nullptr);
+		auto result = t5InitGlassesGraphicsContext(_glasses_handle, graphics_api, graphics_context);
 		// T5_ERROR_INVALID_STATE seems to mean previously initialized
 		bool is_graphics_initialized = (result == T5_SUCCESS || result == T5_ERROR_INVALID_STATE);
 		if (!is_graphics_initialized) {

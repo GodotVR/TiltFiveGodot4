@@ -40,12 +40,12 @@ SAMPLES
   They have been tested with GCC 11.2.0, clang 13.0.0-2, and MSVC 19.30.30705,
   built as follows:
 
-  - `gcc -std=c11 sample.c -I .. ../lib/linux64/libTiltFiveNative.so`
-  - `g++ -std=c++11 sample.cpp -I .. ../lib/linux64/libTiltFiveNative.so -latomic`
-  - `clang -std=c11 sample.c -I .. ../lib/linux64/libTiltFiveNative.so`
-  - `clang++ -std=c++11 sample.cpp -I .. ../lib/linux64/libTiltFiveNative.so -latomic`
-  - `cl /std:c11 sample.c /MD /I .. ..\lib\win64\TiltFiveNative.dll.if.lib`
-  - `cl /std:c++14 sample.cpp /MD /EHsc /I .. ..\lib\win64\TiltFiveNative.dll.if.lib`
+  - `gcc -std=c11 sample.c -I .. ../lib/linux/x86_64/libTiltFiveNative.so`
+  - `g++ -std=c++11 sample.cpp -I .. ../lib/linux/x86_64/libTiltFiveNative.so -latomic`
+  - `clang -std=c11 sample.c -I .. ../lib/linux/x86_64/libTiltFiveNative.so`
+  - `clang++ -std=c++11 sample.cpp -I .. ../lib/linux/x86_64/libTiltFiveNative.so -latomic`
+  - `cl /std:c11 sample.c /MD /I .. ..\lib\win\x86_64\TiltFiveNative.dll.if.lib`
+  - `cl /std:c++14 sample.cpp /MD /EHsc /I .. ..\lib\win\x86_64\TiltFiveNative.dll.if.lib`
 
 CONTACT
 

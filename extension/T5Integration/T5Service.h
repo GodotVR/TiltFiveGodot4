@@ -29,6 +29,8 @@ protected:
 	virtual void connection_updated() {}
 	virtual void tracking_updated() {}
 
+	void set_graphics_context(const T5_GraphicsContextGL& opengl_context);
+	void set_graphics_context(const T5_GraphicsContextVulkan& vulkan_context);
 public:
 	using Ptr = std::shared_ptr<T5Service>;
 
@@ -56,6 +58,9 @@ public:
 	void update_tracking();
 	void get_events(std::vector<GlassesEvent>& out_events);
 
+	T5_GraphicsApi get_graphics_api() const;
+	void* get_graphics_context_handle();
+	bool is_image_texture_array() const;
 
 protected:
 
@@ -74,8 +79,40 @@ protected:
 	T5_Result _last_error;
 
 	Scheduler::Ptr _scheduler;
+	T5_GraphicsApi _graphics_api;
+	T5_GraphicsContextGL _opengl_graphics_context;
+	T5_GraphicsContextVulkan _vulkan_graphics_context;
 };
 
+inline void T5Service::set_graphics_context(const T5_GraphicsContextGL& opengl_context) {
+	_graphics_api = T5_GraphicsApi::kT5_GraphicsApi_GL;
+	_opengl_graphics_context = opengl_context;
+}
+inline void T5Service::set_graphics_context(const T5_GraphicsContextVulkan& vulkan_context) {
+	_graphics_api = T5_GraphicsApi::kT5_GraphicsApi_Vulkan;
+	_vulkan_graphics_context = vulkan_context;
+}
+inline T5_GraphicsApi T5Service::get_graphics_api() const {
+	return _graphics_api;
+}
+inline bool T5Service::is_image_texture_array() const {
+	if (_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_GL && 
+		_opengl_graphics_context.textureMode == T5_GraphicsApi_GL_TextureMode::kT5_GraphicsApi_GL_TextureMode_Array)
+		return true;
+	return false;
+}
+inline void* T5Service::get_graphics_context_handle() {
+	switch (_graphics_api)
+	{
+	case T5_GraphicsApi::kT5_GraphicsApi_GL:
+		return &_opengl_graphics_context;
+	case T5_GraphicsApi::kT5_GraphicsApi_Vulkan:
+		return &_vulkan_graphics_context;
+	default:
+		break;
+	};
+	return nullptr;
+}
 
 inline const std::string T5Service::get_glasses_id(size_t glasses_idx) const {
 	return glasses_idx < _glasses_list.size() ? _glasses_list[glasses_idx]->get_id() : std::string();

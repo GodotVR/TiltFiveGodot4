@@ -3,9 +3,8 @@
 TiltFiveGodot4 is **GDExtension** for the Godot 4 engine to connect to the [Tilt Five](https://www.tiltfive.com/) 
 system. It extends Godot's **XRInterface** and has functions to connect glasses and signals for connection events.
 
-This extension is not ready for general use yet. It is incomplete and currently requires a custom build of Godot.
-
-Godot must be run with the Compatibility renderer because Tilt Five does not currently support Vulcan.
+This extension is in an Alpha state and needs that latest Godot 4.1 to run. It currently needs the OpenGL renderer
+Vulkan support is coming. 
 
 ## Platforms
 
@@ -18,26 +17,18 @@ for those platforms will investigated.
 
 Things you will need to know how to do.
 * Use [scons](https://scons.org/) 
-* Apply patches
-* [Build a custom version of Godot](https://docs.godotengine.org/en/stable/contributing/development/compiling/index.html)
-* [Build the C++ bindings](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html) for GDExtensions
 * [Build GDExtensions](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html)
 
 ### Building the extension
-
-Get godot source and patch from the patches directory.
-
-For the extension godot_cpp will need to be built with the extension api json file dumps from the custom godot build.
 
 Scons should be run from an environment that has the Microsoft x64 development tools setup.
 
 > `scons target=[template_debug | template_release]` Build the shared library. Result is in `build\bin`
 
-> `scons example target=[template_debug | template_release]` Copy build products to the `example\addons\tilt-five`
+> `scons example target=[template_debug | template_release]` Copy build products to the `example\addons\tilt-five\bin`
 
 ## Basic usage 
 
-- Open the custom version of Godot
 - Open the project in the examples directory
 - Run the default scene
 
@@ -48,9 +39,11 @@ Scons should be run from an environment that has the Microsoft x64 development t
 
 ## TODO
 
+- Vulkan support
 - API for tangible camera on the glasses
 - Better docs
 - Examples
+
 
 ## Acknowledgments
 

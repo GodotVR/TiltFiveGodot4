@@ -29,96 +29,31 @@ GodotT5ObjectRegistry g_godot_t5_services;
 
 GodotT5Service::GodotT5Service()
 	: T5Service()
-{}
-
-/*
-void GodotT5Service::reserve_glasses(StringName glasses_id, GD::String display_name) {
-    size_t glasses_idx;
-    GodotT5Glasses::Ptr glasses;
-    ERR_FAIL_COND_MSG(!find_godot_glasses(glasses_id, glasses_idx, glasses), "Glasses id not found");
-
-    T5Service::reserve_glasses(glasses_idx, display_name.ascii().get_data());
-}
-
-
-bool GodotT5Service::is_ready_to_render(StringName glasses_id) {
-    size_t glasses_idx;
-    GodotT5Glasses::Ptr glasses;
-    if(!find_godot_glasses(glasses_id, glasses_idx, glasses))    
-        return glasses->is_reserved();
-    return false;
-}
-
-void GodotT5Service::display_viewport(StringName glasses_id, RID viewport) {
-    size_t glasses_idx;
-    GodotT5Glasses::Ptr glasses;
-    ERR_FAIL_COND_MSG(!find_godot_glasses(glasses_id, glasses_idx, glasses), "Glasses id not found");
-    ERR_FAIL_COND_MSG(!glasses->is_reserved(), "Glasses must be reserved prior to rendering");
-
-    glasses->set_viewport(viewport);
-}
-
-void GodotT5Service::release_glasses(StringName glasses_id) {
-    size_t glasses_idx;
-    GodotT5Glasses::Ptr glasses;
-    ERR_FAIL_COND_MSG(!find_godot_glasses(glasses_id, glasses_idx, glasses), "Glasses id not found");
-    glasses->set_viewport(RID());
-
-    T5Service::release_glasses(glasses_idx);
-}
-
-GodotT5Glasses::Ptr GodotT5Service::get_godot_glasses(int glasses_idx) {
-    ERR_FAIL_INDEX_V(glasses_idx, _glasses_list.size(), GodotT5Glasses::Ptr());
-
-    return get_glasses(glasses_idx);
-}
-
-bool GodotT5Service::find_godot_glasses(StringName glasses_id, size_t& out_glasses_idx, GodotT5Glasses::Ptr& out_glasses) {
-
-    for(out_glasses_idx = 0; out_glasses_idx < get_glasses_count(); out_glasses_idx++) {
-        auto godot_glasses = get_glasses(out_glasses_idx);  
-        if(godot_glasses->_glasses_id == glasses_id) {  
-            out_glasses = godot_glasses;
-            return true;
-        }
-    }
-    return false;
-}
-
-GodotT5Glasses::Ptr GodotT5Service::find_glasses_by_render_target(RID test_render_target) {
-	auto render_server = RenderingServer::get_singleton();
-
-    for(size_t glasses_idx = 0; glasses_idx < get_glasses_count(); glasses_idx++) {
-        auto godot_glasses = get_glasses(glasses_idx);
-        auto glasses_render_target = render_server->viewport_get_render_target(godot_glasses->get_viewport());   
-        if(test_render_target == glasses_render_target) {    
-            return godot_glasses;
-        }
-    }
-
-    return GodotT5Glasses::Ptr();
-}
-
-GodotT5Glasses::Ptr GodotT5Service::find_glasses_by_viewport(RID test_viewport) {
-	auto render_server = RenderingServer::get_singleton();
-
-    for(size_t glasses_idx = 0; glasses_idx < get_glasses_count(); glasses_idx++) {
-        auto godot_glasses = get_glasses(glasses_idx);
-        auto glasses_viewport = godot_glasses->get_viewport();   
-        if(test_viewport == glasses_viewport) {    
-            return godot_glasses;
-        }
-    }
-
-    return GodotT5Glasses::Ptr();
-}
-*/
+{ }
 
 std::unique_ptr<Glasses> GodotT5Service::create_glasses(const std::string_view id) {
-    
     return std::unique_ptr<Glasses>(new GodotT5Glasses(id));
 }
 
+void GodotT5Service::use_opengl_api() {
+    T5_GraphicsContextGL graphics_context;
+    // graphics_context.textureMode = T5_GraphicsApi_GL_TextureMode::kT5_GraphicsApi_GL_TextureMode_Pair;
+    graphics_context.textureMode = T5_GraphicsApi_GL_TextureMode::kT5_GraphicsApi_GL_TextureMode_Array;
+    graphics_context.leftEyeArrayIndex = 0;
+    graphics_context.rightEyeArrayIndex = 1;
+    set_graphics_context(graphics_context);
+}
+
+void GodotT5Service::use_vulkan_api() {
+    LOG_ERROR("Vulkan is not implemented yet");
+    T5_GraphicsContextVulkan graphics_context;
+    // graphics_context.instance = 
+    // graphics_context.physicalDevice =
+    // graphics_context.device =
+    // graphics_context.queue =
+    // graphics_context.queueFamilyIndex =
+    set_graphics_context(graphics_context);
+}
 
 void GodotT5Math::rotate_vector(float quat_x, float quat_y, float quat_z, float quat_w, float& vec_x, float& vec_y, float& vec_z)  {
 
@@ -133,11 +68,11 @@ void GodotT5Math::rotate_vector(float quat_x, float quat_y, float quat_z, float 
 }
 
 void GodotT5Logger::log_error(const char* message, const char* func_name, const char* file_name, int line_num) { 
-    godot::_err_print_error(func_name, file_name, line_num, godot::String(message), true, false);
+    godot::_err_print_error(func_name, file_name, line_num, "TiltFiveXRInterface", message, true, false);
 }
 
 void GodotT5Logger::log_warning(const char* message, const char* func_name, const char* file_name, int line_num) {
-    godot::_err_print_error(func_name, file_name, line_num, godot::String(message), true, false);
+    godot::_err_print_error(func_name, file_name, line_num, "TiltFiveXRInterface", message, true, false);
 }
 
 void GodotT5Logger::log_string(const char* message) {

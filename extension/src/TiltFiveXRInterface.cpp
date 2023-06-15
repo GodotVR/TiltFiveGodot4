@@ -75,6 +75,7 @@ bool TiltFiveXRInterface::setup() {
 
 	t5_service = GodotT5ObjectRegistry::service();
 	ERR_FAIL_COND_V_MSG(!t5_service, false, "Couldn't obtain GodotT5Service singleton");
+	t5_service->use_opengl_api();
 
 	xr_server->add_interface(this);
 	return true;
@@ -326,6 +327,7 @@ bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
 		return false;
 
 	xr_server->set_world_origin(xr_origin->get_global_transform());
+	xr_server->set_world_scale(xr_origin->get_world_scale());
 	
 	entry->rendering = true;
 	return true;

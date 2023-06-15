@@ -9,6 +9,7 @@ std::mutex g_t5_exclusivity_group_1;
 std::mutex g_t5_exclusivity_group_2;
 
 T5Service::T5Service() {
+	_graphics_api = T5_GraphicsApi::kT5_GraphicsApi_None;
 	_scheduler = ObjectRegistry::scheduler();
 }
 
@@ -18,6 +19,10 @@ T5Service::~T5Service() {
 }
 
 bool T5Service::start_service(const std::string_view application_id, std::string_view application_version) {
+	if(_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_None) {
+		LOG_ERROR("TiltFive graphics api is not set");
+		return false;
+	}
 	if(_is_started) return true;
 
 	T5_ClientInfo clientInfo;

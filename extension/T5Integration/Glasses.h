@@ -120,7 +120,8 @@ class Glasses
 
 protected:
     void set_swap_chain_size(int size);
-    void set_swap_chain_texture_handles(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle);
+    void set_swap_chain_texture_pair(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle);
+    void set_swap_chain_texture_array(int swap_chain_idx, intptr_t array_handle);
 
     virtual void on_glasses_reserved() {}
     virtual void on_glasses_released() {}

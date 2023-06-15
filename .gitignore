@@ -9,6 +9,7 @@ build
 *.o
 *.os
 *.so
+*.dll
 *.obj
 *.bc
 *.pyc
@@ -23,5 +24,4 @@ build
 *.idb
 *.exp
 
-example/addons/tiltfive/*.dll
-!extension/TiltFiveNDK/lib/*/*
+!extension/TiltFiveNDK/lib/*/*/*

@@ -39,19 +39,11 @@ public:
 		return std::static_pointer_cast<GodotT5Glasses>(_glasses_list[glasses_idx]);
 	}
 
-	/*
-	void reserve_glasses(StringName glasses_id, GD::String display_name);
-	bool is_ready_to_render(StringName glasses_id);
-	void display_viewport(StringName glasses_id, RID viewport);
-	void release_glasses(StringName glasses_id);
+	void use_opengl_api();
+	void use_vulkan_api();
 
-	GodotT5Glasses::Ptr get_godot_glasses(int glasses_idx);
 
-	bool find_godot_glasses(StringName glasses_id, size_t& out_glasses_idx, GodotT5Glasses::Ptr& out_glasses);
 
-	GodotT5Glasses::Ptr find_glasses_by_render_target(RID render_target);
-	GodotT5Glasses::Ptr find_glasses_by_viewport(RID render_target);
-	*/
 };
 
 class GodotT5Math : public T5Integration::T5Math {

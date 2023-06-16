@@ -75,7 +75,16 @@ bool TiltFiveXRInterface::setup() {
 
 	t5_service = GodotT5ObjectRegistry::service();
 	ERR_FAIL_COND_V_MSG(!t5_service, false, "Couldn't obtain GodotT5Service singleton");
-	t5_service->use_opengl_api();
+
+    RenderingServer *rendering_server = RenderingServer::get_singleton();
+    ERR_FAIL_NULL_V(rendering_server, false);
+    RenderingDevice *rendering_device = rendering_server->get_rendering_device();
+	if(rendering_device){
+		WARN_PRINT("The using vulkan renderer for Tilt Five is not currently functional");
+		t5_service->use_vulkan_api();
+	} else {
+		t5_service->use_opengl_api();
+	}
 
 	xr_server->add_interface(this);
 	return true;
@@ -249,7 +258,7 @@ Vector2 TiltFiveXRInterface::_get_render_target_size() {
 		WARN_PRINT_ONCE("Glasses not set");
 		return Vector2(1216, 768);
 	}
-    return _render_glasses->get_display_size();
+    return _render_glasses->get_render_size();
 }
 
 uint32_t TiltFiveXRInterface::_get_view_count() {
@@ -298,18 +307,7 @@ PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view
 		return arr;
 	}
 
-    Projection cm;
-    cm.set_perspective(_render_glasses->get_fov(), aspect, z_near, z_far);
-	//auto offset = t5_service->get_eye_offset(p_view == 0 ? Eye::Left : Eye::Right);
-
-	//cm = cm * offset;
-
-    real_t *m = (real_t *)cm.columns;
-	for (int i = 0; i < 16; i++) {
-		arr[i] = m[i];
-	}
-
-    return arr;
+	return _render_glasses->get_projection_for_eye(p_view == 0 ? Eye::Left : Eye::Right, aspect, z_near, z_far);
 }
 
 bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {

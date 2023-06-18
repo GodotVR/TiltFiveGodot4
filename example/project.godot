@@ -19,6 +19,14 @@ config/icon="res://icon.png"
 
 T5Interface="*res://addons/tiltfive/T5Interface.gd"
 
+[debug]
+
+settings/stdout/verbose_stdout=true
+
+[filesystem]
+
+import/fbx/enabled=false
+
 [input]
 
 trigger={
@@ -26,6 +34,19 @@ trigger={
 "events": [Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":5,"axis_value":1.0,"script":null)
 ]
 }
+
+[layer_names]
+
+3d_render/layer_1="All"
+3d_render/layer_2="Only spectator"
+3d_render/layer_3="Only glasses"
+3d_physics/layer_1="Default"
+3d_physics/layer_2="Balls"
+3d_physics/layer_10="Wand"
+
+[physics]
+
+3d/solver/contact_max_allowed_penetration=0.001
 
 [rendering]
 

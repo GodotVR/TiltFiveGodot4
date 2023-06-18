@@ -1,0 +1,37 @@
+[gd_scene load_steps=8 format=3 uid="uid://cgc1hi6pem5qt"]
+
+[ext_resource type="PackedScene" uid="uid://je0clrdu7o76" path="res://addons/tiltfive/scenes/T5GlassesBase.tscn" id="1_owmxa"]
+[ext_resource type="Script" path="res://objects/tiltfive/T5Glasses.gd" id="2_7yxmu"]
+[ext_resource type="PackedScene" uid="uid://b1cd3jc00rhal" path="res://addons/tiltfive/assets/T5GlassesModel.tscn" id="3_05qr8"]
+[ext_resource type="PackedScene" uid="uid://fipea8dbocg4" path="res://addons/tiltfive/assets/T5WandModel.tscn" id="3_f05f4"]
+[ext_resource type="PackedScene" uid="uid://cnjn2qhmb4fir" path="res://objects/tiltfive/T5WandRod.tscn" id="4_q5wby"]
+[ext_resource type="Script" path="res://addons/tiltfive/scenes/T5Pointer.gd" id="5_r2can"]
+[ext_resource type="PackedScene" uid="uid://n8iq8757wqwj" path="res://objects/tiltfive/T5Attractor.tscn" id="6_q6yxg"]
+
+[node name="T5Glasses" instance=ExtResource("1_owmxa")]
+script = ExtResource("2_7yxmu")
+
+[node name="Camera" parent="Origin" index="0"]
+current = true
+
+[node name="T5-glasses" parent="Origin/Camera" index="0" instance=ExtResource("3_05qr8")]
+
+[node name="Wand_1" parent="Origin" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 0)
+
+[node name="T5-wand" parent="Origin/Wand_1" index="0" instance=ExtResource("3_f05f4")]
+
+[node name="WandRod" parent="Origin/Wand_1" index="1" instance=ExtResource("4_q5wby")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0793243)
+
+[node name="T5-pointer" type="RayCast3D" parent="Origin/Wand_1" index="2"]
+target_position = Vector3(0, 0, -1)
+collision_mask = 3
+script = ExtResource("5_r2can")
+
+[node name="Attractor" parent="Origin/Wand_1" index="3" instance=ExtResource("6_q6yxg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.05)
+
+[connection signal="button_pressed" from="Origin/Wand_1" to="." method="_on_wand_button_pressed"]
+[connection signal="button_released" from="Origin/Wand_1" to="." method="_on_wand_button_released"]
+[connection signal="input_float_changed" from="Origin/Wand_1" to="." method="_on_wand_input_float_changed"]

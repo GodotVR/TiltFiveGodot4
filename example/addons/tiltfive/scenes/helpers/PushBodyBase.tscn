@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://ctf3nwkxqos0s"]
+
+[ext_resource type="Script" path="res://addons/tiltfive/scenes/helpers/PushBodyBase.gd" id="1_m2asu"]
+
+[node name="PushBodyBase" type="Node3D"]
+script = ExtResource("1_m2asu")
+
+[node name="Body" type="CharacterBody3D" parent="."]
+top_level = true
+collision_layer = 512
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]

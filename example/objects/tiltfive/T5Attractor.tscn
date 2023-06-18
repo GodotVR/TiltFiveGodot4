@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://n8iq8757wqwj"]
+
+[ext_resource type="Script" path="res://objects/tiltfive/T5Attractor.gd" id="1_pe85j"]
+
+[node name="Attractor" type="Node3D"]
+script = ExtResource("1_pe85j")

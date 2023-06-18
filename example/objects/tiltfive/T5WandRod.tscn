@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://cnjn2qhmb4fir"]
+
+[ext_resource type="PackedScene" uid="uid://ctf3nwkxqos0s" path="res://addons/tiltfive/scenes/helpers/PushBodyBase.tscn" id="1_544k3"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_j7ys0"]
+margin = 0.001
+radius = 0.01
+height = 0.17
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_xlc7x"]
+top_radius = 0.005
+bottom_radius = 0.005
+height = 0.15
+
+[node name="WandRod" instance=ExtResource("1_544k3")]
+
+[node name="Body" parent="." index="0"]
+top_level = false
+
+[node name="CollisionShape3D" parent="Body" index="0"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+shape = SubResource("CapsuleShape3D_j7ys0")
+
+[node name="WandMesh" type="MeshInstance3D" parent="Body" index="1"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+layers = 4
+mesh = SubResource("CylinderMesh_xlc7x")

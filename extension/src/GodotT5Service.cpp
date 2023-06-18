@@ -1,10 +1,13 @@
-#include "GodotT5Service.h"
+#include <GodotT5Service.h>
+#include <OpenGLGlasses.h>
+#include <VulkanGlasses.h>
 #include <assert.h>
 #include <Logging.h>
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/quaternion.hpp>
 #include <godot_cpp/classes/texture_layered.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/rendering_device.hpp>
 #include <godot_cpp/classes/xr_server.hpp>
 #include <godot_cpp/core/defs.hpp> 
 
@@ -12,6 +15,7 @@ using godot::Variant;
 using godot::Quaternion;
 using godot::Image;
 using godot::RenderingServer;
+using godot::RenderingDevice;
 using godot::TypedArray;
 using godot::Error;
 using godot::XRServer;
@@ -32,12 +36,16 @@ GodotT5Service::GodotT5Service()
 { }
 
 std::unique_ptr<Glasses> GodotT5Service::create_glasses(const std::string_view id) {
-    return std::unique_ptr<Glasses>(new GodotT5Glasses(id));
+    if(get_graphics_api() == kT5_GraphicsApi_GL)
+        return std::unique_ptr<Glasses>(new OpenGLGlasses(id));
+    else if(get_graphics_api() == kT5_GraphicsApi_Vulkan)
+        return std::unique_ptr<Glasses>(new VulkanGlasses(id));
+    
+    ERR_FAIL_V_MSG(std::unique_ptr<Glasses>(), "Unknown graphics API");
 }
 
 void GodotT5Service::use_opengl_api() {
     T5_GraphicsContextGL graphics_context;
-    // graphics_context.textureMode = T5_GraphicsApi_GL_TextureMode::kT5_GraphicsApi_GL_TextureMode_Pair;
     graphics_context.textureMode = T5_GraphicsApi_GL_TextureMode::kT5_GraphicsApi_GL_TextureMode_Array;
     graphics_context.leftEyeArrayIndex = 0;
     graphics_context.rightEyeArrayIndex = 1;
@@ -45,13 +53,17 @@ void GodotT5Service::use_opengl_api() {
 }
 
 void GodotT5Service::use_vulkan_api() {
-    LOG_ERROR("Vulkan is not implemented yet");
+    RenderingServer *rendering_server = RenderingServer::get_singleton();
+    ERR_FAIL_NULL(rendering_server);
+    RenderingDevice *rendering_device = rendering_server->get_rendering_device();
+    ERR_FAIL_NULL(rendering_device);
+
     T5_GraphicsContextVulkan graphics_context;
-    // graphics_context.instance = 
-    // graphics_context.physicalDevice =
-    // graphics_context.device =
-    // graphics_context.queue =
-    // graphics_context.queueFamilyIndex =
+    graphics_context.instance = (void*)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_INSTANCE, RID(), 0);
+    graphics_context.physicalDevice = (void*)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_PHYSICAL_DEVICE, RID(), 0);
+    graphics_context.device = (void*)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_DEVICE, RID(), 0);
+    graphics_context.queue = (void*)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_QUEUE, RID(), 0);
+    graphics_context.queueFamilyIndex = (uint32_t)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_QUEUE_FAMILY_INDEX, RID(), 0);
     set_graphics_context(graphics_context);
 }
 

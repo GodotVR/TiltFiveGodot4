@@ -5,12 +5,12 @@
 
 #include <godot_cpp/core/binder_common.hpp>
 #include <godot_cpp/classes/xr_server.hpp>
-#include <godot_cpp/classes/xr_origin3d.hpp>
 #include <godot_cpp/classes/sub_viewport.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
 
 #include <GodotT5Service.h>
 #include <GodotT5Glasses.h>
+#include <TiltFiveGameboard.h>
 
 using godot::XRInterfaceExtension;
 using godot::XRServer;
@@ -24,7 +24,6 @@ using godot::RID;
 using godot::SubViewport;
 using godot::PackedStringArray;
 using godot::ObjectID;
-using godot::XROrigin3D;
 using godot::Variant;
 using GodotT5Integration::GodotT5Service;
 using GodotT5Integration::GodotT5Glasses;
@@ -38,7 +37,7 @@ class TiltFiveXRInterface : public XRInterfaceExtension {
 		int idx;
 		std::weak_ptr<GodotT5Glasses> glasses;
 		ObjectID viewport_id;
-		ObjectID xr_origin_id;
+		ObjectID gameboard_id;
 		bool rendering;
 	};
 
@@ -99,7 +98,7 @@ public:
 protected:
 	static void _bind_methods();
 	
-	void _start_display(GlassesIndexEntry& entry, SubViewport* viewport, XROrigin3D* xr_origin);
+	void _start_display(GlassesIndexEntry& entry, SubViewport* viewport, TiltFiveGameboard* xr_origin);
 	void _stop_display(GlassesIndexEntry& entry);
 
 	GlassesIndexEntry* lookup_glasses_entry(StringName glasses_id);

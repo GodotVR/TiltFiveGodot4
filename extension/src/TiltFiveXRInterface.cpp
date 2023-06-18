@@ -1,5 +1,4 @@
 #include "TiltFiveXRInterface.h"
-#include "TiltFiveGameboard.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
@@ -15,7 +14,7 @@ void TiltFiveXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("start_service", "application_id", "application_version"), &TiltFiveXRInterface::start_service);
 	ClassDB::bind_method(D_METHOD("stop_service"), &TiltFiveXRInterface::stop_service);
 	ClassDB::bind_method(D_METHOD("reserve_glasses", "glasses_id", "display_name"), &TiltFiveXRInterface::reserve_glasses);
-	ClassDB::bind_method(D_METHOD("start_display", "glasses_id", "viewport", "xr_origin"), &TiltFiveXRInterface::start_display);
+	ClassDB::bind_method(D_METHOD("start_display", "glasses_id", "viewport", "gameboard"), &TiltFiveXRInterface::start_display);
 	ClassDB::bind_method(D_METHOD("stop_display", "glasses_id"), &TiltFiveXRInterface::stop_display);
 	ClassDB::bind_method(D_METHOD("release_glasses", "glasses_id"), &TiltFiveXRInterface::release_glasses);
 	ClassDB::bind_method(D_METHOD("get_available_glasses_ids"), &TiltFiveXRInterface::get_available_glasses_ids);
@@ -141,21 +140,21 @@ void TiltFiveXRInterface::start_display(const StringName glasses_id, Variant vob
 	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
 
 	auto viewport = Object::cast_to<SubViewport>(vobj);
-	auto xr_origin = Object::cast_to<XROrigin3D>(oobj);
+	auto gameboard = Object::cast_to<TiltFiveGameboard>(oobj);
 	ERR_FAIL_NULL_MSG(viewport, "Parameter 2 is not a SubViewport");
-	ERR_FAIL_NULL_MSG(xr_origin, "Parameter 3 is not a XROrigin3D");
+	ERR_FAIL_NULL_MSG(gameboard, "Parameter 3 is not a TiltFiveGameboard");
 
-	_start_display(*entry, viewport, xr_origin);
+	_start_display(*entry, viewport, gameboard);
 }
 
-void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry& entry, SubViewport* viewport, XROrigin3D* xr_origin) {
+void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry& entry, SubViewport* viewport, TiltFiveGameboard* gameboard) {
 	auto glasses = entry.glasses.lock();
 	if(!glasses->is_reserved()) {
 		WARN_PRINT("Glasses need to be reserved to display viewport");
 		return;
 	}
 	entry.viewport_id = viewport->get_instance_id();
-	entry.xr_origin_id = xr_origin->get_instance_id();
+	entry.gameboard_id = gameboard->get_instance_id();
 
 	viewport->set_use_xr(true);
 	viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_ALWAYS);
@@ -175,7 +174,7 @@ void TiltFiveXRInterface::_stop_display(GlassesIndexEntry& entry) {
 		viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_DISABLED);
 	}
 	entry.viewport_id = ObjectID();
-	entry.xr_origin_id = ObjectID();
+	entry.gameboard_id = ObjectID();
 }
 
 void TiltFiveXRInterface::release_glasses(const StringName glasses_id) {
@@ -287,6 +286,7 @@ Transform3D TiltFiveXRInterface::_get_transform_for_view(uint32_t view, const Tr
 		WARN_PRINT_ONCE("Glasses not set");
 		return Transform3D();
 	}
+	// Should be the gameboard scale set in _pre_draw_viewport
 	auto world_scale = xr_server->get_world_scale();
 
 	auto eye_transform = _render_glasses->get_eye_transform(view == 0 ? Eye::Left : Eye::Right);
@@ -320,12 +320,12 @@ bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
     if(!_render_glasses->is_reserved()) 
 		return false;
 
-	auto xr_origin = Object::cast_to<TiltFiveGameboard>(ObjectDB::get_instance(entry->xr_origin_id));
-	if(!xr_origin)
+	auto gameboard = Object::cast_to<TiltFiveGameboard>(ObjectDB::get_instance(entry->gameboard_id));
+	if(!gameboard)
 		return false;
 
-	xr_server->set_world_origin(xr_origin->get_global_transform());
-	xr_server->set_world_scale(xr_origin->get_gameboard_scale());
+	xr_server->set_world_origin(gameboard->get_global_transform());
+	xr_server->set_world_scale(gameboard->get_gameboard_scale());
 	 
 	entry->rendering = true;
 	return true;

@@ -7,6 +7,7 @@
 using godot::ClassDB;
 using godot::PropertyInfo;
 using godot::D_METHOD;
+using godot::Variant;
 
 void TiltFiveGameboard::_bind_methods() {
 	// Methods.

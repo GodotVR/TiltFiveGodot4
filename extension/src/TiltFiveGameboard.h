@@ -1,11 +1,7 @@
 #ifndef TILT_FIVE_XR_ORIGIN_H
 #define TILT_FIVE_XR_ORIGIN_H
 
-#include "TiltFiveXRInterface.h"
-
 #include <godot_cpp/classes/xr_origin3d.hpp>
-
-
 
 using godot::XROrigin3D;
 

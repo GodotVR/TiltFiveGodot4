@@ -36,12 +36,12 @@ namespace GodotT5Integration {
         bool is_reserved();
 
         Vector2 get_render_size();
-        virtual Transform3D get_head_transform() = 0;
-        virtual Transform3D get_eye_offset(Glasses::Eye eye) = 0;
-        virtual Transform3D get_eye_transform(Glasses::Eye eye) = 0;
-	    virtual PackedFloat64Array get_projection_for_eye(Glasses::Eye view, double aspect, double z_near, double z_far) = 0;
+        virtual Transform3D get_head_transform();
+        virtual Transform3D get_eye_offset(Glasses::Eye eye);
+        virtual Transform3D get_eye_transform(Glasses::Eye eye);
+	    virtual PackedFloat64Array get_projection_for_eye(Glasses::Eye view, double aspect, double z_near, double z_far);
 
-        virtual Transform3D get_wand_transform(size_t wand_num) = 0;
+        virtual Transform3D get_wand_transform(size_t wand_num);
     
         virtual RID get_color_texture() = 0;
 

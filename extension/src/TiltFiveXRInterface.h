@@ -25,12 +25,20 @@ using godot::SubViewport;
 using godot::PackedStringArray;
 using godot::ObjectID;
 using godot::Variant;
+using godot::AABB;
 using GodotT5Integration::GodotT5Service;
 using GodotT5Integration::GodotT5Glasses;
 using T5Integration::GlassesEvent;
 
 class TiltFiveXRInterface : public XRInterfaceExtension {
 	GDCLASS(TiltFiveXRInterface, XRInterfaceExtension);
+
+	enum GameBoardType {
+		NO_GAMEBOARD_SET = kT5_GameboardType_None,
+		LE_GAMEBOARD = kT5_GameboardType_LE,
+		XE_GAMEBOARD = kT5_GameboardType_XE,
+		XE_RAISED_GAMEBOARD = kT5_GameboardType_XE_Raised
+	};
 
 	struct GlassesIndexEntry {
 		StringName id;
@@ -67,6 +75,9 @@ public:
 	void start_display(const StringName glasses_id, Variant viewport, Variant xr_origin);
 	void stop_display(const StringName glasses_id);
 	void release_glasses(const StringName glasses_id);
+
+	GameBoardType get_gameboard_type(const StringName glasses_id);	
+	AABB get_gameboard_extents(GameBoardType gameboard_type);
 
 	PackedStringArray get_available_glasses_ids();
 	PackedStringArray get_reserved_glasses_ids();
@@ -136,6 +147,8 @@ private:
 
     int reserved_glasses_count = 0;
 };
+
+VARIANT_ENUM_CAST(TiltFiveXRInterface::GameBoardType)
 
 
 VARIANT_ENUM_CAST(TiltFiveXRInterface::GlassesEventType);

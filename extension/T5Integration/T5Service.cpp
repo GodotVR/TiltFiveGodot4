@@ -227,4 +227,11 @@ void T5Service::get_events(std::vector<GlassesEvent>& out_events) {
 	}
 }
 
+void T5Service::get_gameboard_size(T5_GameboardType gameboard_type, T5_GameboardSize& gameboard_size) {
+	auto result = t5GetGameboardSize(_context, gameboard_type, &gameboard_size);
+	if(result != T5_SUCCESS)
+		LOG_T5_ERROR(result);
+}
+
+
 } // T5Integration

@@ -51,7 +51,6 @@ struct GlassesEvent {
     EType event;
 };
 
-
 class Glasses 
 {
     friend T5Service;
@@ -106,6 +105,7 @@ class Glasses
     bool update_tracking();
 
    	void get_events(int index, std::vector<GlassesEvent>& out_events);
+    T5_GameboardType get_gameboard_type();
 
 	size_t get_num_wands() { return _wand_list.size(); }
 
@@ -223,9 +223,12 @@ inline void Glasses::set_upside_down_texture(bool is_upside_down) {
     _is_upside_down_texture = is_upside_down;
 }
 
+inline T5_GameboardType Glasses::get_gameboard_type() {
+    return _swap_chain_frames[_current_frame_idx].glasses_pose.gameboardType;
+}
+
 inline GlassesFlags::FlagType Glasses::get_current_state() {
     return _state.get_current();
 }
-
 
 }

@@ -28,7 +28,15 @@ void TiltFiveXRInterface::_bind_methods() {
 	// ClassDB::bind_method(D_METHOD("emit_custom_signal", "name", "value"), &Example::emit_custom_signal);
 
 	// Constants.
-	// BIND_ENUM_CONSTANT(FIRST);
+	BIND_ENUM_CONSTANT(E_ADDED);       
+	BIND_ENUM_CONSTANT(E_LOST);       
+	BIND_ENUM_CONSTANT(E_AVAILABLE); 
+	BIND_ENUM_CONSTANT(E_UNAVAILABLE); 
+	BIND_ENUM_CONSTANT(E_RESERVED); 
+	BIND_ENUM_CONSTANT(E_DROPPED); 
+	BIND_ENUM_CONSTANT(E_TRACKING); 
+	BIND_ENUM_CONSTANT(E_NOT_TRACKING); 
+	BIND_ENUM_CONSTANT(E_STOPPED_ON_ERROR);
 }
 
 

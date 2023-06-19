@@ -7,6 +7,8 @@
 #include <ObjectRegistry.h>
 
 using godot::Vector3;
+using godot::Quaternion;
+using godot::Projection;
 using godot::Variant;
 using godot::XRServer;
 using T5Integration::WandButtons;
@@ -19,6 +21,67 @@ namespace GodotT5Integration {
 GodotT5Glasses::GodotT5Glasses(std::string_view id) 
 : Glasses(id) {
     set_swap_chain_size(g_swap_chain_length);
+}
+
+
+Transform3D GodotT5Glasses::get_head_transform() {
+	Quaternion orientation;
+	Vector3 position;
+	get_glasses_orientation(orientation.x, orientation.y, orientation.z, orientation.w);
+	get_glasses_position(position.x, position.y, position.z);
+
+	Transform3D headPose;
+    headPose.set_origin(position);
+	headPose.set_basis(orientation.inverse());
+    headPose.rotate(Vector3(1,0,0), -Math_PI / 2.0f);
+
+	return headPose;
+}
+
+Transform3D GodotT5Glasses::get_eye_offset(Glasses::Eye eye) {
+	float dir = (eye == Glasses::Left ? -1.0f : 1.0f);
+	auto ipd = get_ipd();
+    Transform3D eye_pose;
+    eye_pose.set_origin(Vector3(dir * ipd / 2.0f, 0, 0));
+
+	return eye_pose;
+}
+
+Transform3D GodotT5Glasses::get_eye_transform(Glasses::Eye eye) {
+	return get_eye_offset(eye) * get_head_transform();
+}
+
+Transform3D GodotT5Glasses::get_wand_transform(size_t wand_num) {
+	Quaternion orientation;
+	Vector3 position;
+	get_wand_position(wand_num, position.x, position.y, position.z);
+	get_wand_orientation(wand_num, orientation.x, orientation.y, orientation.z, orientation.w);
+
+    position = Vector3(position.x, position.z, -position.y);
+    orientation = Quaternion(orientation.x, orientation.z, -orientation.y, orientation.w);
+    orientation = orientation.inverse();
+
+	Transform3D wandPose;
+    wandPose.set_origin(position);
+	wandPose.set_basis(orientation * Quaternion(Vector3(1,0,0), Math_PI / 2.0f));
+
+	return wandPose;
+}
+
+PackedFloat64Array GodotT5Glasses::get_projection_for_eye(Glasses::Eye view, double aspect, double z_near, double z_far) {
+	PackedFloat64Array arr;
+	arr.resize(16); // 4x4 matrix
+    arr.fill(0);
+
+    Projection cm;
+    cm.set_perspective(get_fov(), aspect, z_near, z_far);
+
+    real_t *m = (real_t *)cm.columns;
+	for (int i = 0; i < 16; i++) {
+		arr[i] = m[i];
+	}
+
+    return arr;    
 }
 
 void GodotT5Glasses::on_tracking_updated() {

@@ -1,5 +1,4 @@
 #include <VulkanGlasses.h>
-#include <godot_cpp/variant/quaternion.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/rendering_device.hpp>
 #include <godot_cpp/classes/rd_texture_format.hpp>
@@ -14,11 +13,7 @@ using godot::RenderingServer;
 using godot::RenderingDevice;
 using godot::RDTextureFormat;
 using godot::RDTextureView;
-using godot::Image;
-using godot::TypedArray;
-using godot::Quaternion;
 using godot::Vector3;
-using godot::Projection;
 
 namespace GodotT5Integration {
 
@@ -78,9 +73,12 @@ void VulkanGlasses::SwapChainTextures::deallocate_textures() {
     auto service = T5Integration::ObjectRegistry::service();
     auto render_device = render_server->get_rendering_device();
 
-    render_device->free_rid(render_tex);
-    render_device->free_rid(left_eye_tex);
-    render_device->free_rid(right_eye_tex);
+    if(render_tex.is_valid())
+        render_device->free_rid(render_tex);
+    if(left_eye_tex.is_valid())
+        render_device->free_rid(left_eye_tex);
+    if(right_eye_tex.is_valid())
+        render_device->free_rid(right_eye_tex);
 }
 
 void VulkanGlasses::allocate_textures() {
@@ -96,6 +94,8 @@ void VulkanGlasses::allocate_textures() {
             render_device->texture_get_native_handle(_swap_chain_textures[i].left_eye_tex),
             render_device->texture_get_native_handle(_swap_chain_textures[i].right_eye_tex));
     }
+
+    set_upside_down_texture(true);
 }
 
 void VulkanGlasses::deallocate_textures() {
@@ -120,7 +120,6 @@ void VulkanGlasses::on_glasses_released() {
 void VulkanGlasses::on_glasses_dropped() {
     deallocate_textures();
 }
-
 
 void VulkanGlasses::on_send_frame(int swap_chain_idx) {
     auto service = T5Integration::ObjectRegistry::service();
@@ -159,66 +158,6 @@ void VulkanGlasses::on_send_frame(int swap_chain_idx) {
             0  // dest layer
             );
     }    
-}
-
-
-Transform3D VulkanGlasses::get_head_transform() {
-	Quaternion orientation;
-	Vector3 position;
-	get_glasses_orientation(orientation.x, orientation.y, orientation.z, orientation.w);
-	get_glasses_position(position.x, position.y, position.z);
-
-	Transform3D headPose;
-    headPose.set_origin(position);
-	headPose.set_basis(orientation.inverse());
-    headPose.rotate(Vector3(1,0,0), -Math_PI / 2.0f);
-
-	return headPose;
-}
-
-Transform3D VulkanGlasses::get_eye_offset(Glasses::Eye eye) {
-	float dir = (eye == Glasses::Left ? -1.0f : 1.0f);
-	auto ipd = get_ipd();
-    Transform3D eye_pose;
-    eye_pose.set_origin(Vector3(dir * ipd / 2.0f, 0, 0));
-
-	return eye_pose;
-}
-
-Transform3D VulkanGlasses::get_eye_transform(Glasses::Eye eye) {
-	return get_eye_offset(eye) * get_head_transform();
-}
-
-Transform3D VulkanGlasses::get_wand_transform(size_t wand_num) {
-	Quaternion orientation;
-	Vector3 position;
-	get_wand_position(wand_num, position.x, position.y, position.z);
-	get_wand_orientation(wand_num, orientation.x, orientation.y, orientation.z, orientation.w);
-
-    position = Vector3(position.x, position.z, -position.y);
-    orientation = Quaternion(orientation.x, orientation.z, -orientation.y, orientation.w);
-    orientation = orientation.inverse();
-
-	Transform3D wandPose;
-    wandPose.set_origin(position);
-	wandPose.set_basis(orientation * Quaternion(Vector3(1,0,0), Math_PI / 2.0f));
-
-	return wandPose;
-}
-
-PackedFloat64Array VulkanGlasses::get_projection_for_eye(Glasses::Eye view, double aspect, double z_near, double z_far) {
-	PackedFloat64Array arr;
-	arr.resize(16); // 4x4 matrix
-
-    Projection cm;
-    cm.set_perspective(get_fov(), aspect, z_near, z_far);
-
-    real_t *m = (real_t *)cm.columns;
-	for (int i = 0; i < 16; i++) {
-		arr[i] = m[i];
-	}
-
-    return arr;    
 }
  
 RID VulkanGlasses::get_color_texture() 

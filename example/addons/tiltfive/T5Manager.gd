@@ -4,18 +4,6 @@ signal glasses_available(glasses_id : String)
 signal glasses_reserved(glasses_id : String)
 signal glasses_dropped(glasses_id : String)
 
-enum GlassesEvent {
-	E_ADDED         = 1,
-	E_LOST          = 2,
-	E_AVAILABLE     = 3,
-	E_UNAVAILABLE   = 4,
-	E_RESERVED      = 5,
-	E_DROPPED  		= 6,
-	E_TRACKING      = 7,
-	E_NOT_TRACKING  = 8,
-	E_STOPPED_ON_ERROR = 9
-}
-
 const xr_origin_node := ^"Gameboard"
 
 const wand_node_list := [^"Gameboard/Wand_1", ^"Gameboard/Wand_2", ^"Gameboard/Wand_3", ^"Gameboard/Wand_4"]
@@ -60,8 +48,7 @@ func reserve_glasses(glasses_id : StringName, display_name := "") -> void:
 	if display_name.length() == 0:
 		display_name = default_display_name
 	tilt_five_xr_interface.reserve_glasses(glasses_id, display_name)
-			
-
+	
 func start_display(glasses_id : StringName, viewport : SubViewport):
 	var xr_origin = viewport.get_node(xr_origin_node)
 	tilt_five_xr_interface.start_display(glasses_id, viewport, xr_origin)
@@ -74,16 +61,16 @@ func start_display(glasses_id : StringName, viewport : SubViewport):
 func on_glasses_event(glasses_id, event_num):
 	print(glasses_id, " ", event_num)
 	match  event_num:
-		GlassesEvent.E_AVAILABLE:
+		TiltFiveXRInterface.E_AVAILABLE:
 			if not reserved_glasses.has(glasses_id):
 				reserved_glasses[glasses_id] = false
 			glasses_available.emit(glasses_id)
-		GlassesEvent.E_UNAVAILABLE:
+		TiltFiveXRInterface.E_UNAVAILABLE:
 			reserved_glasses.erase(glasses_id)
-		GlassesEvent.E_RESERVED:
+		TiltFiveXRInterface.E_RESERVED:
 			reserved_glasses[glasses_id] = true
 			glasses_reserved.emit(glasses_id)
-		GlassesEvent.E_DROPPED:
+		TiltFiveXRInterface.E_DROPPED:
 			if reserved_glasses.get(glasses_id, false):
 				reserved_glasses[glasses_id] = false
 				glasses_dropped.emit(glasses_id)

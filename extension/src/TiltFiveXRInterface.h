@@ -44,6 +44,19 @@ class TiltFiveXRInterface : public XRInterfaceExtension {
 public:
 	// Constants.
 
+    enum GlassesEventType
+    {
+        E_ADDED         	= GlassesEvent::E_ADDED,
+        E_LOST          	= GlassesEvent::E_LOST,
+        E_AVAILABLE     	= GlassesEvent::E_AVAILABLE,
+        E_UNAVAILABLE   	= GlassesEvent::E_UNAVAILABLE,
+        E_RESERVED      	= GlassesEvent::E_CONNECTED,
+        E_DROPPED  			= GlassesEvent::E_DISCONNECTED,
+        E_TRACKING      	= GlassesEvent::E_TRACKING,
+        E_NOT_TRACKING  	= GlassesEvent::E_NOT_TRACKING,
+        E_STOPPED_ON_ERROR 	= GlassesEvent::E_STOPPED_ON_ERROR
+    };
+
 	// Property setters and getters);
 
 	// Functions.
@@ -123,5 +136,8 @@ private:
 
     int reserved_glasses_count = 0;
 };
+
+
+VARIANT_ENUM_CAST(TiltFiveXRInterface::GlassesEventType);
 
 #endif // ! TILT_FIVE_XR_INTERFACE_H

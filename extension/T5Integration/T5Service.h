@@ -62,6 +62,8 @@ public:
 	void* get_graphics_context_handle();
 	bool is_image_texture_array() const;
 
+	void get_gameboard_size(T5_GameboardType gameboard_type, T5_GameboardSize& gameboard_size);
+
 protected:
 
 	std::string _application_id;

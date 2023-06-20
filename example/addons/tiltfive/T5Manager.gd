@@ -74,5 +74,7 @@ func on_glasses_event(glasses_id, event_num):
 			if reserved_glasses.get(glasses_id, false):
 				reserved_glasses[glasses_id] = false
 				glasses_dropped.emit(glasses_id)
-	
+		GlassesEvent.E_TRACKING:
+			var gbt = tilt_five_xr_interface.get_gameboard_type(glasses_id)
+			print("Gameboard size = ", tilt_five_xr_interface.get_gameboard_extents(gbt))
 		

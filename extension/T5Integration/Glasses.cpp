@@ -17,6 +17,7 @@ namespace T5Integration {
 		glasses_pose.rotToGLS_GBD.y = 0;
 		glasses_pose.rotToGLS_GBD.z = 0;
 		glasses_pose.rotToGLS_GBD.w = 1;
+		glasses_pose.gameboardType = kT5_GameboardType_None;
 		left_eye_handle = 0;
 		right_eye_handle = 0;
 	}

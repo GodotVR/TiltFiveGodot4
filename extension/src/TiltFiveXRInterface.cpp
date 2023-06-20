@@ -19,6 +19,8 @@ void TiltFiveXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("release_glasses", "glasses_id"), &TiltFiveXRInterface::release_glasses);
 	ClassDB::bind_method(D_METHOD("get_available_glasses_ids"), &TiltFiveXRInterface::get_available_glasses_ids);
 	ClassDB::bind_method(D_METHOD("get_reserved_glasses_ids"), &TiltFiveXRInterface::get_reserved_glasses_ids);
+	ClassDB::bind_method(D_METHOD("get_gameboard_type", "glasses_id"), &TiltFiveXRInterface::get_gameboard_type);
+	ClassDB::bind_method(D_METHOD("get_gameboard_extents", "gameboard_type"), &TiltFiveXRInterface::get_gameboard_extents);
 
 	// Properties.
 
@@ -36,6 +38,10 @@ void TiltFiveXRInterface::_bind_methods() {
 	BIND_ENUM_CONSTANT(E_TRACKING); 
 	BIND_ENUM_CONSTANT(E_NOT_TRACKING); 
 	BIND_ENUM_CONSTANT(E_STOPPED_ON_ERROR);
+	BIND_ENUM_CONSTANT(NO_GAMEBOARD_SET);
+	BIND_ENUM_CONSTANT(LE_GAMEBOARD);
+	BIND_ENUM_CONSTANT(XE_GAMEBOARD);
+	BIND_ENUM_CONSTANT(XE_RAISED_GAMEBOARD);
 }
 
 
@@ -48,8 +54,6 @@ TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_entr
 	}	
 	return nullptr;
 }
-
-
 
 TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_by_render_target(RID test_render_target) {
 	auto render_server = RenderingServer::get_singleton();
@@ -216,6 +220,28 @@ PackedStringArray TiltFiveXRInterface::get_reserved_glasses_ids() {
 			reserved_list.append(glasses->get_id().c_str());
 	}
 	return reserved_list;
+}
+
+TiltFiveXRInterface::GameBoardType TiltFiveXRInterface::get_gameboard_type(const StringName glasses_id) {
+    if(!t5_service) return NO_GAMEBOARD_SET;
+
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_V_MSG(!entry, NO_GAMEBOARD_SET, "Glasses id was not found");
+
+	return static_cast<GameBoardType>(entry->glasses.lock()->get_gameboard_type());
+}
+
+AABB TiltFiveXRInterface::get_gameboard_extents(GameBoardType gameboard_type) {
+	AABB result;
+    if(!t5_service) return result;
+
+	T5_GameboardSize size;
+	t5_service->get_gameboard_size(static_cast<T5_GameboardType>(gameboard_type), size);
+
+	result.set_position(Vector3(-size.viewableExtentNegativeX, -size.viewableExtentNegativeY, 0));
+	result.set_end(Vector3(size.viewableExtentPositiveX, size.viewableExtentPositiveY, size.viewableExtentPositiveZ));
+
+	return result;
 }
 
 StringName TiltFiveXRInterface::_get_name() const {

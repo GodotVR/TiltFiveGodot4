@@ -168,14 +168,14 @@ void TiltFiveXRInterface::start_display(const StringName glasses_id, Variant vob
 	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
 
 	auto viewport = Object::cast_to<SubViewport>(vobj);
-	auto gameboard = Object::cast_to<TiltFiveGameboard>(oobj);
+	auto gameboard = Object::cast_to<T5Origin3D>(oobj);
 	ERR_FAIL_NULL_MSG(viewport, "Parameter 2 is not a SubViewport");
-	ERR_FAIL_NULL_MSG(gameboard, "Parameter 3 is not a TiltFiveGameboard");
+	ERR_FAIL_NULL_MSG(gameboard, "Parameter 3 is not a T5Origin3D");
 
 	_start_display(*entry, viewport, gameboard);
 }
 
-void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry& entry, SubViewport* viewport, TiltFiveGameboard* gameboard) {
+void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry& entry, SubViewport* viewport, T5Origin3D* gameboard) {
 	auto glasses = entry.glasses.lock();
 	if(!glasses->is_reserved()) {
 		WARN_PRINT("Glasses need to be reserved to display viewport");
@@ -358,7 +358,7 @@ bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
 	if(!_render_glasses->is_reserved()) 
 		return false;
 
-	auto gameboard = Object::cast_to<TiltFiveGameboard>(ObjectDB::get_instance(entry->gameboard_id));
+	auto gameboard = Object::cast_to<T5Origin3D>(ObjectDB::get_instance(entry->gameboard_id));
 	if(!gameboard)
 		return false;
 

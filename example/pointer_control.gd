@@ -1,5 +1,4 @@
-extends XRController3D
-
+extends T5Controller3D
 
 @export
 var selected_mat : Material
@@ -9,7 +8,6 @@ var unselected_mat : Material
 
 var stick_pos = Vector3()
 var trigger_pos = Vector3()
-
 
 const WAND_BUTTON_A		:= "button_a"
 const WAND_BUTTON_B		:= "button_b"

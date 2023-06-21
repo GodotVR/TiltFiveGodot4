@@ -110,14 +110,17 @@ void VulkanGlasses::deallocate_textures() {
 }
 
 void VulkanGlasses::on_glasses_reserved() {
+    GodotT5Glasses::on_glasses_reserved();
     allocate_textures();
 }
 
 void VulkanGlasses::on_glasses_released() {
+    GodotT5Glasses::on_glasses_released();
     deallocate_textures();
 }
 
 void VulkanGlasses::on_glasses_dropped() {
+    GodotT5Glasses::on_glasses_dropped();
     deallocate_textures();
 }
 

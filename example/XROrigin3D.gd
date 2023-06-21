@@ -1,4 +1,4 @@
-extends TiltFiveGameboard
+extends T5Origin3D
 
 var elapsed = 0.0
 

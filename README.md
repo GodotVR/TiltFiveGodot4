@@ -32,6 +32,16 @@ Scons should be run from an environment that has the Microsoft x64 development t
 - Open the project in the examples directory
 - Run the default scene
 
+## Starting with a new project
+
+To use this plugin in your own project:
+- Copy the add on into your project
+- Open Project->Project Settings
+  - On the Autoload tab add `res://addons/tiltfive/T5Interface.gd`
+- Create a main scene and add a T5Manager node
+
+See example project for futher details.
+
 ## Dependencies
 
 - Uses the godot-cpp headers
@@ -39,7 +49,6 @@ Scons should be run from an environment that has the Microsoft x64 development t
 
 ## TODO
 
-- Vulkan support
 - API for tangible camera on the glasses
 - Better docs
 - Examples

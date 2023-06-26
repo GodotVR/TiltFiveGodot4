@@ -2,6 +2,7 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/project_settings.hpp>
 
 using namespace godot;
 using GodotT5Integration::GodotT5ObjectRegistry;
@@ -11,8 +12,6 @@ using Eye = GodotT5Integration::Glasses::Eye;
 void TiltFiveXRInterface::_bind_methods() {
 	// Methods.
 
-	ClassDB::bind_method(D_METHOD("start_service", "application_id", "application_version"), &TiltFiveXRInterface::start_service);
-	ClassDB::bind_method(D_METHOD("stop_service"), &TiltFiveXRInterface::stop_service);
 	ClassDB::bind_method(D_METHOD("reserve_glasses", "glasses_id", "display_name"), &TiltFiveXRInterface::reserve_glasses);
 	ClassDB::bind_method(D_METHOD("start_display", "glasses_id", "viewport", "gameboard"), &TiltFiveXRInterface::start_display);
 	ClassDB::bind_method(D_METHOD("stop_display", "glasses_id"), &TiltFiveXRInterface::stop_display);
@@ -23,20 +22,27 @@ void TiltFiveXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_gameboard_extents", "gameboard_type"), &TiltFiveXRInterface::get_gameboard_extents);
 
 	// Properties.
+	ClassDB::bind_method(D_METHOD("set_application_id", "application_id"), &TiltFiveXRInterface::set_application_id);
+	ClassDB::bind_method(D_METHOD("get_application_id"), &TiltFiveXRInterface::get_application_id);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "application_id"), "set_application_id", "get_application_id");
+
+	ClassDB::bind_method(D_METHOD("set_application_version", "application_version"), &TiltFiveXRInterface::set_application_version);
+	ClassDB::bind_method(D_METHOD("get_application_version"), &TiltFiveXRInterface::get_application_version);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "application_version"), "set_application_version", "get_application_version");
 
 	// Signals.
 	ADD_SIGNAL(MethodInfo("glasses_event", PropertyInfo(Variant::STRING, "glasses_id"), PropertyInfo(Variant::INT, "event")));
 	// ClassDB::bind_method(D_METHOD("emit_custom_signal", "name", "value"), &Example::emit_custom_signal);
 
 	// Constants.
-	BIND_ENUM_CONSTANT(E_ADDED);       
-	BIND_ENUM_CONSTANT(E_LOST);       
-	BIND_ENUM_CONSTANT(E_AVAILABLE); 
-	BIND_ENUM_CONSTANT(E_UNAVAILABLE); 
-	BIND_ENUM_CONSTANT(E_RESERVED); 
-	BIND_ENUM_CONSTANT(E_DROPPED); 
-	BIND_ENUM_CONSTANT(E_TRACKING); 
-	BIND_ENUM_CONSTANT(E_NOT_TRACKING); 
+	BIND_ENUM_CONSTANT(E_ADDED);
+	BIND_ENUM_CONSTANT(E_LOST);
+	BIND_ENUM_CONSTANT(E_AVAILABLE);
+	BIND_ENUM_CONSTANT(E_UNAVAILABLE);
+	BIND_ENUM_CONSTANT(E_RESERVED);
+	BIND_ENUM_CONSTANT(E_DROPPED);
+	BIND_ENUM_CONSTANT(E_TRACKING);
+	BIND_ENUM_CONSTANT(E_NOT_TRACKING);
 	BIND_ENUM_CONSTANT(E_STOPPED_ON_ERROR);
 	BIND_ENUM_CONSTANT(NO_GAMEBOARD_SET);
 	BIND_ENUM_CONSTANT(LE_GAMEBOARD);
@@ -44,14 +50,28 @@ void TiltFiveXRInterface::_bind_methods() {
 	BIND_ENUM_CONSTANT(XE_RAISED_GAMEBOARD);
 }
 
+String TiltFiveXRInterface::get_application_id() const {
+	return application_id;
+}
 
+void TiltFiveXRInterface::set_application_id(const String &p_string) {
+	application_id = p_string;
+}
+
+String TiltFiveXRInterface::get_application_version() const {
+	return application_version;
+}
+
+void TiltFiveXRInterface::set_application_version(const String &p_string) {
+	application_version = p_string;
+}
 
 TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_entry(StringName glasses_id) {
 	for(auto& entry : _glasses_index) {
 		if(glasses_id == entry.id) {
 			return &entry;
 		}
-	}	
+	}
 	return nullptr;
 }
 
@@ -61,10 +81,10 @@ TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_by_r
 	for(auto& entry : _glasses_index) {
 		auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
 		if(!viewport) continue;
-        auto glasses_render_target = render_server->viewport_get_render_target(viewport->get_viewport_rid());   
-        if(test_render_target == glasses_render_target) {    
-            return &entry;
-        }
+		auto glasses_render_target = render_server->viewport_get_render_target(viewport->get_viewport_rid());
+		if(test_render_target == glasses_render_target) {
+			return &entry;
+		}
 	}
 	return nullptr;
 }
@@ -73,70 +93,66 @@ TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_by_v
 	for(auto& entry : _glasses_index) {
 		auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
 		if(!viewport) continue;
-        if(test_viewport == viewport->get_viewport_rid()) {    
-            return &entry;
-        }
+		if(test_viewport == viewport->get_viewport_rid()) {
+			return &entry;
+		}
 	}
 	return nullptr;
 }
 
-bool TiltFiveXRInterface::setup() {
+bool TiltFiveXRInterface::_is_initialized() const {
+	return _initialised;
+}
+
+bool TiltFiveXRInterface::_initialize() {
+	// Already initialized?
+	if (_initialised) {
+		return true;
+	}
+
 	xr_server = XRServer::get_singleton();
 	ERR_FAIL_NULL_V_MSG(xr_server, false, "XRServer unavailable");
 
 	t5_service = GodotT5ObjectRegistry::service();
 	ERR_FAIL_COND_V_MSG(!t5_service, false, "Couldn't obtain GodotT5Service singleton");
 
-    RenderingServer *rendering_server = RenderingServer::get_singleton();
-    ERR_FAIL_NULL_V(rendering_server, false);
-    RenderingDevice *rendering_device = rendering_server->get_rendering_device();
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL_V(rendering_server, false);
+	RenderingDevice *rendering_device = rendering_server->get_rendering_device();
 	if(rendering_device){
-		WARN_PRINT("The using vulkan renderer for Tilt Five is not currently functional");
 		t5_service->use_vulkan_api();
 	} else {
 		t5_service->use_opengl_api();
 	}
 
-	xr_server->add_interface(this);
-	return true;
-}
-
-void TiltFiveXRInterface::teardown() {
-	
-	if(xr_server)
-		xr_server->remove_interface(this);
-
-	t5_service.reset();
-
-	xr_server = nullptr;
-}
-
-bool TiltFiveXRInterface::start_service(const String application_id, const String application_version)
-{
-    if(!setup()) return false;
-
 	auto ai = application_id.ascii();
 	auto av = application_version.ascii();
 
-    bool is_started = t5_service->start_service(ai.get_data(), av.get_data());
-	if(is_started)
-		initialize();
-	return is_started;
+	bool is_started = t5_service->start_service(ai.get_data(), av.get_data());
+	ERR_FAIL_COND_V_MSG(!is_started, false, "Couldn't start T5 Service");
+
+	_initialised = true;
+	return true;
 }
 
-void TiltFiveXRInterface::stop_service()
-{
-	if(t5_service->is_service_started()) {
-		set_primary(false);
-		uninitialize();
-		t5_service->stop_service();
-	}
+void TiltFiveXRInterface::_uninitialize() {
+	if (_initialised) {
+		if(t5_service->is_service_started()) {
+			t5_service->stop_service();
+		}
+		t5_service.reset();
 
-	teardown();
+		if (xr_server->get_primary_interface() == this) {
+			xr_server->set_primary_interface(Ref<XRInterface>());
+		}
+
+		xr_server = nullptr;
+		_initialised = false;
+	}
 }
 
 void TiltFiveXRInterface::reserve_glasses(const StringName glasses_id, const String display_name) {
-    if(!t5_service) return;
+	if(!t5_service) return;
 
 	auto entry = lookup_glasses_entry(glasses_id);
 	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
@@ -146,7 +162,7 @@ void TiltFiveXRInterface::reserve_glasses(const StringName glasses_id, const Str
 }
 
 void TiltFiveXRInterface::start_display(const StringName glasses_id, Variant vobj, Variant oobj) {
-    if(!t5_service) return;
+	if(!t5_service) return;
 
 	auto entry = lookup_glasses_entry(glasses_id);
 	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
@@ -190,7 +206,7 @@ void TiltFiveXRInterface::_stop_display(GlassesIndexEntry& entry) {
 }
 
 void TiltFiveXRInterface::release_glasses(const StringName glasses_id) {
-    if(!t5_service) return;
+	if(!t5_service) return;
 
 	auto entry = lookup_glasses_entry(glasses_id);
 	ERR_FAIL_COND_MSG(!entry, "Glasses id was not found");
@@ -199,7 +215,7 @@ void TiltFiveXRInterface::release_glasses(const StringName glasses_id) {
 }
 
 PackedStringArray TiltFiveXRInterface::get_available_glasses_ids() {
-    if(!t5_service) return PackedStringArray();
+	if(!t5_service) return PackedStringArray();
 	
 	PackedStringArray available_list;
 	for(int i = 0; i < t5_service->get_glasses_count(); i++) {
@@ -211,7 +227,7 @@ PackedStringArray TiltFiveXRInterface::get_available_glasses_ids() {
 }
 
 PackedStringArray TiltFiveXRInterface::get_reserved_glasses_ids() {
-    if(!t5_service) return PackedStringArray();
+	if(!t5_service) return PackedStringArray();
 	
 	PackedStringArray reserved_list;
 	for(int i = 0; i < t5_service->get_glasses_count(); i++) {
@@ -223,7 +239,7 @@ PackedStringArray TiltFiveXRInterface::get_reserved_glasses_ids() {
 }
 
 TiltFiveXRInterface::GameBoardType TiltFiveXRInterface::get_gameboard_type(const StringName glasses_id) {
-    if(!t5_service) return NO_GAMEBOARD_SET;
+	if(!t5_service) return NO_GAMEBOARD_SET;
 
 	auto entry = lookup_glasses_entry(glasses_id);
 	ERR_FAIL_COND_V_MSG(!entry, NO_GAMEBOARD_SET, "Glasses id was not found");
@@ -233,7 +249,7 @@ TiltFiveXRInterface::GameBoardType TiltFiveXRInterface::get_gameboard_type(const
 
 AABB TiltFiveXRInterface::get_gameboard_extents(GameBoardType gameboard_type) {
 	AABB result;
-    if(!t5_service) return result;
+	if(!t5_service) return result;
 
 	T5_GameboardSize size;
 	t5_service->get_gameboard_size(static_cast<T5_GameboardType>(gameboard_type), size);
@@ -253,29 +269,12 @@ uint32_t TiltFiveXRInterface::_get_capabilities() const {
 	return XR_STEREO | XR_AR;
 }
 
-bool TiltFiveXRInterface::_is_initialized() const {
-	return _initialised;
-}
-
-bool TiltFiveXRInterface::_initialize() {
-	if (!_initialised) {
-		_initialised = ((bool)t5_service) && xr_server;
-	}
-	return _initialised;
-}
-
-void TiltFiveXRInterface::_uninitialize() {
-	if (_initialised) {
-		_initialised = false;
-	}
-}
-
 bool TiltFiveXRInterface::_supports_play_area_mode(XRInterface::PlayAreaMode mode) const {
-    return mode == XRInterface::PlayAreaMode::XR_PLAY_AREA_STAGE;
+	return mode == XRInterface::PlayAreaMode::XR_PLAY_AREA_STAGE;
 }
 
 XRInterface::PlayAreaMode TiltFiveXRInterface::_get_play_area_mode() const {
-    return XRInterface::PlayAreaMode::XR_PLAY_AREA_STAGE;
+	return XRInterface::PlayAreaMode::XR_PLAY_AREA_STAGE;
 }
 
 XRInterface::TrackingStatus TiltFiveXRInterface::_get_tracking_status() const {
@@ -291,7 +290,7 @@ Vector2 TiltFiveXRInterface::_get_render_target_size() {
 		WARN_PRINT_ONCE("Glasses not set");
 		return Vector2(1216, 768);
 	}
-    return _render_glasses->get_render_size();
+	return _render_glasses->get_render_size();
 }
 
 uint32_t TiltFiveXRInterface::_get_view_count() {
@@ -299,6 +298,8 @@ uint32_t TiltFiveXRInterface::_get_view_count() {
 }
 
 Transform3D TiltFiveXRInterface::_get_camera_transform() {
+	ERR_FAIL_NULL_V_MSG(xr_server, Transform3D(), "XRServer unavailable");
+
 	if (!_initialised) {
 		return Transform3D();
 	}
@@ -313,6 +314,8 @@ Transform3D TiltFiveXRInterface::_get_camera_transform() {
 }
 
 Transform3D TiltFiveXRInterface::_get_transform_for_view(uint32_t view, const Transform3D &origin_transform) {
+	ERR_FAIL_NULL_V_MSG(xr_server, Transform3D(), "XRServer unavailable");
+
 	if (!_initialised) {
 		return Transform3D();
 	}
@@ -345,13 +348,14 @@ PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view
 }
 
 bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
-	ERR_FAIL_COND_V_MSG(_render_glasses, "Rendering viewport already set", false);
+	ERR_FAIL_NULL_V_MSG(xr_server, false, "XRServer unavailable");
+	ERR_FAIL_COND_V_MSG(_render_glasses, false, "Rendering viewport already set");
 	auto entry = lookup_glasses_by_render_target(render_target);
-	ERR_FAIL_COND_V_MSG(!entry, "Viewport does not have associated glasses", false);
+	ERR_FAIL_COND_V_MSG(!entry, false, "Viewport does not have associated glasses");
 
 	_render_glasses = entry->glasses.lock();
 
-    if(!_render_glasses->is_reserved()) 
+	if(!_render_glasses->is_reserved()) 
 		return false;
 
 	auto gameboard = Object::cast_to<TiltFiveGameboard>(ObjectDB::get_instance(entry->gameboard_id));
@@ -413,15 +417,15 @@ PackedStringArray TiltFiveXRInterface::_get_suggested_pose_names(const StringNam
 
 void TiltFiveXRInterface::_process() {
 
-    if(!t5_service) return;
+	if(!t5_service) return;
 
-    t5_service->update_connection();
-    t5_service->update_tracking();
+	t5_service->update_connection();
+	t5_service->update_tracking();
 
 	_events.clear();
-    t5_service->get_events(_events);
-    for(int i = 0; i < _events.size(); i++) 
-    {
+	t5_service->get_events(_events);
+	for(int i = 0; i < _events.size(); i++) 
+	{
 		auto glasses_idx = _events[i].glasses_num;
 		switch (_events[i].event)
 		{
@@ -457,8 +461,8 @@ void TiltFiveXRInterface::_process() {
 		
 			default: break;
 		}
-	    emit_signal("glasses_event", _glasses_index[_events[i].glasses_num].id, (int)_events[i].event);
-    }
+		emit_signal("glasses_event", _glasses_index[_events[i].glasses_num].id, (int)_events[i].event);
+	}
 }
 
 RID TiltFiveXRInterface::_get_color_texture() {

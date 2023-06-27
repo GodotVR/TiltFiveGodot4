@@ -30,7 +30,7 @@ jobs:
             artifact-path: |
               build/bin/libgdtiltfive.windows.template_debug.x86_64.dll
               build/bin/libgdtiltfive.windows.template_release.x86_64.dll
-              extension/TiltFiveNDK/lib/win64/TiltFiveNative.dll
+              extension/TiltFiveNDK/lib/win/x86_64/TiltFiveNative.dll
 
           #- name: 🍎 macOS (universal)
           #  os: macos-11
@@ -119,7 +119,7 @@ jobs:
           mkdir plugin/addons/tiltfive/bin
           # cp gdtiltfive.linux/*.so plugin/addons/tiltfive/bin/
           cp gdtiltfive.windows/build/bin/*.dll plugin/addons/tiltfive/bin/
-          cp gdtiltfive.windows/extension/TiltFiveNDK/lib/win64/*.dll plugin/addons/tiltfive/bin/
+          cp gdtiltfive.windows/extension/TiltFiveNDK/lib/win/x86_64/*.dll plugin/addons/tiltfive/bin/
           # cp gdtiltfive.android/*.so plugin/addons/tiltfive/bin/
           # cp gdtiltfive.ios/*.dylib plugin/addons/tiltfive/bin/
           # cp -R gdtiltfive.macos/libgdtiltfive.macos.* plugin/addons/tiltfive/bin/

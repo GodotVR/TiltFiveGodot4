@@ -65,12 +65,16 @@ public:
         E_STOPPED_ON_ERROR 	= GlassesEvent::E_STOPPED_ON_ERROR
     };
 
-	// Property setters and getters);
+	// Property setters and getters.
+
+	String get_application_id() const;
+	void set_application_id(const String &p_string);
+
+	String get_application_version() const;
+	void set_application_version(const String &p_string);
 
 	// Functions.
 
-	bool start_service(const String application_id, const String application_version);
-	void stop_service();
 	void reserve_glasses(const StringName glasses_id, const String display_name);
 	void start_display(const StringName glasses_id, Variant viewport, Variant xr_origin);
 	void stop_display(const StringName glasses_id);
@@ -132,11 +136,11 @@ protected:
 
 private:
 
-	bool setup();
-	void teardown();
-
 	bool _initialised = false;
 	XRServer *xr_server = nullptr;
+
+	String application_id;
+	String application_version;
 
 	std::vector<GlassesIndexEntry> _glasses_index;
 	std::vector<GlassesEvent> _events;

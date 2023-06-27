@@ -1,5 +1,11 @@
 class_name T5Manager extends Node 
 
+## The T5Manager node should be added to your
+## main scene and will manage when glasses
+## and wands are detected.
+##
+## This should be persistent.
+
 signal glasses_available(glasses_id : String)
 signal glasses_reserved(glasses_id : String)
 signal glasses_dropped(glasses_id : String)
@@ -11,26 +17,36 @@ const wand_node_list := [^"Gameboard/Wand_1", ^"Gameboard/Wand_2", ^"Gameboard/W
 var tilt_five_xr_interface: TiltFiveXRInterface 
 
 @export var automatically_start : bool = true
-@export var application_id : String = "my.game.com"
-@export var application_version : String = "0.1.0"
-@export var default_display_name : String = "Game: Player One"
 
 var reserved_glasses: Dictionary
 
-# Called when the node enters the scene tree for the first time.
+# Called when the manager is loaded and added to our scene
+func _enter_tree():
+	tilt_five_xr_interface = T5Interface.get_tile_five_xr_interface()
+
+	if tilt_five_xr_interface:
+		tilt_five_xr_interface.glasses_event.connect(on_glasses_event)
+
+# Called when the manager is removed
+func _exit_tree():
+	if tilt_five_xr_interface:
+		tilt_five_xr_interface.glasses_event.disconnect(on_glasses_event)
+
+		tilt_five_xr_interface = null
+
+# Called when our scene is fully setup
 func _ready():
-	tilt_five_xr_interface = TiltFiveXRInterface.new();
 	if not tilt_five_xr_interface:
 		return
-	tilt_five_xr_interface.glasses_event.connect(on_glasses_event)
-	if automatically_start:
-		start_service()
-		
-func _exit_tree():
-	pass
-	
+
+	if automatically_start and !tilt_five_xr_interface.is_initialized():
+		tilt_five_xr_interface.initialize()
+
 func start_service() -> bool:
-	return tilt_five_xr_interface.start_service(application_id, application_version)
+	if not tilt_five_xr_interface:
+		return false
+
+	return tilt_five_xr_interface.initialize()
 
 func has_reserved_glasses() -> bool:
 	for glasses in reserved_glasses:
@@ -46,7 +62,7 @@ func reserve_glasses(glasses_id : StringName, display_name := "") -> void:
 		print("Warning: Tilt Five glasses ", glasses_id, " already reserved")
 		return
 	if display_name.length() == 0:
-		display_name = default_display_name
+		display_name = ProjectSettings.get_setting_with_override("xr/tilt_five/default_display_name")
 	tilt_five_xr_interface.reserve_glasses(glasses_id, display_name)
 	
 func start_display(glasses_id : StringName, viewport : SubViewport):
@@ -74,7 +90,7 @@ func on_glasses_event(glasses_id, event_num):
 			if reserved_glasses.get(glasses_id, false):
 				reserved_glasses[glasses_id] = false
 				glasses_dropped.emit(glasses_id)
-		GlassesEvent.E_TRACKING:
+		TiltFiveXRInterface.E_TRACKING:
 			var gbt = tilt_five_xr_interface.get_gameboard_type(glasses_id)
 			print("Gameboard size = ", tilt_five_xr_interface.get_gameboard_extents(gbt))
 		

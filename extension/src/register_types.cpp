@@ -1,6 +1,8 @@
-#include "register_types.h"
-#include "TiltFiveXRInterface.h"
-#include "TiltFiveGameboard.h"
+#include <register_types.h>
+#include <TiltFiveXRInterface.h>
+#include <T5Origin3D.h>
+#include <T5Camera3D.h>
+#include <T5Controller3D.h>
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
@@ -15,7 +17,10 @@ void initialize_tiltfive_types(ModuleInitializationLevel p_level)
 		return;
 	}
 	ClassDB::register_class<TiltFiveXRInterface>();
-	ClassDB::register_class<TiltFiveGameboard>();
+	ClassDB::register_class<T5Origin3D>();
+	ClassDB::register_class<T5Camera3D>();
+	ClassDB::register_class<T5Node3D>();
+	ClassDB::register_class<T5Controller3D>();
 
 }
 

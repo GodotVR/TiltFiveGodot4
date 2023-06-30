@@ -10,9 +10,9 @@ signal glasses_available(glasses_id : String)
 signal glasses_reserved(glasses_id : String)
 signal glasses_dropped(glasses_id : String)
 
-const xr_origin_node := ^"Gameboard"
-
-const wand_node_list := [^"Gameboard/Wand_1", ^"Gameboard/Wand_2", ^"Gameboard/Wand_3", ^"Gameboard/Wand_4"]
+const xr_origin_node := ^"Origin"
+const xr_camera_node := ^"Origin/Camera"
+const wand_node_list := [^"Origin/Wand_1", ^"Origin/Wand_2", ^"Origin/Wand_3", ^"Origin/Wand_4"]
 
 var tilt_five_xr_interface: TiltFiveXRInterface 
 
@@ -68,11 +68,13 @@ func reserve_glasses(glasses_id : StringName, display_name := "") -> void:
 func start_display(glasses_id : StringName, viewport : SubViewport):
 	var xr_origin = viewport.get_node(xr_origin_node)
 	tilt_five_xr_interface.start_display(glasses_id, viewport, xr_origin)
-	for wand_node in wand_node_list:
-		var controller = viewport.get_node(wand_node) as XRController3D
+	var t5_camera := viewport.get_node_or_null(xr_camera_node) as T5Camera3D
+	if t5_camera:
+		t5_camera.tracker = "/user/%s/head" % glasses_id
+	for idx in 4:
+		var controller = viewport.get_node_or_null(wand_node_list[idx]) as T5Controller3D
 		if controller:
-			var tracker_name = controller.tracker
-			controller.tracker = tracker_name.replace("glasses", glasses_id)
+			controller.tracker = "/user/%s/wand_%d" % [glasses_id, idx + 1]
 		
 func on_glasses_event(glasses_id, event_num):
 	print(glasses_id, " ", event_num)

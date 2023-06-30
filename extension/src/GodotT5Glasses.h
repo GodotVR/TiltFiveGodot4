@@ -48,6 +48,10 @@ namespace GodotT5Integration {
         StringName get_wand_tracker_name(size_t wand_idx);
 
         protected:
+        virtual void on_glasses_reserved() override;
+        virtual void on_glasses_released() override;
+        virtual void on_glasses_dropped() override;
+
         virtual void on_tracking_updated() override;
 
         private:
@@ -55,6 +59,7 @@ namespace GodotT5Integration {
         void add_tracker() ;
         void update_wand(size_t wand_idx);
 
+        Ref<XRPositionalTracker> _head;
 		std::vector<Ref<XRPositionalTracker>> _wand_trackers;
 	};
 

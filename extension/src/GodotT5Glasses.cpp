@@ -84,7 +84,47 @@ PackedFloat64Array GodotT5Glasses::get_projection_for_eye(Glasses::Eye view, dou
     return arr;    
 }
 
+void GodotT5Glasses::on_glasses_reserved() {
+	XRServer *xr_server = XRServer::get_singleton();
+	ERR_FAIL_NULL(xr_server);
+
+    auto tracker_name = std::format("/user/{}/head", get_id());
+
+	_head.instantiate();
+	_head->set_tracker_type(XRServer::TRACKER_HEAD);
+	_head->set_tracker_name(tracker_name.c_str());
+	_head->set_tracker_desc("Players head");
+	xr_server->add_tracker(_head);    
+}
+
+void GodotT5Glasses::on_glasses_released() {
+    if(_head.is_valid()) {
+        XRServer *xr_server = XRServer::get_singleton();
+        ERR_FAIL_NULL(xr_server);
+
+        xr_server->remove_tracker(_head);
+    }
+}
+
+void GodotT5Glasses::on_glasses_dropped() {
+    if(_head.is_valid()) {
+        XRServer *xr_server = XRServer::get_singleton();
+        ERR_FAIL_NULL(xr_server);
+
+        xr_server->remove_tracker(_head);
+    }
+}
+
 void GodotT5Glasses::on_tracking_updated() {
+    if(_head.is_valid()) {
+        _head->set_pose(
+            "default", 
+            get_head_transform(), 
+            Vector3(), 
+            Vector3(), 
+            is_tracking() ? godot::XRPose::XR_TRACKING_CONFIDENCE_HIGH : godot::XRPose::XR_TRACKING_CONFIDENCE_NONE);
+    }
+
     auto num_wands = get_num_wands();
     for(int wand_idx = 0; wand_idx < num_wands; ++wand_idx) {
         if(wand_idx == _wand_trackers.size())
@@ -113,7 +153,7 @@ void GodotT5Glasses::add_tracker() {
     Ref<XRPositionalTracker> positional_tracker;
     positional_tracker.instantiate();
 
-    auto tracker_name = std::format("{}/tilt_five_wand_{}", get_id(), new_id);
+    auto tracker_name = std::format("/user/{}/wand_{}", get_id(), new_id);
  
     positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
     positional_tracker->set_tracker_name(tracker_name.c_str());

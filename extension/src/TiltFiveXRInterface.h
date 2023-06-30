@@ -10,7 +10,7 @@
 
 #include <GodotT5Service.h>
 #include <GodotT5Glasses.h>
-#include <TiltFiveGameboard.h>
+#include <T5Origin3D.h>
 
 using godot::XRInterfaceExtension;
 using godot::XRServer;
@@ -126,7 +126,7 @@ public:
 protected:
 	static void _bind_methods();
 	
-	void _start_display(GlassesIndexEntry& entry, SubViewport* viewport, TiltFiveGameboard* xr_origin);
+	void _start_display(GlassesIndexEntry& entry, SubViewport* viewport, T5Origin3D* xr_origin);
 	void _stop_display(GlassesIndexEntry& entry);
 
 	GlassesIndexEntry* lookup_glasses_entry(StringName glasses_id);

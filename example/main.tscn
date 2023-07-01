@@ -1,9 +1,13 @@
-[gd_scene load_steps=12 format=3 uid="uid://ckbe6draoen0x"]
+[gd_scene load_steps=15 format=3 uid="uid://ckbe6draoen0x"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_ptcg0"]
 [ext_resource type="Script" path="res://addons/tiltfive/T5Manager.gd" id="2_dibvp"]
+[ext_resource type="PackedScene" uid="uid://cgc1hi6pem5qt" path="res://objects/tiltfive/T5Glasses.tscn" id="3_u7fgn"]
+[ext_resource type="PackedScene" uid="uid://bte5dqm427t1m" path="res://objects/misc/container.tscn" id="4_cec18"]
+[ext_resource type="PackedScene" uid="uid://ctdhv1mdu1sle" path="res://objects/misc/ball.tscn" id="5_ii1yx"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gbwc2"]
+size = Vector3(0.1, 0.1, 0.1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iuako"]
 
@@ -20,6 +24,7 @@ albedo_color = Color(0.176471, 0.14902, 1, 1)
 albedo_color = Color(0, 0.419608, 0.462745, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_qm7rn"]
+size = Vector3(0.1, 0.1, 0.1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0arwu"]
 albedo_color = Color(0.862745, 0, 0.0235294, 1)
@@ -32,45 +37,78 @@ script = ExtResource("1_ptcg0")
 
 [node name="T5Manager" type="Node" parent="."]
 script = ExtResource("2_dibvp")
+glasses_scene = ExtResource("3_u7fgn")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.952497, -0.0534809, 0.299816, -0.283211, 0.206458, 0.936572, -0.111988, -0.976993, 0.181504, 2.31774, 1.62798, 0)
 
 [node name="Boxes" type="Node3D" parent="."]
+visible = false
 
 [node name="Center" type="MeshInstance3D" parent="Boxes"]
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_iuako")
 
 [node name="Positive Y" type="MeshInstance3D" parent="Boxes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_70r0u")
 
 [node name="Positive Y2" type="MeshInstance3D" parent="Boxes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_pftuj")
 
 [node name="Positive Z" type="MeshInstance3D" parent="Boxes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.15)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_dji1h")
 
 [node name="Negative Z" type="MeshInstance3D" parent="Boxes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.15)
 mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_00c7w")
 
 [node name="Positive X" type="MeshInstance3D" parent="Boxes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0, 0)
 mesh = SubResource("BoxMesh_qm7rn")
 surface_material_override/0 = SubResource("StandardMaterial3D_0arwu")
 
 [node name="Negative X" type="MeshInstance3D" parent="Boxes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0, 0)
 mesh = SubResource("BoxMesh_qm7rn")
 surface_material_override/0 = SubResource("StandardMaterial3D_qrhlq")
 
-[connection signal="glasses_available" from="T5Manager" to="." method="_on_t5_manager_glasses_available"]
-[connection signal="glasses_reserved" from="T5Manager" to="." method="_on_t5_manager_glasses_reserved"]
+[node name="Container" parent="." instance=ExtResource("4_cec18")]
+
+[node name="Ball01" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0874791, 0.0501798, 0)
+
+[node name="Ball02" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0303763, 0.0501798, -0.101343)
+
+[node name="Ball03" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.078237, 0.0501798, -0.053349)
+
+[node name="Ball04" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.146313, 0.0501798, -0.150023)
+
+[node name="Ball05" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.146313, 0.0501798, 0.0851073)
+
+[node name="Ball06" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0427268, 0.0501798, 0.120713)
+
+[node name="Ball07" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.057337, 0.0501798, 0.120713)
+
+[node name="Ball08" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.124742, 0.0501798, 0.0748495)
+
+[node name="Ball09" parent="Container" instance=ExtResource("5_ii1yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.124742, 0.0501798, 0.170191)
+
+[node name="SpectatorCam" type="Camera3D" parent="."]
+transform = Transform3D(0.76339, -0.580546, 0.283201, -2.98023e-08, 0.438434, 0.898764, -0.645938, -0.686107, 0.334696, 0.188827, 0.535742, 0.253795)
+cull_mask = 3
+far = 25.0

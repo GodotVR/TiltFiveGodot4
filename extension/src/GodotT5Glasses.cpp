@@ -117,12 +117,16 @@ void GodotT5Glasses::on_glasses_dropped() {
 
 void GodotT5Glasses::on_tracking_updated() {
     if(_head.is_valid()) {
-        _head->set_pose(
-            "default", 
-            get_head_transform(), 
-            Vector3(), 
-            Vector3(), 
-            is_tracking() ? godot::XRPose::XR_TRACKING_CONFIDENCE_HIGH : godot::XRPose::XR_TRACKING_CONFIDENCE_NONE);
+        if (is_tracking()) {
+            _head->set_pose(
+                "default", 
+                get_head_transform(), 
+                Vector3(), 
+                Vector3(), 
+                godot::XRPose::XR_TRACKING_CONFIDENCE_HIGH);
+        } else {
+            _head->invalidate_pose("default");
+        }
     }
 
     auto num_wands = get_num_wands();

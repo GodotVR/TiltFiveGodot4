@@ -344,7 +344,9 @@ PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view
 		return arr;
 	}
 
-	return _render_glasses->get_projection_for_eye(p_view == 0 ? Eye::Left : Eye::Right, aspect, z_near, z_far);
+	auto world_scale = xr_server->get_world_scale();
+
+	return _render_glasses->get_projection_for_eye(p_view == 0 ? Eye::Left : Eye::Right, aspect, z_near * world_scale, z_far * world_scale);
 }
 
 bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {

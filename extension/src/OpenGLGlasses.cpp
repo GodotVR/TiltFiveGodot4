@@ -52,8 +52,6 @@ void OpenGLGlasses::allocate_textures() {
 void OpenGLGlasses::deallocate_textures() {
     auto render_server = RenderingServer::get_singleton();
 
-    int width, height;
-    Glasses::get_display_size(width, height);
     for(int i = 0; i < _swap_chain_textures.size(); i++) {
         _swap_chain_textures[i].deallocate_textures();
         set_swap_chain_texture_array(i, 0);

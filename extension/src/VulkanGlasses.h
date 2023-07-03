@@ -23,7 +23,6 @@ namespace GodotT5Integration {
         virtual void on_glasses_reserved() override;
         virtual void on_glasses_released() override;
         virtual void on_glasses_dropped() override;
-        virtual void on_send_frame(int swap_chain_idx) override;
 
         public:
 

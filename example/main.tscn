@@ -1,14 +1,21 @@
-[gd_scene load_steps=12 format=3 uid="uid://ckbe6draoen0x"]
+[gd_scene load_steps=17 format=3 uid="uid://ckbe6draoen0x"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_ptcg0"]
 [ext_resource type="Script" path="res://addons/tiltfive/T5Manager.gd" id="2_dibvp"]
+[ext_resource type="Script" path="res://addons/tiltfive/scenes/helpers/SelectableBody.gd" id="3_jespo"]
+[ext_resource type="PackedScene" uid="uid://dl3mv76qkuscf" path="res://T5Glasses.tscn" id="3_xx6p7"]
+[ext_resource type="Material" uid="uid://blq3i2qbhoyum" path="res://addons/tiltfive/materials/highlight_overlay_material.tres" id="5_cq8r1"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gbwc2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iuako"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_pbofy"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_70r0u"]
 albedo_color = Color(0, 1, 0.215686, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1q0d0"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pftuj"]
 albedo_color = Color(0.980392, 0.815686, 0, 1)
@@ -32,20 +39,38 @@ script = ExtResource("1_ptcg0")
 
 [node name="T5Manager" type="Node" parent="."]
 script = ExtResource("2_dibvp")
+glasses_scene = ExtResource("3_xx6p7")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.952497, -0.0534809, 0.299816, -0.283211, 0.206458, 0.936572, -0.111988, -0.976993, 0.181504, 2.31774, 1.62798, 0)
 
 [node name="Boxes" type="Node3D" parent="."]
 
-[node name="Center" type="MeshInstance3D" parent="Boxes"]
+[node name="CenterBody" type="StaticBody3D" parent="Boxes"]
+script = ExtResource("3_jespo")
+grow_amount = 0.05
+
+[node name="Center" type="MeshInstance3D" parent="Boxes/CenterBody"]
+material_overlay = ExtResource("5_cq8r1")
 mesh = SubResource("BoxMesh_gbwc2")
+skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_iuako")
 
-[node name="Positive Y" type="MeshInstance3D" parent="Boxes"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Boxes/CenterBody"]
+shape = SubResource("BoxShape3D_pbofy")
+
+[node name="PositiveYBody" type="StaticBody3D" parent="Boxes"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+script = ExtResource("3_jespo")
+grow_amount = 0.05
+
+[node name="Positive Y" type="MeshInstance3D" parent="Boxes/PositiveYBody"]
 mesh = SubResource("BoxMesh_gbwc2")
+skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_70r0u")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Boxes/PositiveYBody"]
+shape = SubResource("BoxShape3D_1q0d0")
 
 [node name="Positive Y2" type="MeshInstance3D" parent="Boxes"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5, 0)
@@ -72,5 +97,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 mesh = SubResource("BoxMesh_qm7rn")
 surface_material_override/0 = SubResource("StandardMaterial3D_qrhlq")
 
-[connection signal="glasses_available" from="T5Manager" to="." method="_on_t5_manager_glasses_available"]
-[connection signal="glasses_reserved" from="T5Manager" to="." method="_on_t5_manager_glasses_reserved"]
+[node name="SpectatorCam" type="Camera3D" parent="."]
+transform = Transform3D(0.670983, -0.138786, 0.728368, 0, 0.982326, 0.187176, -0.741472, -0.125592, 0.659125, 14.0459, 4.9572, 12.9908)
+cull_mask = 3

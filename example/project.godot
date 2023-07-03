@@ -27,6 +27,12 @@ trigger={
 ]
 }
 
+[layer_names]
+
+3d_render/layer_1="All"
+3d_render/layer_2="Only spectator"
+3d_render/layer_3="Only glasses"
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

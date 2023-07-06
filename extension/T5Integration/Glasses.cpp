@@ -543,6 +543,7 @@ namespace T5Integration {
 
 			// t5 exclusivity group 3 - serialized in main thread
 			T5_Result result = t5SendFrameToGlasses(_glasses_handle, &frameInfo);
+			_current_frame_idx = (_current_frame_idx + 1) % _swap_chain_frames.size();
 
 			LOG_TOGGLE(false, result == T5_SUCCESS, "Started sending frames", "Stoped sending frames");
 			if (result == T5_SUCCESS)
@@ -558,8 +559,6 @@ namespace T5Integration {
 			else {
 				_state.reset(GlassesState::ERROR);
 			}
-
-			_current_frame_idx = (_current_frame_idx + 1) % _swap_chain_frames.size();
 		}
 	}
 

@@ -14,7 +14,7 @@ extends Node
 
 var tilt_five_xr_interface: TiltFiveXRInterface 
 
-func get_tile_five_xr_interface() -> TiltFiveXRInterface:
+func get_tilt_five_xr_interface() -> TiltFiveXRInterface:
 	return tilt_five_xr_interface
 
 func _define_project_setting(

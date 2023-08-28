@@ -26,7 +26,7 @@ var glasses_node: Node3D
 
 # Called when the manager is loaded and added to our scene
 func _enter_tree():
-	tilt_five_xr_interface = T5Interface.get_tile_five_xr_interface()
+	tilt_five_xr_interface = T5Interface.get_tilt_five_xr_interface()
 
 	if tilt_five_xr_interface:
 		tilt_five_xr_interface.glasses_event.connect(on_glasses_event)

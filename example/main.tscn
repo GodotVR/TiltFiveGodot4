@@ -1,6 +1,6 @@
 [gd_scene load_steps=17 format=3 uid="uid://ckbe6draoen0x"]
 
-[ext_resource type="Script" path="res://main.gd" id="1_ptcg0"]
+[ext_resource type="Script" path="res://main.gd" id="1_xvgge"]
 [ext_resource type="Script" path="res://addons/tiltfive/T5Manager.gd" id="2_dibvp"]
 [ext_resource type="Script" path="res://addons/tiltfive/scenes/helpers/SelectableBody.gd" id="3_jespo"]
 [ext_resource type="PackedScene" uid="uid://dl3mv76qkuscf" path="res://T5Glasses.tscn" id="3_xx6p7"]
@@ -35,7 +35,7 @@ albedo_color = Color(0.862745, 0, 0.0235294, 1)
 albedo_color = Color(0.741176, 0, 0.686275, 1)
 
 [node name="Main" type="Node3D"]
-script = ExtResource("1_ptcg0")
+script = ExtResource("1_xvgge")
 
 [node name="T5Manager" type="Node" parent="."]
 script = ExtResource("2_dibvp")
@@ -100,3 +100,6 @@ surface_material_override/0 = SubResource("StandardMaterial3D_qrhlq")
 [node name="SpectatorCam" type="Camera3D" parent="."]
 transform = Transform3D(0.670983, -0.138786, 0.728368, 0, 0.982326, 0.187176, -0.741472, -0.125592, 0.659125, 14.0459, 4.9572, 12.9908)
 cull_mask = 3
+
+[connection signal="glasses_scene_was_added" from="T5Manager" to="." method="_on_t5_manager_glasses_scene_was_added"]
+[connection signal="glasses_scene_will_be_removed" from="T5Manager" to="." method="_on_t5_manager_glasses_scene_will_be_removed"]

@@ -1,6 +1,8 @@
-extends SubViewport
+class_name T5GlassesBase extends SubViewport
 
 @onready var wand = $Origin/Wand_1
+
+var glasses_id : String
 
 func _process(_delta):
 	if wand:

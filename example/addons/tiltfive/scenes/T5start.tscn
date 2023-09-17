@@ -1,0 +1,17 @@
+[gd_scene load_steps=5 format=3 uid="uid://bpe32n8omfrdw"]
+
+[ext_resource type="Script" path="res://addons/tiltfive/T5Start.gd" id="1_rbw4x"]
+[ext_resource type="PackedScene" uid="uid://cnjvy4x25r3ae" path="res://addons/tiltfive/assets/T5_border_XE_raised.glb" id="2_60bkt"]
+[ext_resource type="PackedScene" uid="uid://s3wiiyeuos30" path="res://addons/tiltfive/assets/T5_border.glb" id="2_ignnc"]
+[ext_resource type="PackedScene" uid="uid://bvi54sixhguyl" path="res://addons/tiltfive/assets/T5_border_XE.glb" id="3_in14s"]
+
+[node name="T5Start" type="Node3D"]
+script = ExtResource("1_rbw4x")
+
+[node name="T5_border" parent="." instance=ExtResource("2_ignnc")]
+
+[node name="T5_border_XE" parent="." instance=ExtResource("3_in14s")]
+visible = false
+
+[node name="T5_border_XE_raised" parent="." instance=ExtResource("2_60bkt")]
+visible = false

@@ -1,10 +1,11 @@
-[gd_scene load_steps=17 format=3 uid="uid://ckbe6draoen0x"]
+[gd_scene load_steps=18 format=3 uid="uid://ckbe6draoen0x"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_ptcg0"]
 [ext_resource type="Script" path="res://addons/tiltfive/T5Manager.gd" id="2_dibvp"]
 [ext_resource type="Script" path="res://addons/tiltfive/scenes/helpers/SelectableBody.gd" id="3_jespo"]
 [ext_resource type="PackedScene" uid="uid://dl3mv76qkuscf" path="res://T5Glasses.tscn" id="3_xx6p7"]
 [ext_resource type="Material" uid="uid://blq3i2qbhoyum" path="res://addons/tiltfive/materials/highlight_overlay_material.tres" id="5_cq8r1"]
+[ext_resource type="PackedScene" uid="uid://bpe32n8omfrdw" path="res://addons/tiltfive/scenes/T5start.tscn" id="6_232si"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gbwc2"]
 
@@ -100,3 +101,6 @@ surface_material_override/0 = SubResource("StandardMaterial3D_qrhlq")
 [node name="SpectatorCam" type="Camera3D" parent="."]
 transform = Transform3D(0.670983, -0.138786, 0.728368, 0, 0.982326, 0.187176, -0.741472, -0.125592, 0.659125, 14.0459, 4.9572, 12.9908)
 cull_mask = 3
+
+[node name="T5Start" parent="." instance=ExtResource("6_232si")]
+content_scale = 16.0

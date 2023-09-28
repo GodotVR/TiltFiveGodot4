@@ -27,34 +27,24 @@ Scons should be run from an environment that has the Microsoft x64 development t
 
 > `scons example target=[template_debug | template_release]` Copy build products to the `example\addons\tilt-five\bin`
 
-## Basic usage 
-
-- Open the project in the examples directory
-- Run the default scene
-
 ## Starting with a new project
 
 To use this plugin in your own project:
-- Copy the add on into your project
+- Copy the `addons/tiltfive` folder into your project
 - Open Project->Project Settings
-  - On the Autoload tab add `res://addons/tiltfive/T5Interface.gd`
-- Create a main scene and add a T5Manager node
+  - Click on the Plugins tab 
+  - Make sure the Tilt Five plugin is enabled
+  - You may need to restart Godot
+- In the main scene add a T5Manager node
+- In the main scene add a T5Gameboard node
+- On the T5Manager node set the start location to the T5Gameboard node
+- Add lights and other items to your scene
 
-See example project for futher details.
+Running should now show your scene on the Tilt Five system
 
 ## Dependencies
 
 - Uses the godot-cpp headers
 - Uses the Tilt Five NDK
 
-## TODO
 
-- API for tangible camera on the glasses
-- Better docs
-- Examples
-
-
-## Acknowledgments
-
-This was written by referring a lot to [GodotVR](https://github.com/GodotVR) code and reading 
-[Godot's](https://github.com/godotengine/godot) source code. 

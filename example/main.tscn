@@ -1,9 +1,9 @@
 [gd_scene load_steps=17 format=3 uid="uid://ckbe6draoen0x"]
 
-[ext_resource type="Script" path="res://main.gd" id="1_ptcg0"]
+[ext_resource type="Script" path="res://main.gd" id="1_xvgge"]
 [ext_resource type="Script" path="res://addons/tiltfive/T5Manager.gd" id="2_dibvp"]
+[ext_resource type="PackedScene" uid="uid://dl3mv76qkuscf" path="res://T5Glasses.tscn" id="3_i6xar"]
 [ext_resource type="Script" path="res://addons/tiltfive/scenes/helpers/SelectableBody.gd" id="3_jespo"]
-[ext_resource type="PackedScene" uid="uid://dl3mv76qkuscf" path="res://T5Glasses.tscn" id="3_xx6p7"]
 [ext_resource type="Material" uid="uid://blq3i2qbhoyum" path="res://addons/tiltfive/materials/highlight_overlay_material.tres" id="5_cq8r1"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_gbwc2"]
@@ -35,11 +35,15 @@ albedo_color = Color(0.862745, 0, 0.0235294, 1)
 albedo_color = Color(0.741176, 0, 0.686275, 1)
 
 [node name="Main" type="Node3D"]
-script = ExtResource("1_ptcg0")
+script = ExtResource("1_xvgge")
 
-[node name="T5Manager" type="Node" parent="."]
+[node name="T5Manager" type="Node" parent="." node_paths=PackedStringArray("start_location")]
 script = ExtResource("2_dibvp")
-glasses_scene = ExtResource("3_xx6p7")
+glasses_scene = ExtResource("3_i6xar")
+start_location = NodePath("../T5Gameboard")
+
+[node name="T5Gameboard" type="T5Gameboard" parent="."]
+content_scale = 16.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.952497, -0.0534809, 0.299816, -0.283211, 0.206458, 0.936572, -0.111988, -0.976993, 0.181504, 2.31774, 1.62798, 0)

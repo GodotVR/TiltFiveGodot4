@@ -1,7 +1,10 @@
 [configuration]
 
 entry_symbol = "tiltfive_library_init"
-compatibility_minimum = "4.1.0"
+compatibility_minimum = "4.1.2"
+
+[icons]
+T5Gameboard = "res://addons/tiltfive/assets/board.svg"
 
 [libraries]
 

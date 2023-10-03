@@ -3,7 +3,3 @@
 [ext_resource type="PackedScene" uid="uid://c44ott7hdtkjs" path="res://addons/tiltfive/assets/T5-glasses.glb" id="1_22or3"]
 
 [node name="T5-glasses" instance=ExtResource("1_22or3")]
-
-[node name="Glasses - Cleaned" parent="." index="0"]
-transform = Transform3D(-1, -8.74228e-08, 3.82137e-15, 0, -4.37114e-08, -1, 8.74228e-08, -1, 4.37114e-08, 0, 0, 0)
-layers = 2

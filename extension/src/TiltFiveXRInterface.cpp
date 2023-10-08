@@ -372,22 +372,11 @@ bool TiltFiveXRInterface::_pre_draw_viewport(const RID &render_target) {
 }
 
 void TiltFiveXRInterface::_post_draw_viewport(const RID &render_target, const Rect2 &screen_rect) {
-	Rect2 src_rect(0.0f, 0.0f, 1.0f, 1.0f);
-	Rect2 dst_rect = screen_rect;
-
-	// halve our width
-	Vector2 size = dst_rect.get_size();
-	size.x = size.x * 0.5;
-	dst_rect.size = size;
-
-	Vector2 eye_center(0.0, 0.0);
-
-	//add_blit(render_target, src_rect, screen_rect, true, 0, false, eye_center, 0, 0, 0, 0);
+	_render_glasses->on_post_draw();
 	_render_glasses.reset();
 }
 
 void TiltFiveXRInterface::_end_frame() {
-
 	for(auto& entry : _glasses_index) {
 		if(entry.rendering) {
 			entry.glasses.lock()->send_frame();
@@ -418,7 +407,6 @@ PackedStringArray TiltFiveXRInterface::_get_suggested_pose_names(const StringNam
 }
 
 void TiltFiveXRInterface::_process() {
-
 	if(!t5_service) return;
 
 	t5_service->update_connection();

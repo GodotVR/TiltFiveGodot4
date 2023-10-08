@@ -19,18 +19,20 @@ namespace GodotT5Integration {
             Ref<Texture2DArray> render_tex;
         };
 
+        public:
+
+        OpenGLGlasses(std::string_view id);
+    
+        virtual RID get_color_texture() override;
+
+        private:
+
         void allocate_textures();
         void deallocate_textures();
 
         virtual void on_glasses_reserved() override;
         virtual void on_glasses_released() override;
         virtual void on_glasses_dropped() override;
-
-        public:
-
-        OpenGLGlasses(std::string_view id);
-    
-        virtual RID get_color_texture() override;
 
         private:
 

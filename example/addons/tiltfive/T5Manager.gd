@@ -29,12 +29,14 @@ func _enter_tree():
 	tilt_five_xr_interface = T5Interface.get_tilt_five_xr_interface()
 
 	if tilt_five_xr_interface:
+		tilt_five_xr_interface.service_event.connect(on_service_event)
 		tilt_five_xr_interface.glasses_event.connect(on_glasses_event)
 
 # Called when the manager is removed
 func _exit_tree():
 	if tilt_five_xr_interface:
 		tilt_five_xr_interface.glasses_event.disconnect(on_glasses_event)
+		tilt_five_xr_interface.service_event.disconnect(on_service_event)
 
 		tilt_five_xr_interface = null
 
@@ -88,10 +90,21 @@ func start_display(glasses_id : StringName, viewport : SubViewport):
 func node_name_from_glasses_id(glasses_id: String) -> String:
 	return "Glasses_" + glasses_id.replace("-", "_")
 
+func on_service_event(event_num):
+	match  event_num:
+		TiltFiveXRInterface.E_SERVICE_T5_UNAVAILABLE:
+			print("Tilt Five service is unavailable")
+		TiltFiveXRInterface.E_SERVICE_T5_INCOMPATIBLE_VERSION:
+			print("Tilt Five service has an incompatible version")
+		TiltFiveXRInterface.E_SERVICE_RUNNING:
+			print("Tilt Five service is running")
+		TiltFiveXRInterface.E_SERVICE_STOPPED:
+			print("Tilt Five service has stopped")
+
 func on_glasses_event(glasses_id, event_num):
 	match event_num:
-		TiltFiveXRInterface.E_AVAILABLE:
-			print_verbose(glasses_id, " E_AVAILABLE")
+		TiltFiveXRInterface.E_GLASSES_AVAILABLE:
+			print_verbose(glasses_id, " E_GLASSES_AVAILABLE")
 			if not reserved_glasses.has(glasses_id):
 				reserved_glasses[glasses_id] = false
 
@@ -102,14 +115,14 @@ func on_glasses_event(glasses_id, event_num):
 			# Let others who are interested know
 			glasses_available.emit(glasses_id)
 
-		TiltFiveXRInterface.E_UNAVAILABLE:
-			print_verbose(glasses_id, " E_UNAVAILABLE")
+		TiltFiveXRInterface.E_GLASSES_UNAVAILABLE:
+			print_verbose(glasses_id, " E_GLASSES_UNAVAILABLE")
 
 			# Let others who are interested know
 			reserved_glasses.erase(glasses_id)
 
-		TiltFiveXRInterface.E_RESERVED:
-			print_verbose(glasses_id, " E_RESERVED")
+		TiltFiveXRInterface.E_GLASSES_RESERVED:
+			print_verbose(glasses_id, " E_GLASSES_RESERVED")
 
 			reserved_glasses[glasses_id] = true
 
@@ -123,8 +136,8 @@ func on_glasses_event(glasses_id, event_num):
 			# Let others who are interested know
 			glasses_reserved.emit(glasses_id)
 
-		TiltFiveXRInterface.E_DROPPED:
-			print_verbose(glasses_id, " E_DROPPED")
+		TiltFiveXRInterface.E_GLASSES_DROPPED:
+			print_verbose(glasses_id, " E_GLASSES_DROPPED")
 
 			var node_name = node_name_from_glasses_id(glasses_id)
 			var gview = glasses_node.get_node_or_null(node_name)
@@ -137,12 +150,12 @@ func on_glasses_event(glasses_id, event_num):
 				reserved_glasses[glasses_id] = false
 				glasses_dropped.emit(glasses_id)
 
-		TiltFiveXRInterface.E_TRACKING:
+		TiltFiveXRInterface.E_GLASSES_TRACKING:
 			var gbt = tilt_five_xr_interface.get_gameboard_type(glasses_id)
-			print_verbose(glasses_id, " E_TRACKING, Gameboard size = ", tilt_five_xr_interface.get_gameboard_extents(gbt))
+			print_verbose(glasses_id, " E_GLASSES_TRACKING, Gameboard size = ", tilt_five_xr_interface.get_gameboard_extents(gbt))
 
-		TiltFiveXRInterface.E_NOT_TRACKING:
-			print_verbose(glasses_id, " E_NOT_TRACKING")
+		TiltFiveXRInterface.E_GLASSES_NOT_TRACKING:
+			print_verbose(glasses_id, " E_GLASSES_NOT_TRACKING")
 
 		_:
 			print_verbose(glasses_id, " - unknown event: ", event_num)

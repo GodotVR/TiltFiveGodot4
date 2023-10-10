@@ -11,6 +11,8 @@ std::mutex g_t5_exclusivity_group_2;
 T5Service::T5Service() {
 	_graphics_api = T5_GraphicsApi::kT5_GraphicsApi_None;
 	_scheduler = ObjectRegistry::scheduler();
+
+	_state.clear_all(true);
 }
 
 T5Service::~T5Service() {
@@ -19,11 +21,12 @@ T5Service::~T5Service() {
 }
 
 bool T5Service::start_service(const std::string_view application_id, std::string_view application_version) {
+	if(_state.is_any_current(T5ServiceState::RUNNING | T5ServiceState::STARTING)) 
+		return true;
 	if(_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_None) {
 		LOG_ERROR("TiltFive graphics api is not set");
 		return false;
 	}
-	if(_is_started) return true;
 
 	T5_ClientInfo clientInfo;
 	clientInfo.applicationId = application_id.data();
@@ -36,19 +39,19 @@ bool T5Service::start_service(const std::string_view application_id, std::string
 		return false;
 	}
 
-	_is_started = true;
+	_state.set(T5ServiceState::STARTING);
 
 	_scheduler->start();
-
-	_scheduler->add_task(query_ndk_version());
-	_scheduler->add_task(query_glasses_list());
+	_scheduler->add_task(startup_checks());
 
 	return true;
 }
 
 void T5Service::stop_service() {
-	if(!_is_started) return;
-	_is_started = false;
+	if(_state.is_not_current(T5ServiceState::RUNNING))
+		return;
+
+	_state.clear(T5ServiceState::RUNNING);
 
 	_scheduler->stop();
 	for(int i = 0; i < _glasses_list.size(); i++) {
@@ -73,12 +76,53 @@ std::optional<int> T5Service::find_glasses_idx(const std::string_view glasses_id
 	return {};
 }
 
-CotaskPtr T5Service::query_ndk_version() {
+
+CotaskPtr T5Service::startup_checks() {
+	bool service_okay = false;
+	co_await query_t5_service_version();
+
+	if(_t5_service_version == "no service" || _t5_service_version == "unknown") {
+		_state.set(T5ServiceState::T5_UNAVAILABLE);
+	}
+	else if(_t5_service_version == "service incompatible") {
+		_state.set(T5ServiceState::T5_INCOMPATIBLE_VERSION);
+	}
+	else { 
+		int major;
+		int minor;
+		int revision;
+
+		if(sscanf(_t5_service_version.c_str(), "%d.%d.%d", &major, &minor, &revision) == 3) {
+			if(major >= t5_version_major && minor >= t5_version_minor && revision >= t5_version_revision) {
+				service_okay = true;
+			} else {
+				_state.set(T5ServiceState::T5_INCOMPATIBLE_VERSION);
+			}
+		} else {
+			// If we can't parse the version string somethings wrong
+			LOG_WARNING("Could not parse Tilt Five version");
+			_state.set(T5ServiceState::T5_UNAVAILABLE);
+		}
+	}
+	co_await run_in_foreground;
+	
+	if(service_okay) {
+		_state.clear(T5ServiceState::STARTING);
+		_state.set(T5ServiceState::RUNNING);
+		_scheduler->add_task(query_glasses_list());	
+	}
+	else {
+		stop_service();
+	}
+
+}
+
+CotaskPtr T5Service::query_t5_service_version() {
 	std::vector<char> buffer;
 	size_t buffer_size = 32;
 	buffer.resize(buffer_size);
 
-	T5_Result result;
+	T5_Result result = T5_ERROR_IO_FAILURE;
 	for(int tries = 0; tries < 10; ++tries) {
 		size_t buffer_size = buffer.size();
 		{
@@ -88,22 +132,33 @@ CotaskPtr T5Service::query_ndk_version() {
 		if(result == T5_ERROR_OVERFLOW) {
 			buffer.resize(buffer_size);
 			continue;
-		}
-		else if(result != T5_ERROR_NO_SERVICE && result != T5_ERROR_IO_FAILURE) {
+		} 
+		else if(result == T5_TIMEOUT && 
+				result != T5_ERROR_NO_SERVICE && 
+				result != T5_ERROR_IO_FAILURE) {
 			break;
 		}
 		co_await task_sleep(_poll_rate_for_retry);
 	}
 	co_await run_in_foreground;
-	if(result != T5_SUCCESS) {
+	if(result == T5_SUCCESS) {
+		buffer.resize(buffer_size);
+		_t5_service_version = buffer.data();
+	} 
+	else if(result == T5_ERROR_NO_SERVICE) {
 		LOG_T5_ERROR(result);
-		_ndk_version = "unknown";
+		_t5_service_version = "no service";
+	} 
+	else if(result == T5_ERROR_SERVICE_INCOMPATIBLE) {
+		LOG_T5_ERROR(result);
+		_t5_service_version = "service incompatible";
 	}
 	else {
-		buffer.resize(buffer_size);
-		_ndk_version = buffer.data();
+		LOG_T5_ERROR(result);
+		_t5_service_version = "unknown";
 	}
-	log_message("Tilt Five NDK version: ", _ndk_version);
+
+	log_message("Tilt Five NDK version: ", _t5_service_version);
 }
 
 CotaskPtr T5Service::query_glasses_list() {
@@ -171,7 +226,7 @@ std::unique_ptr<Glasses> T5Service::create_glasses(const std::string_view id) {
 }
 
 bool T5Service::is_service_started() {
-	return _is_started;
+	return _state.is_current(T5ServiceState::RUNNING);
 }
 
 void T5Service::reserve_glasses(int glasses_num, const std::string_view display_name) {
@@ -207,7 +262,7 @@ void T5Service::update_connection() {
 }
 
 void T5Service::update_tracking() {
-	if(!_is_started)
+	if(!is_service_started())
 		return;
 
 	_scheduler->schedule_tasks();
@@ -221,7 +276,27 @@ void T5Service::update_tracking() {
 	tracking_updated();
 }
 
-void T5Service::get_events(std::vector<GlassesEvent>& out_events) {
+void T5Service::get_service_events(std::vector<T5ServiceEvent>& out_events) {
+	
+	auto changes = _state.get_changes();
+	auto current_state = _state.get_current();
+
+	if(_state.became_set(T5ServiceState::T5_UNAVAILABLE)) {
+		out_events.push_back(T5ServiceEvent(T5ServiceEvent::E_T5_UNAVAILABLE));
+	}
+	if(_state.became_set(T5ServiceState::T5_INCOMPATIBLE_VERSION)) {
+		out_events.push_back(T5ServiceEvent(T5ServiceEvent::E_T5_INCOMPATIBLE_VERSION));
+	}
+	if(_state.became_set(T5ServiceState::RUNNING)) {
+		out_events.push_back(T5ServiceEvent(T5ServiceEvent::E_RUNNING));
+	} 
+	if(_state.became_clear(T5ServiceState::RUNNING)) {
+		out_events.push_back(T5ServiceEvent(T5ServiceEvent::E_STOPPED));
+	}
+	_state.reset_changes();
+}
+
+void T5Service::get_glasses_events(std::vector<GlassesEvent>& out_events) {
 	for(int i = 0; i < _glasses_list.size(); ++i) {
 		_glasses_list[i]->get_events(i, out_events);
 	}

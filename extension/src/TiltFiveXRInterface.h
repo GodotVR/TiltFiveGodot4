@@ -29,6 +29,7 @@ using godot::AABB;
 using GodotT5Integration::GodotT5Service;
 using GodotT5Integration::GodotT5Glasses;
 using T5Integration::GlassesEvent;
+using T5Integration::T5ServiceEvent;
 
 class TiltFiveXRInterface : public XRInterfaceExtension {
 	GDCLASS(TiltFiveXRInterface, XRInterfaceExtension);
@@ -52,17 +53,25 @@ class TiltFiveXRInterface : public XRInterfaceExtension {
 public:
 	// Constants.
 
+    enum ServiceEventType
+    {
+        E_SERVICE_STOPPED         			= T5ServiceEvent::E_STOPPED,
+        E_SERVICE_RUNNING          			= T5ServiceEvent::E_RUNNING,
+        E_SERVICE_T5_UNAVAILABLE     		= T5ServiceEvent::E_T5_UNAVAILABLE,
+		E_SERVICE_T5_INCOMPATIBLE_VERSION	= T5ServiceEvent::E_T5_INCOMPATIBLE_VERSION
+    };
+
     enum GlassesEventType
     {
-        E_ADDED         	= GlassesEvent::E_ADDED,
-        E_LOST          	= GlassesEvent::E_LOST,
-        E_AVAILABLE     	= GlassesEvent::E_AVAILABLE,
-        E_UNAVAILABLE   	= GlassesEvent::E_UNAVAILABLE,
-        E_RESERVED      	= GlassesEvent::E_CONNECTED,
-        E_DROPPED  			= GlassesEvent::E_DISCONNECTED,
-        E_TRACKING      	= GlassesEvent::E_TRACKING,
-        E_NOT_TRACKING  	= GlassesEvent::E_NOT_TRACKING,
-        E_STOPPED_ON_ERROR 	= GlassesEvent::E_STOPPED_ON_ERROR
+        E_GLASSES_ADDED         	= GlassesEvent::E_ADDED,
+        E_GLASSES_LOST          	= GlassesEvent::E_LOST,
+        E_GLASSES_AVAILABLE     	= GlassesEvent::E_AVAILABLE,
+        E_GLASSES_UNAVAILABLE   	= GlassesEvent::E_UNAVAILABLE,
+        E_GLASSES_RESERVED      	= GlassesEvent::E_CONNECTED,
+        E_GLASSES_DROPPED  			= GlassesEvent::E_DISCONNECTED,
+        E_GLASSES_TRACKING      	= GlassesEvent::E_TRACKING,
+        E_GLASSES_NOT_TRACKING  	= GlassesEvent::E_NOT_TRACKING,
+        E_GLASSES_STOPPED_ON_ERROR 	= GlassesEvent::E_STOPPED_ON_ERROR
     };
 
 	// Property setters and getters.
@@ -143,7 +152,8 @@ private:
 	String application_version;
 
 	std::vector<GlassesIndexEntry> _glasses_index;
-	std::vector<GlassesEvent> _events;
+	std::vector<GlassesEvent> _glasses_events;
+	std::vector<T5ServiceEvent> _service_events;
 
     GodotT5Service::Ptr t5_service;
 
@@ -153,8 +163,7 @@ private:
 };
 
 VARIANT_ENUM_CAST(TiltFiveXRInterface::GameBoardType)
-
-
+VARIANT_ENUM_CAST(TiltFiveXRInterface::ServiceEventType);
 VARIANT_ENUM_CAST(TiltFiveXRInterface::GlassesEventType);
 
 #endif // ! TILT_FIVE_XR_INTERFACE_H

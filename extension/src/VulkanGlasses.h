@@ -17,6 +17,15 @@ namespace GodotT5Integration {
             RID right_eye_tex;
         };
 
+        public:
+
+        VulkanGlasses(std::string_view id);
+    
+        virtual void on_post_draw() override;
+        virtual RID get_color_texture() override;
+
+        private:
+
         void allocate_textures();
         void deallocate_textures();
 
@@ -24,11 +33,6 @@ namespace GodotT5Integration {
         virtual void on_glasses_released() override;
         virtual void on_glasses_dropped() override;
 
-        public:
-
-        VulkanGlasses(std::string_view id);
-    
-        virtual RID get_color_texture() override;
 
         private:
 

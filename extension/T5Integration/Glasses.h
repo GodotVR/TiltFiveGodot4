@@ -118,7 +118,10 @@ class Glasses
     void get_wand_stick(size_t wand_num, float& out_stick_x, float& out_stick_y);
     void get_wand_buttons(size_t wand_num, WandButtons& buttons);
 
+    virtual void on_post_draw() {}
+
 protected:
+
     void set_swap_chain_size(int size);
     void set_swap_chain_texture_pair(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle);
     void set_swap_chain_texture_array(int swap_chain_idx, intptr_t array_handle);

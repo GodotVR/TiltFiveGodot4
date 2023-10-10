@@ -13,6 +13,7 @@ config_version=5
 config/name="TiltFiveGodot4"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.1")
+run/max_fps=60
 config/icon="res://icon.png"
 
 [autoload]
@@ -32,10 +33,6 @@ trigger={
 3d_render/layer_1="All"
 3d_render/layer_2="Only spectator"
 3d_render/layer_3="Only glasses"
-
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
 
 [xr]
 

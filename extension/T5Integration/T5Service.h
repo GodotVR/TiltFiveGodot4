@@ -16,22 +16,44 @@ using TaskSystem::task_sleep;
 extern std::mutex g_t5_exclusivity_group_1;
 //extern std::mutex g_t5_exclusivity_group_2;
 
+// Required minimum t5 service version
+const int t5_version_major = 1;
+const int t5_version_minor = 4;
+const int t5_version_revision = 0;
+
+
+namespace T5ServiceState {
+	const uint16_t RUNNING					= 0x0001; 
+	const uint16_t STARTING 				= 0x0002;
+
+	const uint16_t T5_UNAVAILABLE			= 0x0008; 
+	const uint16_t T5_INCOMPATIBLE_VERSION	= 0x0010; 
+	const uint16_t ERROR					= 0x1000; 
+};
+
+using T5ServiceFlags = StateFlags<uint16_t>;
+
+struct T5ServiceEvent {
+    enum EType
+    {
+        E_NONE          			= 0,
+        E_STOPPED       			= 1,
+        E_RUNNING					= 2,
+        E_T5_UNAVAILABLE			= 3,
+        E_T5_INCOMPATIBLE_VERSION   = 4
+    };
+    T5ServiceEvent(EType evt) 
+    : event(evt)
+    {}
+
+    EType event;
+};
+
+
 class T5Service {
-protected:
 
-	CotaskPtr query_ndk_version();
-	CotaskPtr query_glasses_list();
-
-	virtual std::unique_ptr<Glasses> create_glasses(const std::string_view id);
-
-	virtual bool should_glasses_be_reserved(int glasses_idx) { return true; }
-
-	virtual void connection_updated() {}
-	virtual void tracking_updated() {}
-
-	void set_graphics_context(const T5_GraphicsContextGL& opengl_context);
-	void set_graphics_context(const T5_GraphicsContextVulkan& vulkan_context);
 public:
+
 	using Ptr = std::shared_ptr<T5Service>;
 
 	T5Service();
@@ -56,7 +78,8 @@ public:
 
 	void update_connection();
 	void update_tracking();
-	void get_events(std::vector<GlassesEvent>& out_events);
+	void get_service_events(std::vector<T5ServiceEvent>& out_events);
+	void get_glasses_events(std::vector<GlassesEvent>& out_events);
 
 	T5_GraphicsApi get_graphics_api() const;
 	void* get_graphics_context_handle();
@@ -66,14 +89,30 @@ public:
 
 protected:
 
+	CotaskPtr startup_checks();
+	CotaskPtr query_t5_service_version();
+	CotaskPtr query_glasses_list();
+
+	virtual std::unique_ptr<Glasses> create_glasses(const std::string_view id);
+
+	virtual bool should_glasses_be_reserved(int glasses_idx) { return true; }
+
+	virtual void connection_updated() {}
+	virtual void tracking_updated() {}
+
+	void set_graphics_context(const T5_GraphicsContextGL& opengl_context);
+	void set_graphics_context(const T5_GraphicsContextVulkan& vulkan_context);
+
+protected:
+
 	std::string _application_id;
 	std::string _application_version;
 
 	T5_Context _context = nullptr;
-	std::string _ndk_version;
+	std::string _t5_service_version;
 	std::vector<Glasses::Ptr> _glasses_list;
 
-	bool _is_started = false;
+	T5ServiceFlags _state;
 
 	std::chrono::milliseconds _poll_rate_for_monitoring = 2s;
 	std::chrono::milliseconds _poll_rate_for_retry = 100ms;
@@ -90,19 +129,23 @@ inline void T5Service::set_graphics_context(const T5_GraphicsContextGL& opengl_c
 	_graphics_api = T5_GraphicsApi::kT5_GraphicsApi_GL;
 	_opengl_graphics_context = opengl_context;
 }
+
 inline void T5Service::set_graphics_context(const T5_GraphicsContextVulkan& vulkan_context) {
 	_graphics_api = T5_GraphicsApi::kT5_GraphicsApi_Vulkan;
 	_vulkan_graphics_context = vulkan_context;
 }
+
 inline T5_GraphicsApi T5Service::get_graphics_api() const {
 	return _graphics_api;
 }
+
 inline bool T5Service::is_image_texture_array() const {
 	if (_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_GL && 
 		_opengl_graphics_context.textureMode == T5_GraphicsApi_GL_TextureMode::kT5_GraphicsApi_GL_TextureMode_Array)
 		return true;
 	return false;
 }
+
 inline void* T5Service::get_graphics_context_handle() {
 	switch (_graphics_api)
 	{

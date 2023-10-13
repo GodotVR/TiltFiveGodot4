@@ -50,9 +50,27 @@ class StateFlags
 		return (_current.load() & state) == state;
 	}
 
+	bool is_any_current(FlagType state) const
+	{
+		return (_current.load() & state) != 0;
+	}
+
+	bool is_not_current(FlagType state) const
+	{
+		return (_current.load() & state) != state;
+	}
+
 	bool any_changed(FlagType state) const
 	{
 		return ((_current.load() ^ _previous) & state) != 0;
+	}
+
+	bool became_set(FlagType state) const {
+		return (_current.load() & state) == state && (_previous & state) != state;
+	}
+
+	bool became_clear(FlagType state) const {
+		return (_current.load() & state) != state && (_previous & state) == state;
 	}
 
 	void reset_changes()

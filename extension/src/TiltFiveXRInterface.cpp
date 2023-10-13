@@ -31,19 +31,25 @@ void TiltFiveXRInterface::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "application_version"), "set_application_version", "get_application_version");
 
 	// Signals.
+	ADD_SIGNAL(MethodInfo("service_event", PropertyInfo(Variant::INT, "event")));
 	ADD_SIGNAL(MethodInfo("glasses_event", PropertyInfo(Variant::STRING, "glasses_id"), PropertyInfo(Variant::INT, "event")));
-	// ClassDB::bind_method(D_METHOD("emit_custom_signal", "name", "value"), &Example::emit_custom_signal);
 
 	// Constants.
-	BIND_ENUM_CONSTANT(E_ADDED);
-	BIND_ENUM_CONSTANT(E_LOST);
-	BIND_ENUM_CONSTANT(E_AVAILABLE);
-	BIND_ENUM_CONSTANT(E_UNAVAILABLE);
-	BIND_ENUM_CONSTANT(E_RESERVED);
-	BIND_ENUM_CONSTANT(E_DROPPED);
-	BIND_ENUM_CONSTANT(E_TRACKING);
-	BIND_ENUM_CONSTANT(E_NOT_TRACKING);
-	BIND_ENUM_CONSTANT(E_STOPPED_ON_ERROR);
+	BIND_ENUM_CONSTANT(E_SERVICE_STOPPED);
+	BIND_ENUM_CONSTANT(E_SERVICE_RUNNING);
+	BIND_ENUM_CONSTANT(E_SERVICE_T5_UNAVAILABLE);
+	BIND_ENUM_CONSTANT(E_SERVICE_T5_INCOMPATIBLE_VERSION);
+
+	BIND_ENUM_CONSTANT(E_GLASSES_ADDED);
+	BIND_ENUM_CONSTANT(E_GLASSES_LOST);
+	BIND_ENUM_CONSTANT(E_GLASSES_AVAILABLE);
+	BIND_ENUM_CONSTANT(E_GLASSES_UNAVAILABLE);
+	BIND_ENUM_CONSTANT(E_GLASSES_RESERVED);
+	BIND_ENUM_CONSTANT(E_GLASSES_DROPPED);
+	BIND_ENUM_CONSTANT(E_GLASSES_TRACKING);
+	BIND_ENUM_CONSTANT(E_GLASSES_NOT_TRACKING);
+	BIND_ENUM_CONSTANT(E_GLASSES_STOPPED_ON_ERROR);
+
 	BIND_ENUM_CONSTANT(NO_GAMEBOARD_SET);
 	BIND_ENUM_CONSTANT(LE_GAMEBOARD);
 	BIND_ENUM_CONSTANT(XE_GAMEBOARD);
@@ -412,12 +418,17 @@ void TiltFiveXRInterface::_process() {
 	t5_service->update_connection();
 	t5_service->update_tracking();
 
-	_events.clear();
-	t5_service->get_events(_events);
-	for(int i = 0; i < _events.size(); i++) 
-	{
-		auto glasses_idx = _events[i].glasses_num;
-		switch (_events[i].event)
+	_service_events.clear();
+	t5_service->get_service_events(_service_events);
+	for(int i = 0; i < _service_events.size(); i++) {
+		emit_signal("service_event", _service_events[i].event);
+	}
+
+	_glasses_events.clear();
+	t5_service->get_glasses_events(_glasses_events);
+	for(int i = 0; i < _glasses_events.size(); i++) {
+		auto glasses_idx = _glasses_events[i].glasses_num;
+		switch (_glasses_events[i].event)
 		{
 			case GlassesEvent::E_ADDED: {
 				if(_glasses_index.size() != glasses_idx) {
@@ -451,7 +462,7 @@ void TiltFiveXRInterface::_process() {
 		
 			default: break;
 		}
-		emit_signal("glasses_event", _glasses_index[_events[i].glasses_num].id, (int)_events[i].event);
+		emit_signal("glasses_event", _glasses_index[_glasses_events[i].glasses_num].id, (int)_glasses_events[i].event);
 	}
 }
 

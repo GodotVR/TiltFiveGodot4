@@ -5,6 +5,7 @@
 #include <Logging.h>
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/quaternion.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/texture_layered.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/rendering_device.hpp>
@@ -19,6 +20,7 @@ using godot::RenderingDevice;
 using godot::TypedArray;
 using godot::Error;
 using godot::XRServer;
+using godot::UtilityFunctions;
 using TextureLayeredType = godot::RenderingServer::TextureLayeredType;
 using T5Integration::Glasses;
 using T5Integration::WandButtons;
@@ -88,7 +90,8 @@ void GodotT5Logger::log_warning(const char* message, const char* func_name, cons
 }
 
 void GodotT5Logger::log_string(const char* message) {
-	std::cout << message << std::endl;
+    Variant msg = message;
+    UtilityFunctions::print(msg);
 }
 
 

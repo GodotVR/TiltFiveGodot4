@@ -3,6 +3,7 @@
 #include <T5Origin3D.h>
 #include <T5Camera3D.h>
 #include <T5Controller3D.h>
+#include <T5Gameboard.h>
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
@@ -21,6 +22,8 @@ void initialize_tiltfive_types(ModuleInitializationLevel p_level)
 	ClassDB::register_class<T5Camera3D>();
 	ClassDB::register_class<T5Node3D>();
 	ClassDB::register_class<T5Controller3D>();
+	ClassDB::register_class<T5Gameboard>();
+
 
 }
 

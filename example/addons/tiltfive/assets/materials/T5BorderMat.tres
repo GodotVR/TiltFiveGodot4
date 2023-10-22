@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://df4vk6rpxs784"]
+
+[ext_resource type="Texture2D" uid="uid://b42436tkvdjtj" path="res://addons/tiltfive/assets/materials/T5_border_tex.png" id="1_d1o3y"]
+
+[resource]
+albedo_texture = ExtResource("1_d1o3y")

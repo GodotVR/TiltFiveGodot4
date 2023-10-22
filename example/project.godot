@@ -20,6 +20,10 @@ config/icon="res://icon.png"
 
 T5Interface="*res://addons/tiltfive/T5Interface.gd"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/tiltfive/plugin.cfg")
+
 [input]
 
 trigger={

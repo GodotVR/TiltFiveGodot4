@@ -34,7 +34,6 @@ albedo_color = Color(0.862745, 0, 0.0235294, 1)
 [node name="T5Glasses" instance=ExtResource("1_uq4nw")]
 
 [node name="Origin" parent="." index="0"]
-gameboard_scale = 16.0
 script = ExtResource("1_qprko")
 
 [node name="T5-glasses" parent="Origin/Camera" index="0" instance=ExtResource("3_xuir6")]

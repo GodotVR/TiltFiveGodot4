@@ -24,6 +24,24 @@ func _enter_tree():
 func _exit_tree():
 	T5Interface.t5_manager = null
 
+## Invoked by T5Interface when the Tilt Five service has started
+func service_started():
+	pass
+	
+## Invoked by T5Interface when the Tilt Five service has stopped
+func service_stopped():
+	pass
+	
+## Invoked by T5Interface when the Tilt Five service is not available
+## The driver might not be installed
+func service_unvailable():
+	pass
+	
+## Invoked by T5Interface when the Tilt Five service installed does
+## not meet the minimum version requirements
+func service_incorrect_version():
+	pass
+
 ## Invoked by the T5Interface to find out if the glasses should be used in
 ## game
 func should_use_glasses(glasses_id : String) -> bool:

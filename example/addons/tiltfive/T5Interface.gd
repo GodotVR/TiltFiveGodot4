@@ -57,9 +57,11 @@ func _enter_tree():
 
 		XRServer.add_interface(tilt_five_xr_interface)
 		tilt_five_xr_interface.glasses_event.connect(_on_glasses_event)
+		tilt_five_xr_interface.service_event.connect(_on_service_event)
 
 func _exit_tree():
 	if tilt_five_xr_interface:
+		tilt_five_xr_interface.service_event.disconnect(_on_service_event)
 		tilt_five_xr_interface.glasses_event.disconnect(_on_glasses_event)
 		if tilt_five_xr_interface.is_initialized():
 			tilt_five_xr_interface.uninitialize()
@@ -93,6 +95,17 @@ func _process_glasses():
 			glasses_state.attempting_to_reserve = true
 			tilt_five_xr_interface.reserve_glasses(glasses_id, t5_manager.get_glasses_display_name(glasses_id))
 
+func _on_service_event(event_num):
+	match event_num:
+		TiltFiveXRInterface.E_SERVICE_RUNNING:
+			t5_manager.service_started()
+		TiltFiveXRInterface.E_SERVICE_STOPPED:
+			t5_manager.service_stopped()
+		TiltFiveXRInterface.E_SERVICE_T5_UNAVAILABLE:
+			t5_manager.service_unvailable()
+		TiltFiveXRInterface.E_SERVICE_T5_INCOMPATIBLE_VERSION:
+			t5_manager.service_incorrect_version()
+	
 func _on_glasses_event(glasses_id, event_num):
 	var glasses_state = glasses_dict.get(glasses_id) as GlassesState
 	if not glasses_state:

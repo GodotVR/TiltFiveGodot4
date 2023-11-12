@@ -3,39 +3,3 @@
 [ext_resource type="PackedScene" uid="uid://bggv3rg34lcs6" path="res://addons/tiltfive/assets/T5-wand.glb" id="1_rqv18"]
 
 [node name="T5-wand" instance=ExtResource("1_rqv18")]
-
-[node name="Wand" parent="." index="0"]
-transform = Transform3D(-1, -8.74228e-08, 3.82137e-15, 0, -4.37114e-08, -1, 8.74228e-08, -1, 4.37114e-08, 0, 0, 0.239415)
-
-[node name="Button_A" parent="Wand" index="0"]
-layers = 2
-
-[node name="Button_B" parent="Wand" index="1"]
-layers = 2
-
-[node name="Button_One" parent="Wand" index="2"]
-layers = 2
-
-[node name="Button_T5" parent="Wand" index="3"]
-layers = 2
-
-[node name="Button_Two" parent="Wand" index="4"]
-layers = 2
-
-[node name="Button_X" parent="Wand" index="5"]
-layers = 2
-
-[node name="Button_Y" parent="Wand" index="6"]
-layers = 2
-
-[node name="Handle" parent="Wand" index="7"]
-layers = 2
-
-[node name="Pointer" parent="Wand" index="8"]
-layers = 2
-
-[node name="Stick" parent="Wand" index="9"]
-layers = 2
-
-[node name="Trigger" parent="Wand" index="10"]
-layers = 2

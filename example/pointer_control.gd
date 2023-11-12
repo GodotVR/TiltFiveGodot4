@@ -17,6 +17,7 @@ const WAND_BUTTON_1		:= "button_1"
 const WAND_BUTTON_2		:= "button_2"
 const WAND_BUTTON_STICK	:= "button_3"
 const WAND_BUTTON_T5	:= "button_t5"
+const WAND_BUTTON_TRIGGER	:= "trigger_click"
 	# Axis
 const WAND_ANALOG_STICK	:= "stick"
 const WAND_ANALOG_TRIGGER := "trigger"
@@ -34,6 +35,7 @@ func _ready():
 	$Controls/Three.material_override = unselected_mat
 	$Controls/T5.material_override = unselected_mat
 	$Controls/Trigger.material_override = unselected_mat
+	$Controls/TriggerClick.material_override = unselected_mat
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -62,6 +64,8 @@ func _on_button_pressed(button):
 			$Controls/Three.material_override = selected_mat
 		WAND_BUTTON_T5:
 			$Controls/T5.material_override = selected_mat
+		WAND_BUTTON_TRIGGER:
+			$Controls/TriggerClick.material_override = selected_mat
 
 
 func _on_button_released(button):
@@ -82,3 +86,5 @@ func _on_button_released(button):
 			$Controls/Three.material_override = unselected_mat
 		WAND_BUTTON_T5:
 			$Controls/T5.material_override = unselected_mat
+		WAND_BUTTON_TRIGGER:
+			$Controls/TriggerClick.material_override = unselected_mat

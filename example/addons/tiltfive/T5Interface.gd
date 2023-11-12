@@ -54,6 +54,7 @@ func _enter_tree():
 	if tilt_five_xr_interface:
 		tilt_five_xr_interface.application_id = T5ProjectSettings.application_id
 		tilt_five_xr_interface.application_version = T5ProjectSettings.application_version
+		tilt_five_xr_interface.trigger_click_threshold = T5ProjectSettings.trigger_click_threshhold
 
 		XRServer.add_interface(tilt_five_xr_interface)
 		tilt_five_xr_interface.glasses_event.connect(_on_glasses_event)

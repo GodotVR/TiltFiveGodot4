@@ -30,6 +30,10 @@ void TiltFiveXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_application_version"), &TiltFiveXRInterface::get_application_version);
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "application_version"), "set_application_version", "get_application_version");
 
+	ClassDB::bind_method(D_METHOD("set_trigger_click_threshold", "threshold"), &TiltFiveXRInterface::set_trigger_click_threshold);
+	ClassDB::bind_method(D_METHOD("get_trigger_click_threshold"), &TiltFiveXRInterface::get_trigger_click_threshold);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "trigger_click_threshold"), "set_trigger_click_threshold", "get_trigger_click_threshold");
+
 	// Signals.
 	ADD_SIGNAL(MethodInfo("service_event", PropertyInfo(Variant::INT, "event")));
 	ADD_SIGNAL(MethodInfo("glasses_event", PropertyInfo(Variant::STRING, "glasses_id"), PropertyInfo(Variant::INT, "event")));
@@ -70,6 +74,20 @@ String TiltFiveXRInterface::get_application_version() const {
 
 void TiltFiveXRInterface::set_application_version(const String &p_string) {
 	application_version = p_string;
+}
+
+float TiltFiveXRInterface::get_trigger_click_threshold() {
+	return _trigger_click_threshold;
+}
+
+void TiltFiveXRInterface::set_trigger_click_threshold(float threshold) {
+	_trigger_click_threshold = threshold;
+
+	for(auto& entry : _glasses_index) {
+		if(!entry.glasses.expired()) {
+			entry.glasses.lock()->set_trigger_click_threshold(_trigger_click_threshold);
+		}
+	}
 }
 
 TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_entry(StringName glasses_id) {
@@ -436,6 +454,8 @@ void TiltFiveXRInterface::_process() {
 				}
 				_glasses_index.resize(glasses_idx + 1);
 				auto glasses = t5_service->get_glasses(glasses_idx);
+				glasses->set_trigger_click_threshold(_trigger_click_threshold);
+
 				_glasses_index[glasses_idx].glasses = glasses;
 				_glasses_index[glasses_idx].id = glasses->get_id().c_str();
 				_glasses_index[glasses_idx].idx = glasses_idx;

@@ -20,6 +20,7 @@ using T5Integration::Glasses;
 namespace GodotT5Integration {
 
     constexpr int g_swap_chain_length = 3;
+    constexpr float g_trigger_hysteresis_range = 0.002; // Sort of arbitrary assume 8 bit DAC +/-(1/256)/2
 
     class GodotT5Service;
 
@@ -47,6 +48,8 @@ namespace GodotT5Integration {
 
         StringName get_wand_tracker_name(size_t wand_idx);
 
+        void set_trigger_click_threshold(float threshold);
+
         protected:
         virtual void on_glasses_reserved() override;
         virtual void on_glasses_released() override;
@@ -61,6 +64,8 @@ namespace GodotT5Integration {
 
         Ref<XRPositionalTracker> _head;
 		std::vector<Ref<XRPositionalTracker>> _wand_trackers;
+
+        float _trigger_click_threshold;
 	};
 
     inline bool GodotT5Glasses::is_reserved() {
@@ -72,6 +77,10 @@ namespace GodotT5Integration {
 
         return _wand_trackers[wand_idx]->get_tracker_name();
     }
+
+     inline void GodotT5Glasses::set_trigger_click_threshold(float threshold) {
+        _trigger_click_threshold = threshold;
+     }
 
 }
 

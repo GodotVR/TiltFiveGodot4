@@ -193,6 +193,13 @@ void GodotT5Glasses::update_wand(size_t wand_idx) {
         Vector2 stick;
         get_wand_stick(wand_idx, stick.x, stick.y);
         tracker->set_input("stick", Variant(stick));
+
+        if(trigger_value > _trigger_click_threshold + g_trigger_hysteresis_range) {
+            tracker->set_input("trigger_click", Variant(true));
+        }
+        else if(trigger_value < (_trigger_click_threshold - g_trigger_hysteresis_range)) {
+            tracker->set_input("trigger_click", Variant(false));
+        }
     }
     if(is_wand_state_set(wand_idx, WandState::BUTTONS_VALID)) {
         WandButtons buttons;

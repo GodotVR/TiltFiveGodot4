@@ -82,6 +82,9 @@ public:
 	String get_application_version() const;
 	void set_application_version(const String &p_string);
 
+	float get_trigger_click_threshold();
+	void set_trigger_click_threshold(float threshold);
+
 	// Functions.
 
 	void reserve_glasses(const StringName glasses_id, const String display_name);
@@ -150,6 +153,7 @@ private:
 
 	String application_id;
 	String application_version;
+	float _trigger_click_threshold = 0.5;
 
 	std::vector<GlassesIndexEntry> _glasses_index;
 	std::vector<GlassesEvent> _glasses_events;

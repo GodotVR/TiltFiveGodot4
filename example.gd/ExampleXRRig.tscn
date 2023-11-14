@@ -1,7 +1,7 @@
 [gd_scene load_steps=17 format=3 uid="uid://dl3mv76qkuscf"]
 
 [ext_resource type="Script" path="res://XROrigin3D.gd" id="1_qprko"]
-[ext_resource type="PackedScene" uid="uid://je0clrdu7o76" path="res://addons/tiltfive/scenes/T5GlassesBase.tscn" id="1_uq4nw"]
+[ext_resource type="PackedScene" uid="uid://je0clrdu7o76" path="res://addons/tiltfive/scenes/T5XRRig.tscn" id="1_uq4nw"]
 [ext_resource type="Script" path="res://pointer_control.gd" id="2_qcruj"]
 [ext_resource type="PackedScene" uid="uid://dnx42xctfl3mx" path="res://Controls.tscn" id="3_udc3i"]
 [ext_resource type="PackedScene" uid="uid://b1cd3jc00rhal" path="res://addons/tiltfive/assets/T5GlassesModel.tscn" id="3_xuir6"]

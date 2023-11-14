@@ -25,7 +25,7 @@ Scons should be run from an environment that has the Microsoft x64 development t
 
 > `scons target=[template_debug | template_release]` Build the shared library. Result is in `build\bin`
 
-> `scons example target=[template_debug | template_release]` Copy build products to the `example\addons\tilt-five\bin`
+> `scons example target=[template_debug | template_release]` Copy build products to the `example.gd\addons\tilt-five\bin`
 
 ## Starting with a new project
 

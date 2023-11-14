@@ -37,8 +37,8 @@ if env['platform'] == 'windows':
         source=sources,
     )
 
-f1 = env.Command('example/addons/tiltfive/bin/libgdtiltfive{}{}'.format(env['suffix'], env['SHLIBSUFFIX']), library, Copy('$TARGET', '$SOURCE') )
-f2 = env.Command('example/addons/tiltfive/bin/TiltFiveNative.dll', tilt_five_library_path + '/TiltFiveNative.dll', Copy('$TARGET', '$SOURCE') )
+f1 = env.Command('example.gd/addons/tiltfive/bin/libgdtiltfive{}{}'.format(env['suffix'], env['SHLIBSUFFIX']), library, Copy('$TARGET', '$SOURCE') )
+f2 = env.Command('example.gd/addons/tiltfive/bin/TiltFiveNative.dll', tilt_five_library_path + '/TiltFiveNative.dll', Copy('$TARGET', '$SOURCE') )
 
 env.Alias('example', [f1, f2])
 

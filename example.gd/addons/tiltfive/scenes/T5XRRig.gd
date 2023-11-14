@@ -1,4 +1,4 @@
-class_name T5GlassesBase extends SubViewport
+class_name T5XRRig extends SubViewport
 
 @onready var wand = $Origin/Wand_1
 

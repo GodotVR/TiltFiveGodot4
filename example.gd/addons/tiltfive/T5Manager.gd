@@ -2,25 +2,25 @@
 class_name T5Manager extends "res://addons/tiltfive/T5ManagerBase.gd" 
 ## Create a instance of an XR rig for each pair of Tilt Five glasses
 ##
-## This node will create an instance of the T5GlassesBase or derived scene
+## This node will create an instance of the T5XRRig or derived scene
 ## for each pair of Tilt Five glasses that are found. The glasses
 ## scene is an XR rig with an SubViewport, T5Origin, Camera, and wand.
-## If the glasses scene is not specified then T5GlassesBase.tscn is used.
+## If the glasses scene is not specified then T5XRRig.tscn is used.
 ## 
 ## This should be persistent.
 
 ## Signal when the glasses scene is added to the main scene
-signal glasses_scene_was_added(glasses : T5GlassesBase)
+signal glasses_scene_was_added(glasses : T5XRRig)
 
 ## Signal when the glasses scene is removed from the main scene
-signal glasses_scene_will_be_removed(glasses : T5GlassesBase)
+signal glasses_scene_will_be_removed(glasses : T5XRRig)
 
 const xr_origin_node := ^"Origin"
 const xr_camera_node := ^"Origin/Camera"
 const wand_node_list := [^"Origin/Wand_1", ^"Origin/Wand_2"]
 
-## [PackedScene] that will instanced for a pair of Tilt Five glasses. Defaults to T5GlassesBase.tscn
-@export var glasses_scene : PackedScene = preload("res://addons/tiltfive/scenes/T5GlassesBase.tscn")
+## [PackedScene] that will instanced for a pair of Tilt Five glasses. Defaults to T5XRRig.tscn
+@export var glasses_scene : PackedScene = preload("res://addons/tiltfive/scenes/T5XRRig.tscn")
 
 ## A [T5Gameboard] node in the scene that will be used to set the location and content scale of the
 ## [T5Origin] in the glasses scene

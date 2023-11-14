@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://main.gd" id="1_xvgge"]
 [ext_resource type="Script" path="res://addons/tiltfive/T5Manager.gd" id="2_dibvp"]
-[ext_resource type="PackedScene" uid="uid://dl3mv76qkuscf" path="res://T5Glasses.tscn" id="3_i6xar"]
+[ext_resource type="PackedScene" uid="uid://dl3mv76qkuscf" path="res://ExampleXRRig.tscn" id="3_i6xar"]
 [ext_resource type="Script" path="res://addons/tiltfive/scenes/helpers/SelectableBody.gd" id="3_jespo"]
 [ext_resource type="Material" uid="uid://blq3i2qbhoyum" path="res://addons/tiltfive/materials/highlight_overlay_material.tres" id="5_cq8r1"]
 

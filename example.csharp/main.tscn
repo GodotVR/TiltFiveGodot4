@@ -1,0 +1,74 @@
+[gd_scene load_steps=10 format=3 uid="uid://cc7yui6nxllyl"]
+
+[ext_resource type="Script" path="res://addons/tiltfive/T5Manager.cs" id="1_e8x2j"]
+[ext_resource type="PackedScene" uid="uid://ba8h6c1mtb3h0" path="res://ExampleRig.tscn" id="2_vyjmk"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_r54is"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v64xu"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ldtrq"]
+albedo_color = Color(0.957524, 0.204212, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3igwb"]
+albedo_color = Color(5.0056e-06, 0.999087, 0.127906, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lunuq"]
+albedo_color = Color(0, 1, 0.584314, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ufftv"]
+albedo_color = Color(0.0313726, 0, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bbl8k"]
+albedo_color = Color(0.45098, 0, 1, 1)
+
+[node name="Main" type="Node3D"]
+
+[node name="T5Manager" type="Node3D" parent="." node_paths=PackedStringArray("startLocation")]
+script = ExtResource("1_e8x2j")
+xrRigScene = ExtResource("2_vyjmk")
+startLocation = NodePath("../T5Gameboard")
+
+[node name="T5Gameboard" type="T5Gameboard" parent="."]
+content_scale = 16.0
+
+[node name="Center" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_r54is")
+
+[node name="Positive X" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.32374, 0, 0)
+mesh = SubResource("BoxMesh_r54is")
+surface_material_override/0 = SubResource("StandardMaterial3D_v64xu")
+
+[node name="Negative X" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0, 0)
+mesh = SubResource("BoxMesh_r54is")
+surface_material_override/0 = SubResource("StandardMaterial3D_ldtrq")
+
+[node name="Positive Y" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+mesh = SubResource("BoxMesh_r54is")
+surface_material_override/0 = SubResource("StandardMaterial3D_3igwb")
+
+[node name="Negative Y" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.2, 0)
+mesh = SubResource("BoxMesh_r54is")
+surface_material_override/0 = SubResource("StandardMaterial3D_lunuq")
+
+[node name="Positive Z" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.2)
+mesh = SubResource("BoxMesh_r54is")
+surface_material_override/0 = SubResource("StandardMaterial3D_ufftv")
+
+[node name="Positive Z2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.2)
+mesh = SubResource("BoxMesh_r54is")
+surface_material_override/0 = SubResource("StandardMaterial3D_bbl8k")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.99099, 0.062492, 0.118462, -0.133934, 0.462383, 0.876506, 0, -0.884475, 0.466587, -5.18588, 2.90804, 2.01052)
+
+[node name="SpectatorCamera" type="Camera3D" parent="."]
+transform = Transform3D(0.518176, -0.550674, 0.654409, -7.45058e-09, 0.765146, 0.643857, -0.855274, -0.333631, 0.396481, 8.04684, 5.20446, 5.82711)
+cull_mask = 3

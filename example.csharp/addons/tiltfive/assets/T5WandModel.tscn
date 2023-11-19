@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://fipea8dbocg4"]
+
+[ext_resource type="PackedScene" uid="uid://bggv3rg34lcs6" path="res://addons/tiltfive/assets/T5-wand.glb" id="1_rqv18"]
+[ext_resource type="Script" path="res://addons/tiltfive/assets/AutoScale.cs" id="2_m6gly"]
+
+[node name="T5-wand" instance=ExtResource("1_rqv18")]
+script = ExtResource("2_m6gly")
+
+[node name="Roundcube_001" parent="." index="0"]
+layers = 2

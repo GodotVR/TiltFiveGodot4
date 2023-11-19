@@ -1,0 +1,22 @@
+[configuration]
+
+entry_symbol = "tiltfive_library_init"
+compatibility_minimum = "4.1.2"
+
+[icons]
+T5Gameboard = "res://addons/tiltfive/assets/board.svg"
+
+[libraries]
+
+windows.x86_64.debug = "res://addons/tiltfive/bin/libgdtiltfive.windows.template_debug.x86_64.dll"
+windows.x86_64.release = "res://addons/tiltfive/bin/libgdtiltfive.windows.template_release.x86_64.dll"
+
+[dependencies]
+
+windows.x86_64.debug = {
+    "res://addons/tiltfive/bin/TiltFiveNative.dll" : ""
+}
+windows.x86_64.release = {
+    "res://addons/tiltfive/bin/TiltFiveNative.dll" : ""
+}
+

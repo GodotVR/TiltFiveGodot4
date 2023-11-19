@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3 uid="uid://dpbt52d0p5wjw"]
+
+[ext_resource type="Script" path="res://addons/tiltfive/scenes/T5XRRig.cs" id="1_rshxt"]
+[ext_resource type="Script" path="res://addons/tiltfive/scenes/T5OriginCS.cs" id="2_jxn4b"]
+[ext_resource type="Script" path="res://addons/tiltfive/scenes/T5CameraCS.cs" id="3_iaov5"]
+[ext_resource type="Script" path="res://addons/tiltfive/scenes/T5ControllerCS.cs" id="3_olh3w"]
+
+[node name="T5XRRig" type="SubViewport"]
+script = ExtResource("1_rshxt")
+
+[node name="Origin" type="T5Origin3D" parent="."]
+script = ExtResource("2_jxn4b")
+
+[node name="Camera" type="T5Camera3D" parent="Origin"]
+script = ExtResource("3_iaov5")
+
+[node name="Wand_1" type="T5Controller3D" parent="Origin"]
+script = ExtResource("3_olh3w")

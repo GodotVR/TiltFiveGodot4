@@ -13,7 +13,7 @@ var highlight_material : StandardMaterial3D
 var pointers_entered : Array
 
 func _ready():
-	var material : StandardMaterial3D = preload("res://addons/tiltfive/materials/highlight_overlay_material.tres")
+	var material : StandardMaterial3D = preload("res://materials/highlight_overlay_material.tres")
 	highlight_material = material.duplicate(true)
 	highlight_material.grow_amount = grow_amount
 

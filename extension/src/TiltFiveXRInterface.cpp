@@ -334,7 +334,12 @@ Transform3D TiltFiveXRInterface::_get_camera_transform() {
 
 	auto hmd_transform = _render_glasses->get_head_transform();
 
-	return xr_server->get_reference_frame() * hmd_transform;
+	// Should be the gameboard scale set in _pre_draw_viewport.
+	auto world_scale = xr_server->get_world_scale();
+	hmd_transform.origin *= world_scale;
+
+	// We want the transform not adjusted by the reference frame.
+	return hmd_transform;
 }
 
 Transform3D TiltFiveXRInterface::_get_transform_for_view(uint32_t view, const Transform3D &origin_transform) {
@@ -347,13 +352,15 @@ Transform3D TiltFiveXRInterface::_get_transform_for_view(uint32_t view, const Tr
 		WARN_PRINT_ONCE("Glasses not set");
 		return Transform3D();
 	}
-	// Should be the gameboard scale set in _pre_draw_viewport
-	auto world_scale = xr_server->get_world_scale();
 
 	auto eye_transform = _render_glasses->get_eye_transform(view == 0 ? Eye::Left : Eye::Right);
-	eye_transform.scale(Vector3(world_scale, world_scale, world_scale));
 
-	return origin_transform * eye_transform;
+	// Should be the gameboard scale set in _pre_draw_viewport.
+	auto world_scale = xr_server->get_world_scale();
+	eye_transform.origin *= world_scale;
+
+	// Apply origin and reference frame.
+	return origin_transform * xr_server->get_reference_frame() * eye_transform;
 }
 
 PackedFloat64Array TiltFiveXRInterface::_get_projection_for_view(uint32_t p_view, double aspect, double z_near, double z_far) {

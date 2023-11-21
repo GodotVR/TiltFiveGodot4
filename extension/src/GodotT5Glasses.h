@@ -11,6 +11,7 @@ using godot::RID;
 using godot::Ref;
 using godot::XRPositionalTracker;
 using godot::Vector2;
+using godot::Vector3;
 using godot::Transform3D;
 using godot::StringName;
 using godot::PackedFloat64Array;
@@ -37,8 +38,8 @@ namespace GodotT5Integration {
         bool is_reserved();
 
         Vector2 get_render_size();
-        virtual Transform3D get_head_transform();
-        virtual Transform3D get_eye_offset(Glasses::Eye eye);
+        virtual Transform3D get_head_transform(Vector3 eye_offset = Vector3());
+        virtual Vector3 get_eye_offset(Glasses::Eye eye);
         virtual Transform3D get_eye_transform(Glasses::Eye eye);
 	    virtual PackedFloat64Array get_projection_for_eye(Glasses::Eye view, double aspect, double z_near, double z_far);
 

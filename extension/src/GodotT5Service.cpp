@@ -70,10 +70,14 @@ void GodotT5Service::use_vulkan_api() {
     set_graphics_context(graphics_context);
 }
 
-void GodotT5Math::rotate_vector(float quat_x, float quat_y, float quat_z, float quat_w, float& vec_x, float& vec_y, float& vec_z)  {
+void GodotT5Math::rotate_vector(float quat_x, float quat_y, float quat_z, float quat_w, float& vec_x, float& vec_y, float& vec_z, bool inverse)  {
 
     godot::Quaternion orient(quat_x, quat_y, quat_z, quat_w);
     godot::Vector3 vec(vec_x, vec_y, vec_z);
+
+    if (inverse) {
+        orient = orient.inverse();
+    }
 
 	vec = orient.xform(vec);
 

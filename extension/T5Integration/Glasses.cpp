@@ -501,7 +501,8 @@ namespace T5Integration {
 			pose.rotToGLS_GBD.w,
 			pos.x,
 			pos.y,
-			pos.z);
+			pos.z,
+			true);
 
 		pos.x += pose.posGLS_GBD.x;
 		pos.y += pose.posGLS_GBD.y;

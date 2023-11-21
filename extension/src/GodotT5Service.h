@@ -49,7 +49,7 @@ public:
 class GodotT5Math : public T5Integration::T5Math {
 	public:
 	using Ptr = std::shared_ptr<GodotT5Math>;
-	void rotate_vector(float quat_x, float quat_y, float quat_z, float quat_w, float& vec_x, float& vec_y, float& vec_z) override;
+	void rotate_vector(float quat_x, float quat_y, float quat_z, float quat_w, float& vec_x, float& vec_y, float& vec_z, bool inverse = false) override;
 };
 
 class GodotT5Logger : public T5Integration::Logger {

@@ -31,6 +31,9 @@ using GodotT5Integration::GodotT5Glasses;
 using T5Integration::GlassesEvent;
 using T5Integration::T5ServiceEvent;
 
+// ID assigned to this Godot plugin
+static constexpr uint8_t kSdkTypeCommunityGodot = 0x70;
+
 class TiltFiveXRInterface : public XRInterfaceExtension {
 	GDCLASS(TiltFiveXRInterface, XRInterfaceExtension);
 

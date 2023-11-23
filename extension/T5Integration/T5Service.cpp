@@ -20,7 +20,7 @@ T5Service::~T5Service() {
 	stop_service();
 }
 
-bool T5Service::start_service(const std::string_view application_id, std::string_view application_version) {
+bool T5Service::start_service(const std::string_view application_id, std::string_view application_version, uint8_t sdk_type) {
 	if(_state.is_any_current(T5ServiceState::RUNNING | T5ServiceState::STARTING)) 
 		return true;
 	if(_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_None) {
@@ -31,6 +31,7 @@ bool T5Service::start_service(const std::string_view application_id, std::string
 	T5_ClientInfo clientInfo;
 	clientInfo.applicationId = application_id.data();
 	clientInfo.applicationVersion = application_version.data();
+	clientInfo.sdkType = sdk_type;
 	
 	auto result = t5CreateContext(&_context, &clientInfo, nullptr);
 
@@ -240,14 +241,6 @@ void T5Service::release_glasses(int glasses_num) {
 	if(glasses_num < 0 || glasses_num >= _glasses_list.size()) return;
 
 	_glasses_list[glasses_num]->disconnect();
-}
-
-void T5Service::connect_glasses(int glasses_num, std::string display_name) {
-	reserve_glasses(glasses_num, display_name);
-}
-
-void T5Service::disconnect_glasses(int glasses_num) {
-	release_glasses(glasses_num);
 }
 
 void T5Service::update_connection() {

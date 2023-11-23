@@ -67,6 +67,7 @@ void GodotT5Service::use_vulkan_api() {
     graphics_context.device = (void*)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_DEVICE, RID(), 0);
     graphics_context.queue = (void*)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_QUEUE, RID(), 0);
     graphics_context.queueFamilyIndex = (uint32_t)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_QUEUE_FAMILY_INDEX, RID(), 0);
+    graphics_context.textureMode = kT5_GraphicsApi_Vulkan_TextureMode_ImageView;
     set_graphics_context(graphics_context);
 }
 

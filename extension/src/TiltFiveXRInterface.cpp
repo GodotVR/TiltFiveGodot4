@@ -152,7 +152,7 @@ bool TiltFiveXRInterface::_initialize() {
 	auto ai = application_id.ascii();
 	auto av = application_version.ascii();
 
-	bool is_started = t5_service->start_service(ai.get_data(), av.get_data());
+	bool is_started = t5_service->start_service(ai.get_data(), av.get_data(), kSdkTypeCommunityGodot);
 	ERR_FAIL_COND_V_MSG(!is_started, false, "Couldn't start T5 Service");
 
 	_initialised = true;

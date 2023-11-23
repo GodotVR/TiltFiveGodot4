@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Tilt Five, Inc.
+ * Copyright (C) 2020-2023 Tilt Five, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,27 @@ typedef struct {
     float z;
 } T5_Quat;
 
+/// \brief Matrix order
+typedef enum {
+    kT5_MatrixOrder_RowMajor    = 1,
+    kT5_MatrixOrder_ColumnMajor = 2,
+} T5_MatrixOrder;
+
+/// \brief Z Depth range
+typedef enum {
+    kT5_DepthRange_MinusOneToOne = 1,
+    kT5_DepthRange_ZeroToOne     = 2,
+} T5_DepthRange;
+
+/// \brief Handedness of a cartesian coordinate system
+///
+/// For an explanation of coordinate system handedness, refer to
+///  https://learn.microsoft.com/en-us/windows/win32/direct3d9/coordinate-systems
+typedef enum {
+    kT5_CartesianCoordinateHandedness_Left  = 1,
+    kT5_CartesianCoordinateHandedness_Right = 2,
+} T5_CartesianCoordinateHandedness;
+
 /// \brief Opaque handle used with system-wide functions
 ///
 /// Obtained from t5GetContext().<br/>
@@ -98,11 +119,11 @@ typedef enum {
 } T5_GraphicsApi;
 
 typedef enum {
-    /// \breif Treat ::T5_FrameInfo.leftTexHandle and ::T5_FrameInfo.rightTexHandle as a pair of
+    /// \brief Treat ::T5_FrameInfo.leftTexHandle and ::T5_FrameInfo.rightTexHandle as a pair of
     /// GL_TEXTURE_2D.
     kT5_GraphicsApi_GL_TextureMode_Pair = 1,
 
-    /// \breif Treat ::T5_FrameInfo.leftTexHandle as a GL_TEXTURE_2D_ARRAY.
+    /// \brief Treat ::T5_FrameInfo.leftTexHandle as a GL_TEXTURE_2D_ARRAY.
     /// ::T5_FrameInfo.rightTexHandle is unused.
     ///
     /// Left/Right array index should be specified in ::T5_GraphicsContextGL::leftEyeArrayIndex
@@ -120,6 +141,16 @@ typedef struct {
     /// \brief In kT5_GraphicsApi_GL_TextureMode_Array, specify the array index of the right eye
     uint32_t rightEyeArrayIndex;
 } T5_GraphicsContextGL;
+
+typedef enum {
+    /// \brief Treat ::T5_FrameInfo.leftTexHandle and ::T5_FrameInfo.rightTexHandle as a pair of
+    /// pointers to VkImage handles.
+    kT5_GraphicsApi_Vulkan_TextureMode_Image = 1,
+
+    /// \brief Treat ::T5_FrameInfo.leftTexHandle and ::T5_FrameInfo.rightTexHandle as a pair of
+    /// pointers to VkImageView handles.
+    kT5_GraphicsApi_Vulkan_TextureMode_ImageView = 2,
+} T5_GraphicsApi_Vulkan_TextureMode;
 
 typedef struct {
     /// \brief A pointer to a VkInstance
@@ -139,6 +170,9 @@ typedef struct {
 
     /// \brief The queue family index used to create the queue
     uint32_t queueFamilyIndex;
+
+    /// \brief Specify the interpretation of the texture handles in ::T5_FrameInfo
+    T5_GraphicsApi_Vulkan_TextureMode textureMode;
 } T5_GraphicsContextVulkan;
 
 /// \brief Possible gameboard types
@@ -481,5 +515,23 @@ typedef enum {
     /// (E.g. Important firmware update) - Integer, boolean
     kT5_ParamSys_Integer_CPL_AttRequired = 2,
 } T5_ParamSys;
+
+/// \brief Projection parameters
+typedef struct {
+    /// \brief 4×4 Perspective Projection Matrix
+    double matrix[16];
+
+    /// \brief Field of View (Y Axis in Degrees)
+    double fieldOfView;
+
+    /// \brief Aspect Ratio
+    double aspectRatio;
+
+    /// \brief Framebuffer Width
+    uint16_t framebufferWidth;
+
+    /// \brief Framebuffer Height
+    uint16_t framebufferHeight;
+} T5_ProjectionInfo;
 
 /// \}

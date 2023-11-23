@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Tilt Five, Inc.
+ * Copyright (C) 2020-2023 Tilt Five, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -644,6 +644,20 @@ public:
         }
     }
 
+    /// \brief Send a Haptic Impulse to a wand
+    ///
+    /// \param[in]  handle - A handle for the desired wand to receive an impulse.
+    /// \param[in]  amplitude - The amplitude of the impulse, between [0.0 and 1.0].
+    /// \param[in]  duration - The duration of the impulse, between 0 and 320ms.
+    auto sendImpulse(T5_WandHandle handle, float amplitude, uint16_t duration) -> Result<void> {
+        T5_Result err = t5SendImpulse(mGlasses, handle, amplitude, duration);
+        if (!err) {
+            return kSuccess;
+        } else {
+            return static_cast<Error>(err);
+        }
+    }
+
     /// \brief Obtain a list of connected wands
     ///
     /// \return std::vector <::T5_WandHandle> representing the available wands.
@@ -1116,6 +1130,21 @@ public:
         return wands;
     };
 
+    /// \brief Send a haptic impulse to a specific tiltfive::Wand
+    ///
+    /// \param[in] handle - The handle of the desired tiltfive::Wand to receive the impulse.
+    /// \param[in] amplitude - The amplitude of the impulse, between (0.0 and 1.0].
+    /// \param[in] duration - The duration, in ms, of the impulse. Must be between 1 and 320ms.
+    auto sendImpulse(const T5_WandHandle& handle, float amplitude, uint16_t duration)
+        -> Result<void> {
+        auto result = mGlasses->sendImpulse(handle, amplitude, duration);
+        if (!result) {
+            return result.error();
+        }
+
+        return kSuccess;
+    }
+
     /// \cond DO_NOT_DOCUMENT
     virtual ~WandStreamHelper() {
         mRunning = false;
@@ -1332,6 +1361,13 @@ public:
     /// \brief Get the latest wand report for this wand
     auto getLatestReport() const -> Result<T5_WandReport> {
         return mWandStreamHelper->getLatestReport(mHandle);
+    }
+
+    /// \brief Send an impulse to this wand.
+    /// \param amplitude - The amplitude of the impulse, between (0.0 and 1.0].
+    /// \param duration - The duration, in ms, of the impulse. Must be between 1 and 320ms.
+    auto sendImpulse(float amplitude, uint16_t duration) const -> Result<void> {
+        return mWandStreamHelper->sendImpulse(mHandle, amplitude, duration);
     }
 
     /// \brief Get the wand handle

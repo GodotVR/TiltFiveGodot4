@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Tilt Five, Inc.
+ * Copyright (C) 2020-2023 Tilt Five, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,6 +139,9 @@ typedef uint32_t T5_Result;
 
 /// Invalid Buffer Size
 #define T5_ERROR_INVALID_BUFFER_SIZE (0x101C)
+
+/// Invalid Geometry
+#define T5_ERROR_INVALID_GEOMETRY (0x101D)
 
 /// Maximum C error code
 #define T5_MAX_ERROR (0x8000)

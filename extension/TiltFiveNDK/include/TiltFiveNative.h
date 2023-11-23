@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Tilt Five, Inc.
+ * Copyright (C) 2020-2023 Tilt Five, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -224,7 +224,7 @@ T5_EXPORT void t5DestroyGlasses(T5_Glasses* glasses);
 /// \retval ::T5_ERROR_INVALID_ARGS          `param` was not a valid enumerant
 ///                                          <span class='altMeaning'>or</span>
 ///                                          NULL was supplied for `value`
-/// \retval ::T5_ERROR_TIMEOUT               Timeout waiting to read value.
+/// \retval ::T5_TIMEOUT                     Timeout waiting to read value.
 /// \retval ::T5_ERROR_IO_FAILURE            Failed to communicate with the service.
 /// \retval ::T5_ERROR_NO_SERVICE            Service is unavailable.
 /// \retval ::T5_ERROR_NO_CONTEXT            `context` is invalid.
@@ -256,7 +256,7 @@ T5_EXPORT T5_Result t5GetSystemIntegerParam(T5_Context context, T5_ParamSys para
 /// \retval ::T5_ERROR_INVALID_ARGS          `param` was not a valid enumerant
 ///                                          <span class='altMeaning'>or</span>
 ///                                          NULL was supplied for `value`
-/// \retval ::T5_ERROR_TIMEOUT               Timeout waiting to read value.
+/// \retval ::T5_TIMEOUT                     Timeout waiting to read value.
 /// \retval ::T5_ERROR_IO_FAILURE            Failed to communicate with the service.
 /// \retval ::T5_ERROR_NO_SERVICE            Service is unavailable.
 /// \retval ::T5_ERROR_NO_CONTEXT            `context` is invalid.
@@ -297,7 +297,7 @@ T5_EXPORT T5_Result t5GetSystemFloatParam(T5_Context context, T5_ParamSys param,
 ///                                          NULL was supplied for `buffer`
 ///                                          <span class='altMeaning'>or</span>
 ///                                          NULL was supplied for `bufferSize`
-/// \retval ::T5_ERROR_TIMEOUT               Timeout waiting to read value.
+/// \retval ::T5_TIMEOUT                     Timeout waiting to read value.
 /// \retval ::T5_ERROR_IO_FAILURE            Failed to communicate with the service.
 /// \retval ::T5_ERROR_NO_SERVICE            Service is unavailable.
 /// \retval ::T5_ERROR_NO_CONTEXT            `context` is invalid.
@@ -781,7 +781,7 @@ T5_EXPORT T5_Result t5ValidateFrameInfo(T5_Glasses glasses,
 /// \retval ::T5_ERROR_INVALID_ARGS       `param` was not a valid enumerant
 ///                                       <span class='altMeaning'>or</span>
 ///                                       NULL was supplied for `value`
-/// \retval ::T5_ERROR_TIMEOUT            Timeout waiting to read value.
+/// \retval ::T5_TIMEOUT                  Timeout waiting to read value.
 /// \retval ::T5_ERROR_IO_FAILURE         Failed to communicate with the service.
 /// \retval ::T5_ERROR_NO_SERVICE         Service is unavailable.
 /// \retval ::T5_ERROR_NO_CONTEXT         `context` is invalid.
@@ -815,7 +815,7 @@ T5_EXPORT T5_Result t5GetGlassesIntegerParam(T5_Glasses glasses,
 /// \retval ::T5_ERROR_INVALID_ARGS       `param` was not a valid enumerant
 ///                                       <span class='altMeaning'>or</span>
 ///                                       NULL was supplied for `value`
-/// \retval ::T5_ERROR_TIMEOUT            Timeout waiting to read value.
+/// \retval ::T5_TIMEOUT                  Timeout waiting to read value.
 /// \retval ::T5_ERROR_IO_FAILURE         Failed to communicate with the service.
 /// \retval ::T5_ERROR_NO_SERVICE         Service is unavailable.
 /// \retval ::T5_ERROR_NO_CONTEXT         `context` is invalid.
@@ -859,7 +859,7 @@ T5_EXPORT T5_Result t5GetGlassesFloatParam(T5_Glasses glasses,
 ///                                       0
 ///                                       <span class='altMeaning'>or</span>
 ///                                       NULL was supplied for `bufferSize`
-/// \retval ::T5_ERROR_TIMEOUT            Timeout waiting to read value.
+/// \retval ::T5_TIMEOUT                  Timeout waiting to read value.
 /// \retval ::T5_ERROR_IO_FAILURE         Failed to communicate with the service.
 /// \retval ::T5_ERROR_NO_SERVICE         Service is unavailable.
 /// \retval ::T5_ERROR_NO_CONTEXT         `context` is invalid.
@@ -903,6 +903,66 @@ T5_EXPORT T5_Result t5GetChangedGlassesParams(T5_Glasses glasses,
                                               T5_ParamGlasses* buffer,
                                               uint16_t* count);
 
+/// \brief Get projection properties for glasses
+///
+/// \par Threading
+/// Exclusivity group 1 - Functions in this group must not be called concurrently from different
+/// threads.
+///
+/// \par Parameters
+/// Each graphics API requires different properties when creating a projection matrix.
+/// They each have their defaults, for which the properties are shown below. If you are not using
+/// the defaults for your graphics API, ensure that you adjust the parameters used here.
+///
+///           ┌───────┬──────┬──────┬──────────────────────────────────┐
+///           │ L/RHS │ Near │ Far  │ Native Equivalent Function       │
+/// ┌─────────┼───────┼──────┼──────┼──────────────────────────────────│
+/// │ OpenGL  │  RHS→ │  -1  │  +1  │ glFrustum                        │
+/// │ DirectX │ ←LHS  │   0  │  +1  │ D3DXMatrixPerspectiveOffCenterLH │
+/// │ Vulkan  │  RHS→ │   0  │  +1  │                                  │
+/// │ Metal   │  RHS→ │  -1  │  +1  │                                  │
+/// └─────────┴───────┴──────┴──────┴──────────────────────────────────┘
+/// Note: When referencing D3DXMatrixPerspectiveOffCenterLH, DirectX uses Row-major matrix
+///
+/// \param[in]  glasses        - ::T5_Glasses returned by t5CreateGlasses().
+/// \param[in]  handedness     - ::T5_CartesianCoordinateHandedness specifying handedness.
+/// \param[in]  depthRange     - ::T5_DepthRange to use for matrix creation.
+/// \param[in]  matrixOrder    - ::T5_MatrixOrder representing row or column major ordering.
+/// \param[in]  nearPlane      - The near clipping plane in view space
+/// \param[in]  farPlane       - The far clipping plane in view space
+/// \param[in]  worldScale     - Conversion factor between world space and real-world units.
+/// \param[out] projectionInfo - ::T5_ProjectionInfo to write values to.
+///
+/// \retval ::T5_SUCCESS                Projection info written to projectionInfo.
+/// \retval ::T5_ERROR_INVALID_ARGS     Nullptr was supplied for `projectionInfo`.
+///                                      <span class='altMeaning'>or</span>
+///                                     Nullptr was supplied for `projectionInfo.matrix`.
+///                                      <span class='altMeaning'>or</span>
+///                                     `handedness` is invalid.
+///                                      <span class='altMeaning'>or</span>
+///                                     `depthRange` is invalid.
+///                                      <span class='altMeaning'>or</span>
+///                                     `matrixOrder` is invalid.
+/// \retval ::T5_ERROR_INVALID_GEOMETRY nearPlane ≤ 0
+///                                      <span class='altMeaning'>or</span>
+///                                     farPlane ≤ 0
+///                                      <span class='altMeaning'>or</span>
+///                                     farPlane ≤ nearPlane
+///                                      <span class='altMeaning'>or</span>
+///                                     worldScale ≤ 0
+/// \retval ::T5_ERROR_NO_CONTEXT       `glasses` is invalid.
+/// \retval ::T5_ERROR_IO_FAILURE       Failed to communicate with the service.
+/// \retval ::T5_ERROR_NO_SERVICE       Service is unavailable.
+/// \retval ::T5_ERROR_TARGET_NOT_FOUND Device not found.
+T5_EXPORT T5_Result t5GetProjection(T5_Glasses glasses,
+                                    T5_CartesianCoordinateHandedness handedness,
+                                    T5_DepthRange depthRange,
+                                    T5_MatrixOrder matrixOrder,
+                                    double nearPlane,
+                                    double farPlane,
+                                    double worldScale,
+                                    T5_ProjectionInfo* projectionInfo);
+
 /// \defgroup wand_functions Wand related
 /// \brief Functions related to wands
 
@@ -942,6 +1002,36 @@ T5_EXPORT T5_Result t5ListWandsForGlasses(T5_Glasses glasses,
                                           T5_WandHandle* buffer,
                                           uint8_t* count);
 
+/// \brief Send a haptic data buffer to a wand
+/// \ingroup wand_functions
+///
+/// \par Threading
+/// Exclusivity group 1 - Functions in this group must not be called concurrently from different
+/// threads.
+///
+/// \param[in]     glasses - ::T5_Glasses returned by t5CreateGlasses().
+/// \param[in]     wand - ::T5_WandHandle to get value for.
+/// \param[in]     amplitude - The amplitude of the impulse, between 0.0 and 1.0.
+/// \param[in]     duration  - The duration, in ms, of the
+/// impulse. Duration must be less than or equal to 320ms.
+///
+/// \retval ::T5_SUCCESS                List successfully written to buffer.
+/// \retval ::T5_ERROR_INVALID_ARGS     Value outside of [0.0,1.0] was supplied for amplitude.
+///                                           <span class='altMeaning'>or</span>
+///                                     Value outside of [0,320] was supplied for duration.
+/// \retval ::T5_ERROR_NO_CONTEXT       `glasses` is invalid.
+/// \retval ::T5_ERROR_IO_FAILURE       Failed to communicate with the service.
+/// \retval ::T5_ERROR_NO_SERVICE       Service is unavailable.
+/// \retval ::T5_ERROR_TARGET_NOT_FOUND Device not found.
+///
+/// The following are internal errors that should be discarded and/or logged:
+/// \retval ::T5_ERROR_INTERNAL         Internal (Not correctable): Generic error.
+/// \retval ::T5_ERROR_INVALID_STATE    Internal (Not correctable): Invalid state for request.
+T5_EXPORT T5_Result t5SendImpulse(T5_Glasses glasses,
+                                  T5_WandHandle wand,
+                                  float amplitude,
+                                  uint16_t duration);
+
 /// \brief Configure the wand event stream
 /// \ingroup wand_functions
 ///
@@ -969,7 +1059,7 @@ T5_EXPORT T5_Result t5ConfigureWandStreamForGlasses(T5_Glasses glasses,
 ///
 /// The client should repeatedly call this for as long as the wand event
 /// stream is enabled. In any polling period, the client should call this
-/// in a loop until it returns ::T5_ERROR_TIMEOUT to ensure that the queue
+/// in a loop until it returns ::T5_TIMEOUT to ensure that the queue
 /// is drained.
 ///
 /// The server will continuously write events to the stream, and will not block
@@ -987,7 +1077,7 @@ T5_EXPORT T5_Result t5ConfigureWandStreamForGlasses(T5_Glasses glasses,
 /// \param[in]  timeoutMs - Timeout in ms to wait before returning without read.
 ///
 /// \retval ::T5_SUCCESS           Wand stream event written to `glasses`
-/// \retval ::T5_ERROR_TIMEOUT     Timeout waiting for wand stream event
+/// \retval ::T5_TIMEOUT           Timeout waiting for wand stream event
 /// \retval ::T5_ERROR_NO_CONTEXT  `glasses` is invalid.
 /// \retval ::T5_ERROR_UNAVAILABLE Wand stream isn't configured as enabled.
 ///                                Use t5ConfigureWandStream() to enable.

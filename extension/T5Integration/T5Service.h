@@ -59,14 +59,12 @@ public:
 	T5Service();
 	virtual ~T5Service();
 
-	bool start_service(const std::string_view applicationID, std::string_view applicationVersion);
+	bool start_service(const std::string_view applicationID, std::string_view applicationVersion, uint8_t sdk_type = 0);
 	void stop_service();
 	bool is_service_started();
 
 	void reserve_glasses(int glasses_num, const std::string_view display_name);
 	void release_glasses(int glasses_num);
-	[[deprecated]] void connect_glasses(int glasses_num, const std::string display_name);
-	[[deprecated]] void disconnect_glasses(int glasses_num);
 
     void set_upside_down_texture(int glasses_num, bool is_upside_down);
 	

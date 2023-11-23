@@ -15,13 +15,15 @@ namespace GodotT5Integration {
             RID render_tex;
             RID left_eye_tex;
             RID right_eye_tex;
+
+            intptr_t left_tex_handle;
+            intptr_t right_tex_handle;
         };
 
         public:
 
         VulkanGlasses(std::string_view id);
     
-        virtual void on_post_draw() override;
         virtual RID get_color_texture() override;
 
         private:

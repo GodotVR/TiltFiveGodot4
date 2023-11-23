@@ -23,6 +23,7 @@ void T5Controller3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_input", "name"), &T5Controller3D::get_input);
 	ClassDB::bind_method(D_METHOD("get_float", "name"), &T5Controller3D::get_float);
 	ClassDB::bind_method(D_METHOD("get_vector2", "name"), &T5Controller3D::get_vector2);
+	ClassDB::bind_method(D_METHOD("trigger_haptic_pulse", "amplitude", "duration"), &T5Controller3D::trigger_haptic_pulse);
 	
 	ClassDB::bind_method(D_METHOD("_button_pressed", "name"), &T5Controller3D::_button_pressed);
 	ClassDB::bind_method(D_METHOD("_button_released", "name"), &T5Controller3D::_button_released);
@@ -140,4 +141,11 @@ Vector2 T5Controller3D::get_vector2(const StringName &p_name) const {
 	} else {
 		return Vector2();
 	}
+}
+
+void T5Controller3D::trigger_haptic_pulse(float amplitude, int duration) {
+	auto glasses = get_associated_glasses();
+	auto wand_num = get_associated_wand_num();
+	if(glasses && wand_num >= 0)
+		glasses->trigger_haptic_pulse(wand_num, amplitude, duration);
 }

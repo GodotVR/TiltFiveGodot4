@@ -42,8 +42,7 @@ public:
 	void use_opengl_api();
 	void use_vulkan_api();
 
-
-
+	bool get_tracker_association(StringName tracker_name, int& out_glasses_idx, int& out_wand_idx);
 };
 
 class GodotT5Math : public T5Integration::T5Math {

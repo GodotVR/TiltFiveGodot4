@@ -1,5 +1,7 @@
 #include <T5Node3D.h>
 #include <T5Origin3D.h>
+#include <GodotT5Service.h>
+#include <Logging.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/property_info.hpp>
 #include <godot_cpp/variant/callable.hpp>
@@ -12,31 +14,9 @@ using godot::Variant;
 using godot::Object;
 using godot::Callable;
 using godot::Object;
+using GodotT5Integration::GodotT5Service;
+using T5Integration::ObjectRegistry;
 
-// This doesn't seem to be exposed in GDExtension
-/* void T5Node3D::_validate_property(PropertyInfo &p_property) const {
-	XRServer *xr_server = XRServer::get_singleton();
-	ERR_FAIL_NULL(xr_server);
-
-    auto t5_interface = Object::cast_to<TiltFiveXRInterface>(xr_server->find_interface("TiltFive").ptr());
-	ERR_FAIL_NULL(t5_interface);
-
-	if (p_property.name == String("tracker")) {
-		PackedStringArray names = t5_interface->_get_suggested_tracker_names();
-		String hint_string;
-		for (const String &name : names) {
-			hint_string += name + String(",");
-		}
-		p_property.hint_string = hint_string;
-	} else if (p_property.name == String("pose")) {
-		PackedStringArray names = t5_interface->_get_suggested_pose_names(tracker_name);
-		String hint_string;
-		for (const String &name : names) {
-			hint_string += name + String(",");
-		}
-		p_property.hint_string = hint_string;
-	}
-} */
 
 
 void T5Node3D::set_tracker(const StringName p_tracker_name) {
@@ -184,6 +164,7 @@ void T5Node3D::_bind_tracker()  {
         if (pose.is_valid()) {
             set_transform(pose->get_adjusted_transform());
         }
+
     }
 }
 
@@ -191,6 +172,10 @@ void T5Node3D::_unbind_tracker() {
     if (tracker.is_valid()) {
         tracker->disconnect("pose_changed", Callable(this, "_pose_changed"));
         tracker.unref();
+
+        _indexes_associated = false;
+        _glasses_idx = -1;
+        _wand_idx = -1;
     }
 }
 
@@ -216,5 +201,26 @@ void T5Node3D::_pose_changed(Object* p_obj) {
     if (pose && pose->get_name() == pose_name) {
         set_transform(pose->get_adjusted_transform());
     }
+}
+
+GodotT5Glasses::Ptr T5Node3D::get_associated_glasses() {
+    auto service = std::static_pointer_cast<GodotT5Service>(ObjectRegistry::service()); 
+    if(!_indexes_associated) {
+        service->get_tracker_association(tracker_name, _glasses_idx, _wand_idx);
+        _indexes_associated = true;
+    }
+	if(_glasses_idx >= 0) {
+		return service->get_glasses(_glasses_idx);
+	}
+    return GodotT5Glasses::Ptr();
+}
+
+int T5Node3D::get_associated_wand_num() {
+    if(!_indexes_associated) {
+        auto service = std::static_pointer_cast<GodotT5Service>(ObjectRegistry::service()); 
+        service->get_tracker_association(tracker_name, _glasses_idx, _wand_idx);
+        _indexes_associated = true;
+    }
+    return _wand_idx;
 }
 

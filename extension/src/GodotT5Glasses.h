@@ -43,11 +43,14 @@ namespace GodotT5Integration {
         virtual Transform3D get_eye_transform(Glasses::Eye eye);
 	    virtual PackedFloat64Array get_projection_for_eye(Glasses::Eye view, double aspect, double z_near, double z_far);
 
-        virtual Transform3D get_wand_transform(size_t wand_num);
+        virtual Transform3D get_wand_transform(int wand_num);
     
         virtual RID get_color_texture() = 0;
 
-        StringName get_wand_tracker_name(size_t wand_idx);
+        StringName get_wand_tracker_name(int wand_idx);
+
+        bool get_tracker_association(StringName tracker_name, int& out_wand_idx);
+
 
         void set_trigger_click_threshold(float threshold);
 
@@ -61,7 +64,7 @@ namespace GodotT5Integration {
         private:
 
         void add_tracker() ;
-        void update_wand(size_t wand_idx);
+        void update_wand(int wand_idx);
 
         Ref<XRPositionalTracker> _head;
 		std::vector<Ref<XRPositionalTracker>> _wand_trackers;
@@ -73,7 +76,7 @@ namespace GodotT5Integration {
         return is_connected();
     }
 
-    inline StringName GodotT5Glasses::get_wand_tracker_name(size_t wand_idx) {
+    inline StringName GodotT5Glasses::get_wand_tracker_name(int wand_idx) {
         ERR_FAIL_INDEX_V(wand_idx, get_num_wands(), StringName());
 
         return _wand_trackers[wand_idx]->get_tracker_name();

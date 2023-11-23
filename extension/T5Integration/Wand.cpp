@@ -102,6 +102,7 @@ void WandService::get_wand_data(WandList& list) {
 	list = _wand_list;
 }
 
+
 bool WandService::configure_wand_tracking(bool enable) {
 
 	T5_Result result = T5_SUCCESS;

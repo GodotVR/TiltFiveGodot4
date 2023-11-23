@@ -57,8 +57,10 @@ func _on_button_pressed(button):
 		WAND_BUTTON_Y:
 			$Controls/Y.material_override = selected_mat
 		WAND_BUTTON_1:
+			trigger_haptic_pulse(1,100)
 			$Controls/One.material_override = selected_mat
 		WAND_BUTTON_2:
+			trigger_haptic_pulse(1,50)
 			$Controls/Two.material_override = selected_mat
 		WAND_BUTTON_STICK:
 			$Controls/Three.material_override = selected_mat

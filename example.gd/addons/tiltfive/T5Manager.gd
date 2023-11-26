@@ -10,16 +10,20 @@ class_name T5Manager extends "res://addons/tiltfive/T5ManagerBase.gd"
 ## This should be persistent.
 
 ## Signal when the glasses scene is added to the main scene
+## This signal is depreciated please use xr_rig_was_added
 signal glasses_scene_was_added(glasses : T5XRRig)
 
 ## Signal when the glasses scene is removed from the main scene
+## This signal is depreciated please use xr_rig_will_be_removed
 signal glasses_scene_will_be_removed(glasses : T5XRRig)
 
-const xr_origin_node := ^"Origin"
-const xr_camera_node := ^"Origin/Camera"
-const wand_node_list := [^"Origin/Wand_1", ^"Origin/Wand_2"]
+## Signal when the T5XRRig scene is added to the main scene
+signal xr_rig_was_added(xr_rig : T5XRRig)
 
-## [PackedScene] that will instanced for a pair of Tilt Five glasses. Defaults to T5XRRig.tscn
+## Signal when the T5XRRig scene is removed to the main scene
+signal xr_rig_will_be_removed(xr_rig : T5XRRig)
+
+## [PackedScene] inherited from T5XRRig.tcsn. 
 @export var glasses_scene : PackedScene = preload("res://addons/tiltfive/scenes/T5XRRig.tscn")
 
 ## A [T5Gameboard] node in the scene that will be used to set the location and content scale of the
@@ -34,32 +38,20 @@ func _ready():
 	glasses_node.name = "TiltFiveGlasses"
 	get_parent().add_child.call_deferred(glasses_node)
 
-func create_glasses_scene(glasses_id : String) -> Node:
-	var gview = glasses_scene.instantiate()
-	glasses_node.add_child(gview)
+func create_xr_rig(glasses_id : String) -> T5XRRig:
+	var xr_rig = glasses_scene.instantiate() as T5XRRig
+	glasses_node.add_child(xr_rig)
 	if start_location:
-		var origin := get_glasses_scene_origin(gview)
+		var origin := xr_rig.origin as T5Origin3D
 		origin.transform = start_location.transform
 		origin.gameboard_scale = start_location.content_scale
-	glasses_scene_was_added.emit(gview)
-	return gview
+	glasses_scene_was_added.emit(xr_rig)
+	xr_rig_was_added.emit(xr_rig)
+	return xr_rig
 	
-func release_glasses_scene(glasses_scene : Node) -> void:
-	glasses_scene_will_be_removed.emit(glasses_scene)
-	glasses_node.remove_child(glasses_scene)
-	glasses_scene.queue_free()
-
-func get_glasses_scene_viewport(glasses_scene : Node) -> SubViewport:
-	return glasses_scene as SubViewport
-
-func get_glasses_scene_origin(glasses_scene : Node) -> T5Origin3D:
-	return glasses_scene.get_node(xr_origin_node)
-
-func get_glasses_scene_camera(glasses_scene : Node) -> Camera3D:
-	return glasses_scene.get_node(xr_camera_node)
-	
-func get_glasses_scene_wand(glasses_scene : Node, wand_num : int) -> T5Controller3D:
-	if wand_num < wand_node_list.size():
-		return glasses_scene.get_node_or_null(wand_node_list[wand_num]) as T5Controller3D
-	return null
+func release_xr_rig(xr_rig : T5XRRig) -> void:
+	glasses_scene_will_be_removed.emit(xr_rig)
+	xr_rig_will_be_removed.emit(xr_rig)
+	glasses_node.remove_child(xr_rig)
+	xr_rig.queue_free()
 	

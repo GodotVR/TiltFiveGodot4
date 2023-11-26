@@ -9,10 +9,6 @@ extends Node
 ##
 ## create_glasses_scene
 ## release_glasses_scene
-## get_glasses_scene_viewport
-## get_glasses_scene_origin
-## get_glasses_scene_camera
-## get_glasses_scene_wand
 ##
 ## The derived node should be persistent.
 
@@ -53,39 +49,17 @@ func should_use_glasses(glasses_id : String) -> bool:
 func get_glasses_display_name(glasses_id : String) -> String:
 	return T5ProjectSettings.default_display_name
 
-## Invoked by the T5Interface to get the XR rig scene to be associated with 
-## tilt five glasses. This scene should contain a SubViewport -> T5Origin -> Camera3D and T5Controller3D(s)
-func create_glasses_scene(glasses_id : String) -> Node:
-	push_error("create_glasses_scene not implemented in T5ManagerBase derived class")
+## Invoked by the T5Interface to get an T5XRRig derived node
+func create_xr_rig(glasses_id : String) -> T5XRRig:
+	push_error("create_xr_rig not implemented in T5ManagerBase derived class")
 	return null
 
 ## Invoked by the T5Interface if the Tilt Five glasses become unavailable
-func release_glasses_scene(glasses_scene : Node) -> void:
+func release_xr_rig(xr_rig : T5XRRig) -> void:
 	push_error("release_glasses_scene not implemented in T5ManagerBase derived class")
 	
-## Invoked by the T5Interface to get the SubViewport of the XR rig
-func get_glasses_scene_viewport(glasses_scene : Node) -> SubViewport:
-	push_error("get_glasses_scene_viewport not implemented in T5ManagerBase derived class")
-	return null
-
-## Invoked by the T5Interface to get the T5Origin3D of the XR rig
-func get_glasses_scene_origin(glasses_scene : Node) -> T5Origin3D:
-	push_error("get_glasses_scene_origin not implemented in T5ManagerBase derived class")
-	return null
-
-## Invoked by the T5Interface to get the Camera3D of the XR rig
-func get_glasses_scene_camera(glasses_scene : Node) -> Camera3D:
-	push_error("get_glasses_scene_camera not implemented in T5ManagerBase derived class")
-	return null
-	
-## Invoked by the T5Interface to get a T5Controller3D from the XR rig. Although the default rig
-## has only one wand two may be paired to a headset.
-func get_glasses_scene_wand(glasses_scene : Node, wand_num : int) -> T5Controller3D:
-	push_error("get_glasses_scene_wand not implemented in T5ManagerBase derived class")
-	return null
-	
 ## Invoked by the T5Interface to set the gameboard type the Tilt Fiave glasses detected
-func set_glasses_scene_gameboard_type(glasses_scene : Node, gameboard_type : T5Interface.GameboardType) -> void:
+func set_gameboard_type(xr_rig : T5XRRig, gameboard_type : T5Def.GameboardType) -> void:
 	pass
 	
 

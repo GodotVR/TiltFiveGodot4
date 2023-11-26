@@ -59,7 +59,7 @@ Transform3D GodotT5Glasses::get_eye_transform(Glasses::Eye eye) {
 	return get_head_transform(get_eye_offset(eye));
 }
 
-Transform3D GodotT5Glasses::get_wand_transform(size_t wand_num) {
+Transform3D GodotT5Glasses::get_wand_transform(int wand_num) {
 	Quaternion orientation;
 	Vector3 position;
 	get_wand_position(wand_num, position.x, position.y, position.z);
@@ -175,7 +175,7 @@ void GodotT5Glasses::add_tracker() {
 	_wand_trackers.push_back(positional_tracker);    
 }
 
-void GodotT5Glasses::update_wand(size_t wand_idx) {
+void GodotT5Glasses::update_wand(int wand_idx) {
 
 	auto xr_server = XRServer::get_singleton();
 
@@ -224,4 +224,18 @@ void GodotT5Glasses::update_wand(size_t wand_idx) {
 		tracker->set_input("button_t5", Variant(buttons.t5)); 
 	}
 }
+
+bool GodotT5Glasses::get_tracker_association(StringName tracker_name, int& out_wand_idx) {
+    for(out_wand_idx = 0; out_wand_idx < _wand_trackers.size(); ++out_wand_idx) {
+        auto b1 = tracker_name.to_utf8_buffer();
+        auto b2 = _wand_trackers[out_wand_idx]->get_tracker_name().to_utf8_buffer();
+
+        if(tracker_name == _wand_trackers[out_wand_idx]->get_tracker_name())
+            return true;
+    }
+    out_wand_idx = -1;
+    return false;
+}
+
+
 } // GodotT5Integration

@@ -27,6 +27,8 @@ public:
 	float get_float(const StringName &p_name) const;
 	Vector2 get_vector2(const StringName &p_name) const;
 
+	void trigger_haptic_pulse(float amplitude, int duration);
+
 	T5Controller3D() {}
 	~T5Controller3D() {}
 

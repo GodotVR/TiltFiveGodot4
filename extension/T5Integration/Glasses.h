@@ -107,16 +107,18 @@ class Glasses
    	void get_events(int index, std::vector<GlassesEvent>& out_events);
     T5_GameboardType get_gameboard_type();
 
-	size_t get_num_wands() { return _wand_list.size(); }
+	int get_num_wands() { return _wand_list.size(); }
 
-    bool is_wand_state_set(size_t wand_num, uint8_t flags);
-    bool is_wand_state_changed(size_t wand_num, uint8_t flags);
-	bool is_wand_pose_valid(size_t wand_num);
-	void get_wand_position(size_t wand_num, float& out_pos_x, float& out_pos_y, float& out_pos_z);
-	void get_wand_orientation(size_t wand_num, float& out_quat_x, float& out_quat_y, float& out_quat_z, float& out_quat_w);
-    void get_wand_trigger(size_t wand_num, float& out_trigger);
-    void get_wand_stick(size_t wand_num, float& out_stick_x, float& out_stick_y);
-    void get_wand_buttons(size_t wand_num, WandButtons& buttons);
+    bool is_wand_state_set(int wand_num, uint8_t flags);
+    bool is_wand_state_changed(int wand_num, uint8_t flags);
+	bool is_wand_pose_valid(int wand_num);
+	void get_wand_position(int wand_num, float& out_pos_x, float& out_pos_y, float& out_pos_z);
+	void get_wand_orientation(int wand_num, float& out_quat_x, float& out_quat_y, float& out_quat_z, float& out_quat_w);
+    void get_wand_trigger(int wand_num, float& out_trigger);
+    void get_wand_stick(int wand_num, float& out_stick_x, float& out_stick_y);
+    void get_wand_buttons(int wand_num, WandButtons& buttons);
+
+    void trigger_haptic_pulse(int wand_num, float amplitude, uint16_t duration);
 
     virtual void on_post_draw() {}
 

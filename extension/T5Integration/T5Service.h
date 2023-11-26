@@ -68,11 +68,11 @@ public:
 
     void set_upside_down_texture(int glasses_num, bool is_upside_down);
 	
-	size_t get_glasses_count() { return _glasses_list.size(); }
+	int get_glasses_count() { return _glasses_list.size(); }
 	std::optional<int> find_glasses_idx(const std::string_view glasses_id);
 
-	const std::string get_glasses_id(size_t glasses_idx) const;
-	const std::string get_glasses_name(size_t glasses_idx) const;
+	const std::string get_glasses_id(int glasses_idx) const;
+	const std::string get_glasses_name(int glasses_idx) const;
 
 	void update_connection();
 	void update_tracking();
@@ -157,11 +157,11 @@ inline void* T5Service::get_graphics_context_handle() {
 	return nullptr;
 }
 
-inline const std::string T5Service::get_glasses_id(size_t glasses_idx) const {
+inline const std::string T5Service::get_glasses_id(int glasses_idx) const {
 	return glasses_idx < _glasses_list.size() ? _glasses_list[glasses_idx]->get_id() : std::string();
 }
 
-inline const std::string T5Service::get_glasses_name(size_t glasses_idx) const {
+inline const std::string T5Service::get_glasses_name(int glasses_idx) const {
 	return glasses_idx < _glasses_list.size() ? _glasses_list[glasses_idx]->get_name() : std::string();
 }
 

@@ -11,6 +11,7 @@
 // future it should be possible to depreciate this custom 
 // T5 node hierarchy.
 //
+#include <GodotT5Service.h>
 #include <godot_cpp/variant/string_name.hpp>
 #include <godot_cpp/classes/ref.hpp>
 #include <godot_cpp/classes/packed_data_container.hpp>
@@ -26,6 +27,9 @@ using godot::PackedStringArray;
 using godot::XRPose;
 using godot::XRPositionalTracker;
 using godot::Node3D;
+using GodotT5Integration::GodotT5Service;
+using GodotT5Integration::GodotT5Glasses;
+using T5Integration::ObjectRegistry;
 
 class T5Node3D : public Node3D {
 	GDCLASS(T5Node3D, Node3D);
@@ -57,10 +61,16 @@ protected:
 	void _removed_tracker(const StringName p_tracker_name, int p_tracker_type);
 	void _pose_changed(Object* p_obj);
 
+	GodotT5Glasses::Ptr get_associated_glasses();
+	int get_associated_wand_num();
+
 private:
 	StringName tracker_name;
 	StringName pose_name = "default";
 
+	int _indexes_associated = false;
+	int _glasses_idx = -1;
+	int _wand_idx = -1;
 };
 
 #endif // T5_NODE_3D_H

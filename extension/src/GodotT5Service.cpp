@@ -71,6 +71,18 @@ void GodotT5Service::use_vulkan_api() {
     set_graphics_context(graphics_context);
 }
 
+bool GodotT5Service::get_tracker_association(StringName tracker_name, int& out_glasses_idx, int& out_wand_idx) {
+    for(out_glasses_idx = 0; out_glasses_idx < _glasses_list.size(); ++out_glasses_idx) {
+        auto godot_glasses = std::static_pointer_cast<GodotT5Glasses>(_glasses_list[out_glasses_idx]);
+        if(godot_glasses->get_tracker_association(tracker_name, out_wand_idx)) {
+            return true;
+        }
+    }
+    out_glasses_idx = -1;
+    out_wand_idx = -1;
+    return false;
+}
+
 void GodotT5Math::rotate_vector(float quat_x, float quat_y, float quat_z, float quat_w, float& vec_x, float& vec_y, float& vec_z, bool inverse)  {
 
     godot::Quaternion orient(quat_x, quat_y, quat_z, quat_w);

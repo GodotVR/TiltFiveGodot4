@@ -61,11 +61,11 @@ namespace T5Integration {
 		out_quat_w = pose.rotToGLS_GBD.w;
 	}    
 	
-	bool Glasses::is_wand_state_set(size_t wand_num, uint8_t flags) {
+	bool Glasses::is_wand_state_set(int wand_num, uint8_t flags) {
 		return wand_num < _wand_list.size() && (_wand_list[wand_num]._state & flags) == flags;
 	}
 
-    bool Glasses::is_wand_state_changed(size_t wand_num, uint8_t flags) {
+    bool Glasses::is_wand_state_changed(int wand_num, uint8_t flags) {
 		if(wand_num >= _wand_list.size()) return false;
 
 		auto current_state = _wand_list[wand_num]._state;
@@ -75,11 +75,11 @@ namespace T5Integration {
 		return (changed & flags) != 0;
 	}
 
-	bool Glasses::is_wand_pose_valid(size_t wand_num) {
+	bool Glasses::is_wand_pose_valid(int wand_num) {
 		return wand_num < _wand_list.size() && (_wand_list[wand_num]._state & WandState::POSE_VALID) != 0;
 	}
 
-	void Glasses::get_wand_position(size_t wand_num, float& out_pos_x, float& out_pos_y, float& out_pos_z) {
+	void Glasses::get_wand_position(int wand_num, float& out_pos_x, float& out_pos_y, float& out_pos_z) {
 		if (wand_num < _wand_list.size()) {
 			out_pos_x = _wand_list[wand_num]._pose.posAim_GBD.x;
 			out_pos_y = _wand_list[wand_num]._pose.posAim_GBD.y;
@@ -90,7 +90,7 @@ namespace T5Integration {
 		}
 	}
 
-	void Glasses::get_wand_orientation(size_t wand_num, float& out_quat_x, float& out_quat_y, float& out_quat_z, float& out_quat_w) {
+	void Glasses::get_wand_orientation(int wand_num, float& out_quat_x, float& out_quat_y, float& out_quat_z, float& out_quat_w) {
 		if (wand_num < _wand_list.size()) {
 			out_quat_x = _wand_list[wand_num]._pose.rotToWND_GBD.x;
 			out_quat_y = _wand_list[wand_num]._pose.rotToWND_GBD.y;
@@ -103,14 +103,14 @@ namespace T5Integration {
 		}
 	}
 
-    void Glasses::get_wand_trigger(size_t wand_num, float& out_trigger) {
+    void Glasses::get_wand_trigger(int wand_num, float& out_trigger) {
 		out_trigger = 0;
 		if (wand_num < _wand_list.size()) {
 			out_trigger = _wand_list[wand_num]._analog.trigger;
 		}
 	}
 	
-    void Glasses::get_wand_stick(size_t wand_num, float& out_stick_x, float& out_stick_y) {
+    void Glasses::get_wand_stick(int wand_num, float& out_stick_x, float& out_stick_y) {
 		out_stick_x = 0;
 		out_stick_y = 0;
 		if (wand_num < _wand_list.size()) {
@@ -119,9 +119,17 @@ namespace T5Integration {
 		}
 	}
 
-	void Glasses::get_wand_buttons(size_t wand_num, WandButtons& buttons) {
+	void Glasses::get_wand_buttons(int wand_num, WandButtons& buttons) {
 		if (wand_num < _wand_list.size()) {
 			buttons = _wand_list[wand_num]._buttons;
+		}
+	}
+
+	void Glasses::trigger_haptic_pulse(int wand_num, float amplitude, uint16_t duration) {
+		if(wand_num < _wand_list.size() && _state.is_current(GlassesState::CONNECTED))
+		{
+			std::lock_guard lock(g_t5_exclusivity_group_1);
+			t5SendImpulse(_glasses_handle, _wand_list[wand_num]._handle, amplitude, duration);
 		}
 	}
 

@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1cd3jc00rhal"]
+
+[ext_resource type="PackedScene" uid="uid://c44ott7hdtkjs" path="res://addons/tiltfive/assets/T5-glasses.glb" id="1_22or3"]
+[ext_resource type="Script" path="res://addons/tiltfive/assets/AutoScale.cs" id="2_mghk4"]
+
+[node name="T5-glasses" instance=ExtResource("1_22or3")]
+script = ExtResource("2_mghk4")
+
+[node name="Cube" parent="." index="0"]
+layers = 2

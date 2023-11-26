@@ -39,7 +39,9 @@ if env['platform'] == 'windows':
 
 f1 = env.Command('example.gd/addons/tiltfive/bin/libgdtiltfive{}{}'.format(env['suffix'], env['SHLIBSUFFIX']), library, Copy('$TARGET', '$SOURCE') )
 f2 = env.Command('example.gd/addons/tiltfive/bin/TiltFiveNative.dll', tilt_five_library_path + '/TiltFiveNative.dll', Copy('$TARGET', '$SOURCE') )
+f3 = env.Command('example.csharp/addons/tiltfive/bin/libgdtiltfive{}{}'.format(env['suffix'], env['SHLIBSUFFIX']), library, Copy('$TARGET', '$SOURCE') )
+f4 = env.Command('example.csharp/addons/tiltfive/bin/TiltFiveNative.dll', tilt_five_library_path + '/TiltFiveNative.dll', Copy('$TARGET', '$SOURCE') )
 
-env.Alias('example', [f1, f2])
+env.Alias('example', [f1, f2, f3, f4])
 
 Default(library)

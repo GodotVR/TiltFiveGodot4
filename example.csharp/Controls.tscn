@@ -1,0 +1,50 @@
+[gd_scene load_steps=4 format=3 uid="uid://dnx42xctfl3mx"]
+
+[sub_resource type="CapsuleMesh" id="4"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_dc5d6"]
+
+[sub_resource type="SphereMesh" id="3"]
+
+[node name="Controls" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0748157, -0.00207818, 0.009782)
+
+[node name="Trigger" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, -0.000888377, -0.0415742, -0.0168045)
+mesh = SubResource("4")
+
+[node name="TriggerClick" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, -0.000888377, -0.00848173, -0.0840266)
+mesh = SubResource("BoxMesh_dc5d6")
+
+[node name="Three" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0, 0, 0)
+mesh = SubResource("3")
+
+[node name="One" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, -0.02, 0, 0.05)
+mesh = SubResource("3")
+
+[node name="Two" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0.02, 0, 0.05)
+mesh = SubResource("3")
+
+[node name="T5" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.37114e-10, -0.01, 0, 0.01, -4.37114e-10, 0, 0, 0, 0.01, 0, 0, 0.08)
+mesh = SubResource("4")
+
+[node name="X" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0, 0, 0.15)
+mesh = SubResource("3")
+
+[node name="B" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0, 0, 0.21)
+mesh = SubResource("3")
+
+[node name="Y" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0.03, 0, 0.18)
+mesh = SubResource("3")
+
+[node name="A" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, -0.03, 0, 0.18)
+mesh = SubResource("3")

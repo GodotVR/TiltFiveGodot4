@@ -130,7 +130,7 @@ jobs:
           cp -r source/example.csharp/addons/tiltfive plugin_cs/addons
           cp source/LICENSE.txt plugin_cs/addons/tiltfive
           cp source/CONTRIBUTORS.md plugin_cs/addons/tiltfive
-          cp source/CHANGES.md plugin/addons_cs/tiltfive
+          cp source/CHANGES.md plugin_cs/addons/tiltfive
           mkdir plugin_cs/addons/tiltfive/bin
           # cp gdtiltfive.linux/*.so plugin_cs/addons/tiltfive/bin/
           cp gdtiltfive.windows/build/bin/*.dll plugin_cs/addons/tiltfive/bin/

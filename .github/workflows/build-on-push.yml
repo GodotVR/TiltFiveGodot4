@@ -2,7 +2,7 @@
 name: Build on push
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-# events, but only for the master branch we'll create .zip files
+# events, but only for the main branch we'll create .zip files
 on:
   [push, pull_request]
 
@@ -98,7 +98,7 @@ jobs:
     needs: build
     permissions:
       contents: write
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags'))
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -108,7 +108,7 @@ jobs:
           path: source
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
-      - name: Copy files to destination
+      - name: Copy files to destination for gdscript
         run: |
           mkdir plugin
           mkdir plugin/addons
@@ -123,12 +123,27 @@ jobs:
           # cp gdtiltfive.android/*.so plugin/addons/tiltfive/bin/
           # cp gdtiltfive.ios/*.dylib plugin/addons/tiltfive/bin/
           # cp -R gdtiltfive.macos/libgdtiltfive.macos.* plugin/addons/tiltfive/bin/
+      - name: Copy files to destination for csharp
+        run: |
+          mkdir plugin_cs
+          mkdir plugin_cs/addons
+          cp -r source/example.csharp/addons/tiltfive plugin_cs/addons
+          cp source/LICENSE.txt plugin_cs/addons/tiltfive
+          cp source/CONTRIBUTORS.md plugin_cs/addons/tiltfive
+          cp source/CHANGES.md plugin/addons_cs/tiltfive
+          mkdir plugin_cs/addons/tiltfive/bin
+          # cp gdtiltfive.linux/*.so plugin_cs/addons/tiltfive/bin/
+          cp gdtiltfive.windows/build/bin/*.dll plugin_cs/addons/tiltfive/bin/
+          cp gdtiltfive.windows/extension/TiltFiveNDK/lib/win/x86_64/*.dll plugin_cs/addons/tiltfive/bin/
+          # cp gdtiltfive.android/*.so plugin_cs/addons/tiltfive/bin/
+          # cp gdtiltfive.ios/*.dylib plugin_cs/addons/tiltfive/bin/
+          # cp -R gdtiltfive.macos/libgdtiltfive.macos.* plugin_cs/addons/tiltfive/bin/
       - name: Calculate GIT short ref
         run: |
           cd source
           echo "GITHUB_SHA_SHORT=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
           cd ..
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
       - name: Get tag name
         run: |
           echo "GITHUB_SHA_SHORT=$(echo ${GITHUB_REF##*/})" >> $GITHUB_ENV
@@ -143,14 +158,16 @@ jobs:
           rm -rf source
           rm -rf .git
           mv plugin gdtiltfive_${{ env.GITHUB_SHA_SHORT }}
+          mv plugin_cs gdtiltfive_cs_${{ env.GITHUB_SHA_SHORT }}
       - name: Zip asset
         run: |
-          zip -qq -r gdtiltfive.zip .
+          zip -qq -r gdtiltfive_gdscript.zip gdtiltfive_${{ env.GITHUB_SHA_SHORT }}
+          zip -qq -r gdtiltfive_csharp.zip gdtiltfive_cs_${{ env.GITHUB_SHA_SHORT }}
       - name: Create and upload asset
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: "gdtiltfive.zip"
+          artifacts: "gdtiltfive_gdscript.zip, gdtiltfive_csharp.zip"
           omitNameDuringUpdate: true
           omitBodyDuringUpdate: true
           omitPrereleaseDuringUpdate : true

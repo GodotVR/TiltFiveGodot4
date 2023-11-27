@@ -105,7 +105,7 @@ public partial class T5Manager : Node, T5ManagerInterface
 		xrRig.QueueFree();
 	}
 
-	public void SetGameboardType(T5XRRig rig, T5Interface.GameboardType gameboard_type)
+	public void SetGameboardType(T5XRRig rig, T5Def.GameboardType gameboard_type)
 	{
 	}
 }

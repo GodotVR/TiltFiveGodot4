@@ -62,9 +62,9 @@ func _ready():
 		tilt_five_xr_interface.initialize()
 
 func _start_display(glasses_id : StringName, xr_rig : T5XRRig):
-	tilt_five_xr_interface.start_display(glasses_id, xr_rig, xr_rig.origin)
-	xr_rig.camera.tracker = "/user/%s/head" % glasses_id
-	xr_rig.wand.tracker = "/user/%s/wand_1" % glasses_id
+	tilt_five_xr_interface.start_display(glasses_id, xr_rig, xr_rig.get_origin())
+	xr_rig.get_camera().tracker = "/user/%s/head" % glasses_id
+	xr_rig.get_wand().tracker = "/user/%s/wand_1" % glasses_id
 
 func _process_glasses():
 	for glasses_id in id_to_state:
@@ -128,9 +128,9 @@ func _on_glasses_event(glasses_id, event_num):
 		TiltFiveXRInterface.E_GLASSES_TRACKING:
 			var gbt = tilt_five_xr_interface.get_gameboard_type(glasses_id)
 			var xr_rig = xr_rig_state.xr_rig
-			if xr_rig and xr_rig.gameboard_type != gbt:
-				xr_rig.gameboard_type = gbt
-				xr_rig.gameboard_size = tilt_five_xr_interface.get_gameboard_extents(gbt)
+			if xr_rig and xr_rig._gameboard_type != gbt:
+				xr_rig._gameboard_type = gbt
+				xr_rig._gameboard_size = tilt_five_xr_interface.get_gameboard_extents(gbt)
 				t5_manager.set_gameboard_type(xr_rig, gbt)
 			print_verbose(glasses_id, " E_TRACKING, Gameboard size = ", )
 

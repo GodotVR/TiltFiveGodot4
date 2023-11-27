@@ -50,6 +50,6 @@ public interface T5ManagerInterface
     public void ReleaseXRRig(T5XRRig xrRig);
 
     // Invoked by the T5Interface to set the gameboard type the Tilt Five glasses detected
-    public void SetGameboardType(T5XRRig rig, T5Interface.GameboardType gameboard_type);
+    public void SetGameboardType(T5XRRig rig, T5Def.GameboardType gameboard_type);
 }
 

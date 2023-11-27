@@ -8,7 +8,7 @@ public partial class T5XRRig : SubViewport
 	T5ControllerCS wand;
 
 	public string GlassesID { get; set; } 
-	public T5Interface.GameboardType GameboardType { get; set; }
+	public T5Def.GameboardType GameboardType { get; set; }
 	public Aabb GameboardSize { get; set; }
 	public T5OriginCS Origin {  get { return origin; } }
 	public T5CameraCS Camera{ get { return camera; } }

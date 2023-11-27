@@ -25,14 +25,6 @@ public partial class T5Interface : Node
 		E_GLASSES_STOPPED_ON_ERROR = 9
 	}
 
-	public enum GameboardType
-	{
-		Unknown = 1,
-		LE = 2,
-		XE = 3,
-		XE_Raised = 4
-	}
-
 	// State of a set of glasses. 
 	class XRRigState {
 		public bool available = false;
@@ -40,7 +32,7 @@ public partial class T5Interface : Node
 		public bool reserved = false;
 
 		public T5XRRig rig;
-		public GameboardType gameboardType;
+		public T5Def.GameboardType gameboardType;
 
 		public bool CanAttemptToReserve {  get { return available && !attemptingToReserve && !reserved; } }
 	}
@@ -196,7 +188,7 @@ public partial class T5Interface : Node
 			case GlassesEventType.E_GLASSES_TRACKING:
 			{
 				GD.Print(glassesID, " E_GLASSES_TRACKING");
-				var gbt = xrInterface.Call("get_gameboard_type", glassesID).As<GameboardType>();
+				var gbt = xrInterface.Call("get_gameboard_type", glassesID).As<T5Def.GameboardType>();
 				if(xrRigState.gameboardType != gbt)
 				{
 					xrRigState.gameboardType = gbt;

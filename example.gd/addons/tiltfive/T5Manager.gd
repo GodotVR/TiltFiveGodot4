@@ -40,9 +40,10 @@ func _ready():
 
 func create_xr_rig(glasses_id : String) -> T5XRRig:
 	var xr_rig = glasses_scene.instantiate() as T5XRRig
+	xr_rig._glasses_id = glasses_id
 	glasses_node.add_child(xr_rig)
 	if start_location:
-		var origin := xr_rig.origin as T5Origin3D
+		var origin := xr_rig.get_origin()
 		origin.transform = start_location.transform
 		origin.gameboard_scale = start_location.content_scale
 	glasses_scene_was_added.emit(xr_rig)

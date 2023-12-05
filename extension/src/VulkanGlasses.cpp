@@ -23,10 +23,10 @@ VulkanGlasses::VulkanGlasses(std::string_view id)
 }
 
 void VulkanGlasses::SwapChainTextures::allocate_textures(int width, int height) {
-    deallocate_textures();
+	if(is_allocated)
+    	deallocate_textures();
 
     auto render_server = RenderingServer::get_singleton();
-    auto service = T5Integration::ObjectRegistry::service();
     auto render_device = render_server->get_rendering_device();
 
     Ref<RDTextureFormat> texture_format_render;
@@ -54,11 +54,15 @@ void VulkanGlasses::SwapChainTextures::allocate_textures(int width, int height) 
 
     left_tex_handle = render_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_IMAGE_VIEW, left_eye_tex, 0);
     right_tex_handle = render_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_IMAGE_VIEW, right_eye_tex, 0);
+
+	is_allocated = true;
 }
 
 void VulkanGlasses::SwapChainTextures::deallocate_textures() {
+	if(!is_allocated)
+		return;
+
     auto render_server = RenderingServer::get_singleton();
-    auto service = T5Integration::ObjectRegistry::service();
     auto render_device = render_server->get_rendering_device();
 
     if(right_eye_tex.is_valid())
@@ -67,6 +71,11 @@ void VulkanGlasses::SwapChainTextures::deallocate_textures() {
         render_device->free_rid(left_eye_tex);
     if(render_tex.is_valid())
         render_device->free_rid(render_tex);
+
+	left_tex_handle = 0;
+	right_tex_handle = 0;
+
+	is_allocated = false;
 }
 
 void VulkanGlasses::allocate_textures() {
@@ -95,18 +104,11 @@ void VulkanGlasses::deallocate_textures() {
     }
 }
 
-void VulkanGlasses::on_glasses_reserved() {
-    GodotT5Glasses::on_glasses_reserved();
+void VulkanGlasses::on_start_display() {
     allocate_textures();
 }
 
-void VulkanGlasses::on_glasses_released() {
-    GodotT5Glasses::on_glasses_released();
-    deallocate_textures();
-}
-
-void VulkanGlasses::on_glasses_dropped() {
-    GodotT5Glasses::on_glasses_dropped();
+void VulkanGlasses::on_stop_display()  {
     deallocate_textures();
 }
  

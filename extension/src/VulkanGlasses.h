@@ -12,6 +12,7 @@ namespace GodotT5Integration {
             void allocate_textures(int width, int height);
             void deallocate_textures();
 
+			bool is_allocated = false;
             RID render_tex;
             RID left_eye_tex;
             RID right_eye_tex;
@@ -31,10 +32,8 @@ namespace GodotT5Integration {
         void allocate_textures();
         void deallocate_textures();
 
-        virtual void on_glasses_reserved() override;
-        virtual void on_glasses_released() override;
-        virtual void on_glasses_dropped() override;
-
+		virtual void on_start_display() override;
+		virtual void on_stop_display() override;
 
         private:
 

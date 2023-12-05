@@ -2,6 +2,8 @@
 #include <Glasses.h>
 #include <Logging.h>
 #include <Wand.h>
+#include <cmath>
+
 
 using TaskSystem::task_sleep;
 using TaskSystem::run_in_foreground;
@@ -28,7 +30,9 @@ namespace T5Integration {
 		_scheduler = ObjectRegistry::scheduler();
 		_math = ObjectRegistry::math();
 
-		_state.reset(GlassesState::UNAVAILABLE, true);
+		_state.reset(GlassesState::UNAVAILABLE);
+		_previous_event_state.reset(GlassesState::UNAVAILABLE);
+		_previous_update_state.reset(GlassesState::UNAVAILABLE);
 
 		set_swap_chain_size(1);
 	}
@@ -178,6 +182,9 @@ namespace T5Integration {
 
 		while (_glasses_handle && _state.is_current(GlassesState::SUSTAIN_CONNECTION)) {
 			T5_ConnectionState connectionState;
+			GlassesFlags _previous_monitor_state;
+
+			_previous_monitor_state.sync_from(_state);
 
 			{
 				std::lock_guard lock(g_t5_exclusivity_group_1);
@@ -264,15 +271,16 @@ namespace T5Integration {
 			}
 			}
 
-			if (_state.any_changed(GlassesState::READY | GlassesState::GRAPHICS_INIT)) {
+			if (_state.any_changed(_previous_monitor_state, GlassesState::READY | GlassesState::GRAPHICS_INIT)) {
 				if (_state.is_current(GlassesState::READY | GlassesState::GRAPHICS_INIT))
 					_state.set(GlassesState::CONNECTED);
 				else
 					_state.clear(GlassesState::CONNECTED);
 			}
-			if (_state.is_current(GlassesState::READY) && !_state.is_current(GlassesState::TRACKING_WANDS)) {
-				_state.set(GlassesState::TRACKING_WANDS);
-				_scheduler->add_task(monitor_wands());
+			if (_state.is_current(GlassesState::READY)) {
+				if(_state.set_and_was_toggled(GlassesState::TRACKING_WANDS)) {
+					_scheduler->add_task(monitor_wands()); 
+				}
 			}
 
 			co_await task_sleep(
@@ -427,7 +435,6 @@ namespace T5Integration {
 	}
 
 	void Glasses::disconnect() {
-
 		if (_state.is_current(GlassesState::READY)) {
 			T5_Result result;
 			{
@@ -440,6 +447,18 @@ namespace T5Integration {
 		}
 		_state.clear(GlassesState::READY | GlassesState::GRAPHICS_INIT | GlassesState::SUSTAIN_CONNECTION);
 		on_glasses_released();
+	}
+
+	void Glasses::start_display() {
+		if(_state.set_and_was_toggled(GlassesState::DISPLAY_STARTED)) {
+			on_start_display();
+		}
+	}
+
+	void Glasses::stop_display() {
+		if(_state.clear_and_was_toggled(GlassesState::DISPLAY_STARTED)) {
+			on_stop_display();
+		}
 	}
 
 	bool Glasses::initialize_graphics() {
@@ -573,26 +592,15 @@ namespace T5Integration {
 
 
 	bool Glasses::update_connection() {
-		static GlassesFlags::FlagType prev_changes = 0;
-		static GlassesFlags::FlagType prev_current = 0;
 
-		auto changes = _state.get_changes();
-		auto current_state = _state.get_current();
-		
-		// if(changes != prev_changes || current_state != prev_current) {
-		// 	log_message("Glasses::update_connection changes ", changes, " Current ", current_state);
-		// 	prev_changes = changes;
-		// 	prev_current = current_state;
-		// }
-
-		if((changes & GlassesState::CONNECTED) == GlassesState::CONNECTED) {
-			if(current_state & GlassesState::CONNECTED) {
-				on_glasses_reserved();
-			} else {
-				on_glasses_dropped();
-
-			}
+		if(_state.became_set(_previous_update_state, GlassesState::CONNECTED)) {
+			on_glasses_reserved();
 		}
+		if(_state.became_clear(_previous_update_state, GlassesState::CONNECTED)) {
+				stop_display();
+				on_glasses_dropped();
+		}
+		_previous_update_state.sync_from(_state);
 
 		return true;
 	}
@@ -605,48 +613,34 @@ namespace T5Integration {
 
    	void Glasses::get_events(int index, std::vector<GlassesEvent>& out_events) {
 		
-		static GlassesFlags::FlagType prev_changes = 0;
-		static GlassesFlags::FlagType prev_current = 0;
-
-		auto changes = _state.get_changes();
-		auto current_state = _state.get_current();
-		
-		// if(changes != prev_changes || current_state != prev_current) {
-		// 	log_message("T5Service::get_events ", changes, " Current ", current_state);
-		// 	prev_changes = changes;
-		// 	prev_current = current_state;
-		// }
-		if((changes & GlassesState::CREATED) == GlassesState::CREATED) {
-			if(current_state & GlassesState::CREATED) {
-				out_events.push_back(GlassesEvent(index, GlassesEvent::E_ADDED));
-
-			} else {
-				out_events.push_back(GlassesEvent(index, GlassesEvent::E_LOST));
-			}
+		if(_state.became_set(_previous_event_state, GlassesState::CREATED)) {
+			out_events.push_back(GlassesEvent(index, GlassesEvent::E_ADDED));
 		}
-		if((changes & GlassesState::UNAVAILABLE) == GlassesState::UNAVAILABLE) {
-			if(current_state & GlassesState::UNAVAILABLE) {
+		if(_state.became_clear(_previous_event_state, GlassesState::CREATED)) {
+			out_events.push_back(GlassesEvent(index, GlassesEvent::E_LOST));
+		}
+
+		if(_state.became_set(_previous_event_state, GlassesState::UNAVAILABLE)) {
 				out_events.push_back(GlassesEvent(index, GlassesEvent::E_UNAVAILABLE));
-			} else {
+		}
+		if(_state.became_clear(_previous_event_state, GlassesState::UNAVAILABLE)) {
 				out_events.push_back(GlassesEvent(index, GlassesEvent::E_AVAILABLE));
-			}
 		}
-		if((changes & GlassesState::CONNECTED) == GlassesState::CONNECTED) {
-			if(current_state & GlassesState::CONNECTED) {
+
+		if(_state.became_set(_previous_event_state, GlassesState::CONNECTED)) {
 				out_events.push_back(GlassesEvent(index, GlassesEvent::E_CONNECTED)); 
-			} else {
+		}
+		if(_state.became_clear(_previous_event_state, GlassesState::CONNECTED)) {
 				out_events.push_back(GlassesEvent(index, GlassesEvent::E_DISCONNECTED));
+		}
 
-			}
+		if(_state.became_set(_previous_event_state, GlassesState::TRACKING)) {
+			out_events.push_back(GlassesEvent(index, GlassesEvent::E_TRACKING));
 		}
-		if((changes & GlassesState::TRACKING) == GlassesState::TRACKING) {
-			out_events.push_back(GlassesEvent(index, current_state & GlassesState::TRACKING ? GlassesEvent::E_TRACKING : GlassesEvent::E_NOT_TRACKING));
+		if(_state.became_clear(_previous_event_state, GlassesState::TRACKING)) {
+			out_events.push_back(GlassesEvent(index, GlassesEvent::E_NOT_TRACKING));
 		}
-		if((changes & GlassesState::ERROR) == GlassesState::ERROR) {
-			// There is currently no way to recover from the error state
-			out_events.push_back(GlassesEvent(index, current_state & GlassesState::ERROR ? GlassesEvent::E_STOPPED_ON_ERROR : GlassesEvent::E_AVAILABLE));
-		}
-		_state.reset_changes();
+
+		_previous_event_state.sync_from(_state);
 	}
-
 }

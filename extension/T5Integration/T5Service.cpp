@@ -12,61 +12,63 @@ T5Service::T5Service() {
 	_graphics_api = T5_GraphicsApi::kT5_GraphicsApi_None;
 	_scheduler = ObjectRegistry::scheduler();
 
-	_state.clear_all(true);
+	_state.clear_all();
+	_previous_event_state.clear_all();
 }
 
 T5Service::~T5Service() {
-
 	stop_service();
 }
 
 bool T5Service::start_service(const std::string_view application_id, std::string_view application_version, uint8_t sdk_type) {
-	if(_state.is_any_current(T5ServiceState::RUNNING | T5ServiceState::STARTING)) 
+	if(_state.is_current(T5ServiceState::RUNNING)) 
 		return true;
-	if(_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_None) {
-		LOG_ERROR("TiltFive graphics api is not set");
-		return false;
+	if(_state.set_and_was_toggled(T5ServiceState::STARTING))
+	{ 
+		if(_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_None) {
+			LOG_ERROR("TiltFive graphics api is not set");
+			return false;
+		}
+
+		T5_ClientInfo clientInfo;
+		clientInfo.applicationId = application_id.data();
+		clientInfo.applicationVersion = application_version.data();
+		clientInfo.sdkType = sdk_type;
+		
+		auto result = t5CreateContext(&_context, &clientInfo, nullptr);
+
+		if(result != T5_SUCCESS) {
+			LOG_T5_ERROR(result);
+			return false;
+		}
+
+		_state.set(T5ServiceState::STARTING);
+
+		_scheduler->start();
+		_scheduler->add_task(startup_checks());
 	}
-
-	T5_ClientInfo clientInfo;
-	clientInfo.applicationId = application_id.data();
-	clientInfo.applicationVersion = application_version.data();
-	clientInfo.sdkType = sdk_type;
-	
-	auto result = t5CreateContext(&_context, &clientInfo, nullptr);
-
-	if(result != T5_SUCCESS) {
-		LOG_T5_ERROR(result);
-		return false;
-	}
-
-	_state.set(T5ServiceState::STARTING);
-
-	_scheduler->start();
-	_scheduler->add_task(startup_checks());
-
 	return true;
 }
 
 void T5Service::stop_service() {
-	if(_state.is_not_current(T5ServiceState::RUNNING))
-		return;
+	if(	_state.clear_and_was_toggled(T5ServiceState::RUNNING) || 
+		_state.clear_and_was_toggled(T5ServiceState::STARTING))
+	{		
+		_scheduler->stop();
+		for(int i = 0; i < _glasses_list.size(); i++) {
+			_glasses_list[i]->stop_display();
+			_glasses_list[i]->disconnect();
+			_glasses_list[i]->destroy_handle();
+		}
+		_glasses_list.clear();
 
-	_state.clear(T5ServiceState::RUNNING);
-
-	_scheduler->stop();
-	for(int i = 0; i < _glasses_list.size(); i++) {
-		_glasses_list[i]->disconnect();
-		_glasses_list[i]->destroy_handle();
+		if(_context)
+		{
+			std::lock_guard lock(g_t5_exclusivity_group_1);
+			t5DestroyContext(&_context);
+		}
+		_context = nullptr;
 	}
-	_glasses_list.clear();
-
-	if(_context)
-	{
-		std::lock_guard lock(g_t5_exclusivity_group_1);
-		t5DestroyContext(&_context);
-	}
-	_context = nullptr;
 }
 
 std::optional<int> T5Service::find_glasses_idx(const std::string_view glasses_id) {
@@ -200,7 +202,6 @@ CotaskPtr T5Service::query_glasses_list() {
 				break;
 			parsed_id_list.emplace_back(str_view.substr(0, pos));
 			str_view.remove_prefix(pos + 1);
-
 		}
 
 		co_await run_in_foreground;
@@ -270,23 +271,19 @@ void T5Service::update_tracking() {
 }
 
 void T5Service::get_service_events(std::vector<T5ServiceEvent>& out_events) {
-	
-	auto changes = _state.get_changes();
-	auto current_state = _state.get_current();
-
-	if(_state.became_set(T5ServiceState::T5_UNAVAILABLE)) {
+	if(_state.became_set(_previous_event_state, T5ServiceState::T5_UNAVAILABLE)) {
 		out_events.push_back(T5ServiceEvent(T5ServiceEvent::E_T5_UNAVAILABLE));
 	}
-	if(_state.became_set(T5ServiceState::T5_INCOMPATIBLE_VERSION)) {
+	if(_state.became_set(_previous_event_state, T5ServiceState::T5_INCOMPATIBLE_VERSION)) {
 		out_events.push_back(T5ServiceEvent(T5ServiceEvent::E_T5_INCOMPATIBLE_VERSION));
 	}
-	if(_state.became_set(T5ServiceState::RUNNING)) {
+	if(_state.became_set(_previous_event_state, T5ServiceState::RUNNING)) {
 		out_events.push_back(T5ServiceEvent(T5ServiceEvent::E_RUNNING));
 	} 
-	if(_state.became_clear(T5ServiceState::RUNNING)) {
+	if(_state.became_clear(_previous_event_state, T5ServiceState::RUNNING)) {
 		out_events.push_back(T5ServiceEvent(T5ServiceEvent::E_STOPPED));
 	}
-	_state.reset_changes();
+	_previous_event_state.sync_from(_state);
 }
 
 void T5Service::get_glasses_events(std::vector<GlassesEvent>& out_events) {

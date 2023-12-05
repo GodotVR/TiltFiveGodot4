@@ -1,6 +1,7 @@
 #pragma once
 #include <thread>
 #include <chrono>
+#include <vector>
 #include <TiltFiveNative.h>
 
 
@@ -81,15 +82,15 @@ private:
 	T5_Result _last_wand_error;
 };
 
-inline std::optional<Wand*> find_wand(const WandList& list, T5_WandHandle handle) {
+inline Wand* find_wand(WandList& list, T5_WandHandle handle) {
 	auto it = std::find_if(list.begin(), list.end(),
 						   [handle](auto& test_wand) {
 							   return test_wand._handle == handle;
 						   });
 
 	if(it != list.end())
-		return it._Ptr;
-	return std::nullopt;
+		return std::addressof(*it);
+	return nullptr;
 }
 
 } // T5Integration

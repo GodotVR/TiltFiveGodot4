@@ -111,6 +111,7 @@ protected:
 	std::vector<Glasses::Ptr> _glasses_list;
 
 	T5ServiceFlags _state;
+	T5ServiceFlags _previous_event_state;
 
 	std::chrono::milliseconds _poll_rate_for_monitoring = 2s;
 	std::chrono::milliseconds _poll_rate_for_retry = 100ms;

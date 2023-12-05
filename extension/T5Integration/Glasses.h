@@ -17,16 +17,17 @@ using TaskSystem::Scheduler;
 float const g_default_fov = 48.0f;
 
 namespace GlassesState {
-	const uint16_t READY				= 0x00000001; //000000001
-	const uint16_t GRAPHICS_INIT		= 0x00000002; //000000010
-	const uint16_t SUSTAIN_CONNECTION	= 0x00000004; //000000100
+	const uint16_t READY				= 0x00000001; //0000000001
+	const uint16_t GRAPHICS_INIT		= 0x00000002; //0000000010
+	const uint16_t SUSTAIN_CONNECTION	= 0x00000004; //0000000100
 
-	const uint16_t CREATED				= 0x00000008; //000001000
-	const uint16_t UNAVAILABLE			= 0x00000010; //000010000
-	const uint16_t TRACKING				= 0x00000020; //000100000
-	const uint16_t CONNECTED			= 0x00000040; //001000000
-	const uint16_t TRACKING_WANDS		= 0x00000080; //010000000
-	const uint16_t ERROR				= 0x00000100; //100000000
+	const uint16_t CREATED				= 0x00000008; //0000001000
+	const uint16_t UNAVAILABLE			= 0x00000010; //0000010000
+	const uint16_t TRACKING				= 0x00000020; //0000100000
+	const uint16_t CONNECTED			= 0x00000040; //0001000000
+	const uint16_t TRACKING_WANDS		= 0x00000080; //0010000000
+	const uint16_t ERROR				= 0x00000100; //0100000000
+	const uint16_t DISPLAY_STARTED		= 0x00000200; //1000000000
 }
 
 struct GlassesEvent {
@@ -82,10 +83,13 @@ class Glasses
     bool is_available();
     bool is_tracking();
     
-   bool allocate_handle(T5_Context context);
+    bool allocate_handle(T5_Context context);
     void destroy_handle();
     void connect(const std::string_view application_name);
     void disconnect();
+	void start_display();
+	void stop_display();
+
 
     float get_ipd();
     float get_fov();
@@ -128,6 +132,8 @@ protected:
     void set_swap_chain_texture_pair(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle);
     void set_swap_chain_texture_array(int swap_chain_idx, intptr_t array_handle);
 
+	virtual void on_start_display() {}
+	virtual void on_stop_display() {}
     virtual void on_glasses_reserved() {}
     virtual void on_glasses_released() {}
     virtual void on_glasses_dropped() {}
@@ -172,6 +178,8 @@ private:
 	float _ipd = 0.059f;
 
 	GlassesFlags _state;
+	GlassesFlags _previous_event_state;
+	GlassesFlags _previous_update_state;
 
     bool _is_upside_down_texture = false;
 

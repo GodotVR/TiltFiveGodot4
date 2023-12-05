@@ -10,6 +10,9 @@ T5Gameboard = "res://addons/tiltfive/assets/board.svg"
 
 windows.x86_64.debug = "res://addons/tiltfive/bin/libgdtiltfive.windows.template_debug.x86_64.dll"
 windows.x86_64.release = "res://addons/tiltfive/bin/libgdtiltfive.windows.template_release.x86_64.dll"
+linux.x86_64.debug = "res://addons/tiltfive/bin/libgdtiltfive.linux.template_debug.x86_64.so"
+linux.x86_64.release = "res://addons/tiltfive/bin/libgdtiltfive.linux.template_release.x86_64.so"
+
 
 [dependencies]
 
@@ -18,5 +21,11 @@ windows.x86_64.debug = {
 }
 windows.x86_64.release = {
     "res://addons/tiltfive/bin/TiltFiveNative.dll" : ""
+}
+linux.x86_64.debug = {
+    "res://addons/tiltfive/bin/libTiltFiveNative.so" : ""
+}
+linux.x86_64.release = {
+    "res://addons/tiltfive/bin/libTiltFiveNative.so" : ""
 }
 

@@ -151,8 +151,8 @@ void WandService::monitor_wands(std::stop_token s_token) {
 
 		if(event.type != kT5_WandStreamEventType_Desync) {
 			std::lock_guard lock(_list_access);
-			auto opt_wand_ptr = find_wand(_wand_list, event.wandId);
-			auto wand = opt_wand_ptr ? opt_wand_ptr.value() : &_wand_list.emplace_back();
+			auto wand_ptr = find_wand(_wand_list, event.wandId);
+			auto wand = wand_ptr ? wand_ptr : &_wand_list.emplace_back();
 			wand->update_from_stream_event(event);
 		}
 		else {

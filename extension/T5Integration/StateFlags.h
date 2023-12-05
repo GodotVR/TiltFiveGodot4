@@ -16,14 +16,15 @@ class StateFlags
 		return _current.load();
 	}
 
-	FlagType get_changes() const
-	{
-		return (_current.load() ^ _previous);
-	}
-
 	void set(FlagType state)
 	{
 		_current.fetch_or(state);
+	}
+
+	bool set_and_was_toggled(FlagType state)
+	{
+		T old = _current.fetch_or(state);
+		return (old & state) != state;
 	}
 
 	void clear(FlagType state)
@@ -31,18 +32,20 @@ class StateFlags
 		_current.fetch_and(~state);
 	}
 
-	void clear_all(bool clear_changes = true)
+	bool clear_and_was_toggled(FlagType state)
 	{
-		_current.store(0);
-		if(clear_changes) 
-			_previous = 0;
+		T old = _current.fetch_and(~state);
+		return (old & state) == state;
 	}
 
-	void reset(FlagType state, bool clear_changes = false)
+	void clear_all()
+	{
+		_current.store(0);
+	}
+
+	void reset(FlagType state)
 	{
 		_current.store(state);
-		if(clear_changes) 
-		    _previous = state;
 	}
 
 	bool is_current(FlagType state) const
@@ -60,25 +63,25 @@ class StateFlags
 		return (_current.load() & state) != state;
 	}
 
-	bool any_changed(FlagType state) const
+	bool any_changed(const StateFlags<FlagType>& from, FlagType query_state) const
 	{
-		return ((_current.load() ^ _previous) & state) != 0;
+		return ((_current.load() ^ from._current.load()) & query_state) != 0;
 	}
 
-	bool became_set(FlagType state) const {
-		return (_current.load() & state) == state && (_previous & state) != state;
+	bool became_set(const StateFlags<FlagType>& from, FlagType query_state) const {
+		return (_current.load() & query_state) == query_state && 
+				(from._current.load() & query_state) != query_state;
 	}
 
-	bool became_clear(FlagType state) const {
-		return (_current.load() & state) != state && (_previous & state) == state;
+	bool became_clear(const StateFlags<FlagType>& from, FlagType query_state) const {
+		return (_current.load() & query_state) != query_state && 
+				(from._current.load() & query_state) == query_state;
 	}
 
-	void reset_changes()
-	{
-		_previous = _current;
+	void sync_from(const StateFlags<FlagType>& from) {
+		_current.store(from._current.load());
 	}
 
 	private:
 	std::atomic<FlagType> _current;
-	FlagType _previous;
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <sstream>
 #include <TiltFiveNative.h>
 
 namespace T5Integration {
@@ -56,6 +57,10 @@ void log_message(T var1, Types... var2) {
 
 #ifndef LOG_TOGGLE
 #define LOG_TOGGLE(INIT, TEST, MSG1, MSG2) { static bool toggle ## __LINE__ = (INIT);  T5Integration::log_toggle((TEST), toggle ## __LINE__, MSG1, MSG2); }
+#endif
+
+#ifndef LOG_MESSAGE
+#define LOG_MESSAGE(...) T5Integration::log_message(__func__, ":", __LINE__, " ", __VA_ARGS__)
 #endif
 
 #ifndef LOG_ERROR

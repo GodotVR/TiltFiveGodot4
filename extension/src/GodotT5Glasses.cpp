@@ -97,11 +97,12 @@ void GodotT5Glasses::on_glasses_reserved() {
 	XRServer *xr_server = XRServer::get_singleton();
 	ERR_FAIL_NULL(xr_server);
 
-	auto tracker_name = std::format("/user/{}/head", get_id());
+    char buffer[64];
+    ERR_FAIL_COND(snprintf(buffer, 64, "/user/%s/head", get_id().c_str()) > 64);
 
 	_head.instantiate();
 	_head->set_tracker_type(XRServer::TRACKER_HEAD);
-	_head->set_tracker_name(tracker_name.c_str());
+	_head->set_tracker_name(buffer);
 	_head->set_tracker_desc("Players head");
 	xr_server->add_tracker(_head);    
 }
@@ -166,11 +167,12 @@ void GodotT5Glasses::add_tracker() {
 	Ref<XRPositionalTracker> positional_tracker;
 	positional_tracker.instantiate();
 
-	auto tracker_name = std::format("/user/{}/wand_{}", get_id(), new_id);
+    char buffer[64];
+    ERR_FAIL_COND(snprintf(buffer, 64, "/user/%s/wand_%d", get_id().c_str(), new_id) > 64);
  
-	positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
-	positional_tracker->set_tracker_name(tracker_name.c_str());
-	positional_tracker->set_tracker_desc(tracker_name.c_str());
+    positional_tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
+    positional_tracker->set_tracker_name(buffer);
+    positional_tracker->set_tracker_desc("Tracks wand");
 
 	_wand_trackers.push_back(positional_tracker);    
 }

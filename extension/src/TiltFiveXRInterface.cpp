@@ -205,6 +205,7 @@ void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry&
 		WARN_PRINT("Glasses need to be reserved to display viewport");
 		return;
 	}
+	glasses->start_display();
 	entry.viewport_id = viewport->get_instance_id();
 	entry.gameboard_id = gameboard->get_instance_id();
 
@@ -220,11 +221,13 @@ void TiltFiveXRInterface::stop_display(const StringName glasses_id) {
 
 
 void TiltFiveXRInterface::_stop_display(GlassesIndexEntry& entry) {
+	auto glasses = entry.glasses.lock();
 	auto viewport = Object::cast_to<SubViewport>(ObjectDB::get_instance(entry.viewport_id));
 	if(viewport) {
 		viewport->set_use_xr(false);
 		viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_DISABLED);
 	}
+	glasses->stop_display();
 	entry.viewport_id = ObjectID();
 	entry.gameboard_id = ObjectID();
 }

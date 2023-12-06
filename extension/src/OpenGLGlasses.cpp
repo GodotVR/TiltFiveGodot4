@@ -20,7 +20,8 @@ OpenGLGlasses::OpenGLGlasses(std::string_view id)
 void OpenGLGlasses::SwapChainTextures::allocate_textures(int width, int height) {
     auto render_server = RenderingServer::get_singleton();
 
-    deallocate_textures();
+	if(is_allocated)
+    	deallocate_textures();
 
     Ref<Image> dummy_image = Image::create(width, height, false, godot::Image::FORMAT_RGBA8);
     godot::Color bg(0,0,0);
@@ -32,10 +33,13 @@ void OpenGLGlasses::SwapChainTextures::allocate_textures(int width, int height) 
 
     render_tex.instantiate();
     render_tex->create_from_images(image_arr);
+
+	is_allocated = true;
 }
 
 void OpenGLGlasses::SwapChainTextures::deallocate_textures() {
     render_tex.unref();
+	is_allocated = false;
 }
 
 void OpenGLGlasses::allocate_textures() {
@@ -58,18 +62,11 @@ void OpenGLGlasses::deallocate_textures() {
     }
 }
 
-void OpenGLGlasses::on_glasses_reserved() {
-    GodotT5Glasses::on_glasses_reserved();
+void OpenGLGlasses::on_start_display() {
     allocate_textures();
 }
 
-void OpenGLGlasses::on_glasses_released() {
-    GodotT5Glasses::on_glasses_released();
-    deallocate_textures();
-}
-
-void OpenGLGlasses::on_glasses_dropped() {
-    GodotT5Glasses::on_glasses_dropped();
+void OpenGLGlasses::on_stop_display()  {
     deallocate_textures();
 }
 

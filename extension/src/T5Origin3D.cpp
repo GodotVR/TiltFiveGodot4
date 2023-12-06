@@ -2,9 +2,9 @@
 #include <godot_cpp/core/class_db.hpp>
 
 using godot::ClassDB;
+using godot::D_METHOD;
 using godot::MethodInfo;
 using godot::PropertyInfo;
-using godot::D_METHOD;
 using godot::Variant;
 
 void T5Origin3D::_bind_methods() {
@@ -13,18 +13,17 @@ void T5Origin3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_gameboard_scale", "scale"), &T5Origin3D::set_gameboard_scale);
 
 	// Properties.
-    ClassDB::add_property("T5Origin3D", PropertyInfo(Variant::FLOAT, "gameboard_scale"), "set_gameboard_scale", "get_gameboard_scale");
+	ClassDB::add_property("T5Origin3D", PropertyInfo(Variant::FLOAT, "gameboard_scale"), "set_gameboard_scale", "get_gameboard_scale");
 
 	// Signals
 	ADD_SIGNAL(MethodInfo("gameboard_scale_changed", PropertyInfo(Variant::FLOAT, "scale")));
 }
 
-
 real_t T5Origin3D::get_gameboard_scale() {
-    return _scale;
+	return _scale;
 }
 
 void T5Origin3D::set_gameboard_scale(real_t scale) {
-    _scale = scale;
+	_scale = scale;
 	emit_signal("gameboard_scale_changed", _scale);
 }

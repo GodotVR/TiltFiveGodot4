@@ -1,15 +1,14 @@
 #include <T5Camera3D.h>
 #include <T5Origin3D.h>
-#include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/xr_server.hpp>
+#include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/callable.hpp>
 
-using godot::XRServer;
 using godot::Callable;
 using godot::ClassDB;
 using godot::D_METHOD;
 using godot::PropertyInfo;
-
+using godot::XRServer;
 
 void T5Camera3D::set_tracker(const StringName p_tracker_name) {
 	if (tracker.is_valid() && tracker->get_tracker_name() == p_tracker_name) {
@@ -36,51 +35,48 @@ StringName T5Camera3D::get_tracker() const {
 }
 
 bool T5Camera3D::get_is_active() const {
-    if (tracker.is_null()) {
-        return false;
-    } else if (!tracker->has_pose(pose_name)) {
-        return false;
-    } else {
-        return true;
-    }
+	if (tracker.is_null()) {
+		return false;
+	} else if (!tracker->has_pose(pose_name)) {
+		return false;
+	} else {
+		return true;
+	}
 }
 
 bool T5Camera3D::get_has_tracking_data() const {
-    if (tracker.is_null()) {
-        return false;
-    } else if (!tracker->has_pose(pose_name)) {
-        return false;
-    } else {
-        return tracker->get_pose(pose_name)->get_has_tracking_data();
-    }
+	if (tracker.is_null()) {
+		return false;
+	} else if (!tracker->has_pose(pose_name)) {
+		return false;
+	} else {
+		return tracker->get_pose(pose_name)->get_has_tracking_data();
+	}
 }
 
 Ref<XRPose> T5Camera3D::get_pose() {
-    if (tracker.is_valid()) {
-        return tracker->get_pose(pose_name);
-    } else {
-        return Ref<XRPose>();
-    }
+	if (tracker.is_valid()) {
+		return tracker->get_pose(pose_name);
+	} else {
+		return Ref<XRPose>();
+	}
 }
 
-PackedStringArray T5Camera3D::get_configuration_warnings(PackedStringArray& warnings) const {
-
-    if (is_visible() && is_inside_tree()) {
+PackedStringArray T5Camera3D::get_configuration_warnings(PackedStringArray &warnings) const {
+	if (is_visible() && is_inside_tree()) {
 		// must be child node of T5Origin3D!
 		T5Origin3D *origin = Object::cast_to<T5Origin3D>(get_parent());
 		if (origin == nullptr) {
 			warnings.push_back("T5Camera3D must have an T5Origin3D node as its parent.");
 		}
 
-        if (tracker_name.is_empty()) {
-            warnings.push_back("No tracker name is set.");
-        }
-    }
+		if (tracker_name.is_empty()) {
+			warnings.push_back("No tracker name is set.");
+		}
+	}
 
-    return warnings;
+	return warnings;
 }
-
-
 
 T5Camera3D::T5Camera3D() {
 	XRServer *xr_server = XRServer::get_singleton();
@@ -121,25 +117,24 @@ void T5Camera3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_pose_changed", "pose"), &T5Camera3D::_pose_changed);
 }
 
-
 void T5Camera3D::_bind_tracker() {
-    ERR_FAIL_COND_MSG(tracker.is_valid(), "Unbind the current tracker first");
+	ERR_FAIL_COND_MSG(tracker.is_valid(), "Unbind the current tracker first");
 
-    XRServer *xr_server = XRServer::get_singleton();
-    if (xr_server != nullptr) {
-        tracker = xr_server->get_tracker(tracker_name);
-        if (tracker.is_null()) {
-            // It is possible and valid if the tracker isn't available (yet), in this case we just exit
-            return;
-        }
+	XRServer *xr_server = XRServer::get_singleton();
+	if (xr_server != nullptr) {
+		tracker = xr_server->get_tracker(tracker_name);
+		if (tracker.is_null()) {
+			// It is possible and valid if the tracker isn't available (yet), in this case we just exit
+			return;
+		}
 
-        tracker->connect("pose_changed", Callable(this, "_pose_changed"));
+		tracker->connect("pose_changed", Callable(this, "_pose_changed"));
 
-        Ref<XRPose> pose = get_pose();
-        if (pose.is_valid()) {
-            set_transform(pose->get_adjusted_transform());
-        }
-    }
+		Ref<XRPose> pose = get_pose();
+		if (pose.is_valid()) {
+			set_transform(pose->get_adjusted_transform());
+		}
+	}
 }
 
 void T5Camera3D::_unbind_tracker() {
@@ -151,9 +146,9 @@ void T5Camera3D::_unbind_tracker() {
 
 void T5Camera3D::_changed_tracker(const StringName p_tracker_name, int p_tracker_type) {
 	if (p_tracker_name == tracker_name) {
-        // just in case unref our current tracker
-        _unbind_tracker();
-		
+		// just in case unref our current tracker
+		_unbind_tracker();
+
 		_bind_tracker();
 	}
 }
@@ -165,9 +160,8 @@ void T5Camera3D::_removed_tracker(const StringName p_tracker_name, int p_tracker
 }
 
 void T5Camera3D::_pose_changed(const Variant p_obj) {
-    auto pose = Object::cast_to<XRPose>(p_obj);
-    if (pose && pose->get_name() == pose_name) {
-        set_transform(pose->get_adjusted_transform());
-    }
+	auto pose = Object::cast_to<XRPose>(p_obj);
+	if (pose && pose->get_name() == pose_name) {
+		set_transform(pose->get_adjusted_transform());
+	}
 }
-	

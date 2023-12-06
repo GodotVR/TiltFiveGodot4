@@ -1,10 +1,10 @@
 #pragma once
+#include <TiltFiveNative.h>
 #include <memory>
 #include <sstream>
-#include <TiltFiveNative.h>
 
 namespace T5Integration {
-	
+
 class Logger {
 public:
 	using Ptr = std::shared_ptr<Logger>;
@@ -30,14 +30,14 @@ void log_toggle(bool current, bool& state, const char* msg1, const char* msg2);
 
 inline void log_message_stream(std::stringstream& stream) {}
 
-template<typename T, typename... Types>
+template <typename T, typename... Types>
 void log_message_stream(std::stringstream& stream, T var1, Types... var2) {
 	stream << var1;
 
 	log_message_stream(stream, var2...);
 }
 
-template<typename T, typename... Types>
+template <typename T, typename... Types>
 void log_message(T var1, Types... var2) {
 	std::stringstream stream;
 	stream << var1;
@@ -47,16 +47,24 @@ void log_message(T var1, Types... var2) {
 
 } //namespace T5Integration
 
-
 #define LOG_CHECK_POINT T5Integration::log_message("===> ", __func__, " : ", __LINE__);
 
 #ifndef LOG_CHECK_POINT_ONCE
-#define LOG_CHECK_POINT_ONCE { static bool once ## __LINE__ = false; if(! once ## __LINE__) {LOG_CHECK_POINT once ## __LINE__ = true; }}
+#define LOG_CHECK_POINT_ONCE                       \
+	{                                              \
+		static bool once##__LINE__ = false;        \
+		if (!once##__LINE__) {                     \
+			LOG_CHECK_POINT once##__LINE__ = true; \
+		}                                          \
+	}
 #endif
 
-
 #ifndef LOG_TOGGLE
-#define LOG_TOGGLE(INIT, TEST, MSG1, MSG2) { static bool toggle ## __LINE__ = (INIT);  T5Integration::log_toggle((TEST), toggle ## __LINE__, MSG1, MSG2); }
+#define LOG_TOGGLE(INIT, TEST, MSG1, MSG2)                               \
+	{                                                                    \
+		static bool toggle##__LINE__ = (INIT);                           \
+		T5Integration::log_toggle((TEST), toggle##__LINE__, MSG1, MSG2); \
+	}
 #endif
 
 #ifndef LOG_MESSAGE
@@ -76,6 +84,12 @@ void log_message(T var1, Types... var2) {
 #endif
 
 #ifndef LOG_ERROR_ONCE
-#define LOG_ERROR_ONCE(MSG) { static bool once ## __LINE__ = false; if(! once ## __LINE__) {LOG_ERROR(MSG); once ## __LINE__ = true; }}
+#define LOG_ERROR_ONCE(MSG)                 \
+	{                                       \
+		static bool once##__LINE__ = false; \
+		if (!once##__LINE__) {              \
+			LOG_ERROR(MSG);                 \
+			once##__LINE__ = true;          \
+		}                                   \
+	}
 #endif
-

@@ -1,17 +1,18 @@
 #include <T5Controller3D.h>
 #include <godot_cpp/core/class_db.hpp>
 
-using godot::ClassDB;
-using godot::PropertyInfo;
-using godot::D_METHOD;
-using godot::Variant;
-using godot::MethodInfo;
 using godot::Callable;
+using godot::ClassDB;
+using godot::D_METHOD;
+using godot::MethodInfo;
+using godot::PropertyInfo;
+using godot::Variant;
 
-#define DEF_SNAME(arg) StringName& sn_##arg() { \
-	static StringName name = #arg; \
-	return name; \
-}
+#define DEF_SNAME(arg)                 \
+	StringName &sn_##arg() {           \
+		static StringName name = #arg; \
+		return name;                   \
+	}
 
 DEF_SNAME(button_pressed)
 DEF_SNAME(button_released)
@@ -24,7 +25,7 @@ void T5Controller3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_float", "name"), &T5Controller3D::get_float);
 	ClassDB::bind_method(D_METHOD("get_vector2", "name"), &T5Controller3D::get_vector2);
 	ClassDB::bind_method(D_METHOD("trigger_haptic_pulse", "amplitude", "duration"), &T5Controller3D::trigger_haptic_pulse);
-	
+
 	ClassDB::bind_method(D_METHOD("_button_pressed", "name"), &T5Controller3D::_button_pressed);
 	ClassDB::bind_method(D_METHOD("_button_released", "name"), &T5Controller3D::_button_released);
 	ClassDB::bind_method(D_METHOD("_input_float_changed", "name", "value"), &T5Controller3D::_input_float_changed);
@@ -146,6 +147,6 @@ Vector2 T5Controller3D::get_vector2(const StringName &p_name) const {
 void T5Controller3D::trigger_haptic_pulse(float amplitude, int duration) {
 	auto glasses = get_associated_glasses();
 	auto wand_num = get_associated_wand_num();
-	if(glasses && wand_num >= 0)
+	if (glasses && wand_num >= 0)
 		glasses->trigger_haptic_pulse(wand_num, amplitude, duration);
 }

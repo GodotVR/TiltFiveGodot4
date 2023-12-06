@@ -1,9 +1,8 @@
 #pragma once
-#include <thread>
-#include <chrono>
-#include <vector>
 #include <TiltFiveNative.h>
-
+#include <chrono>
+#include <thread>
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -16,17 +15,17 @@ const uint8_t BUTTONS_VALID = 0x04;
 const uint8_t ANALOG_VALID = 0x08;
 const uint8_t POSE_VALID = 0x10;
 const uint8_t BATTERY_VALID = 0x20;
-};
+}; //namespace WandState
 
 struct WandButtons {
-	bool t5:1;
-	bool one:1;
-	bool two:1;
-	bool three:1;
-	bool a:1;
-	bool b:1;
-	bool x:1;
-	bool y:1;
+	bool t5 : 1;
+	bool one : 1;
+	bool two : 1;
+	bool three : 1;
+	bool a : 1;
+	bool b : 1;
+	bool x : 1;
+	bool y : 1;
 };
 
 struct WandAnalog {
@@ -84,13 +83,13 @@ private:
 
 inline Wand* find_wand(WandList& list, T5_WandHandle handle) {
 	auto it = std::find_if(list.begin(), list.end(),
-						   [handle](auto& test_wand) {
-							   return test_wand._handle == handle;
-						   });
+			[handle](auto& test_wand) {
+				return test_wand._handle == handle;
+			});
 
-	if(it != list.end())
+	if (it != list.end())
 		return std::addressof(*it);
 	return nullptr;
 }
 
-} // T5Integration
+} //namespace T5Integration

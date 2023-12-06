@@ -1,16 +1,16 @@
 #pragma once
+#include <Glasses.h>
+#include <StateFlags.h>
+#include <TaskSystem.h>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <TaskSystem.h>
-#include <StateFlags.h>
-#include <Glasses.h>
 
 namespace T5Integration {
 
 using TaskSystem::CotaskPtr;
-using TaskSystem::Scheduler;
 using TaskSystem::run_in_foreground;
+using TaskSystem::Scheduler;
 using TaskSystem::task_sleep;
 
 extern std::mutex g_t5_exclusivity_group_1;
@@ -21,7 +21,7 @@ const int t5_version_major = 1;
 const int t5_version_minor = 4;
 const int t5_version_revision = 0;
 
-
+// clang-format off
 namespace T5ServiceState {
 	const uint16_t RUNNING					= 0x0001; 
 	const uint16_t STARTING 				= 0x0002;
@@ -30,30 +30,30 @@ namespace T5ServiceState {
 	const uint16_t T5_INCOMPATIBLE_VERSION	= 0x0010; 
 	const uint16_t ERROR					= 0x1000; 
 };
+// clang-format on
 
 using T5ServiceFlags = StateFlags<uint16_t>;
 
+// clang-format off
 struct T5ServiceEvent {
-    enum EType
-    {
-        E_NONE          			= 0,
-        E_STOPPED       			= 1,
-        E_RUNNING					= 2,
-        E_T5_UNAVAILABLE			= 3,
-        E_T5_INCOMPATIBLE_VERSION   = 4
-    };
-    T5ServiceEvent(EType evt) 
-    : event(evt)
-    {}
+	enum EType
+	{
+		E_NONE						= 0,
+		E_STOPPED					= 1,
+		E_RUNNING					= 2,
+		E_T5_UNAVAILABLE			= 3,
+		E_T5_INCOMPATIBLE_VERSION	= 4
+	};
+	// clang-format on
 
-    EType event;
+	T5ServiceEvent(EType evt) :
+			event(evt) {}
+
+	EType event;
 };
 
-
 class T5Service {
-
 public:
-
 	using Ptr = std::shared_ptr<T5Service>;
 
 	T5Service();
@@ -66,8 +66,8 @@ public:
 	void reserve_glasses(int glasses_num, const std::string_view display_name);
 	void release_glasses(int glasses_num);
 
-    void set_upside_down_texture(int glasses_num, bool is_upside_down);
-	
+	void set_upside_down_texture(int glasses_num, bool is_upside_down);
+
 	int get_glasses_count() { return _glasses_list.size(); }
 	std::optional<int> find_glasses_idx(const std::string_view glasses_id);
 
@@ -86,7 +86,6 @@ public:
 	void get_gameboard_size(T5_GameboardType gameboard_type, T5_GameboardSize& gameboard_size);
 
 protected:
-
 	CotaskPtr startup_checks();
 	CotaskPtr query_t5_service_version();
 	CotaskPtr query_glasses_list();
@@ -102,7 +101,6 @@ protected:
 	void set_graphics_context(const T5_GraphicsContextVulkan& vulkan_context);
 
 protected:
-
 	std::string _application_id;
 	std::string _application_version;
 
@@ -139,21 +137,20 @@ inline T5_GraphicsApi T5Service::get_graphics_api() const {
 }
 
 inline bool T5Service::is_image_texture_array() const {
-	if (_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_GL && 
-		_opengl_graphics_context.textureMode == T5_GraphicsApi_GL_TextureMode::kT5_GraphicsApi_GL_TextureMode_Array)
+	if (_graphics_api == T5_GraphicsApi::kT5_GraphicsApi_GL &&
+			_opengl_graphics_context.textureMode == T5_GraphicsApi_GL_TextureMode::kT5_GraphicsApi_GL_TextureMode_Array)
 		return true;
 	return false;
 }
 
 inline void* T5Service::get_graphics_context_handle() {
-	switch (_graphics_api)
-	{
-	case T5_GraphicsApi::kT5_GraphicsApi_GL:
-		return &_opengl_graphics_context;
-	case T5_GraphicsApi::kT5_GraphicsApi_Vulkan:
-		return &_vulkan_graphics_context;
-	default:
-		break;
+	switch (_graphics_api) {
+		case T5_GraphicsApi::kT5_GraphicsApi_GL:
+			return &_opengl_graphics_context;
+		case T5_GraphicsApi::kT5_GraphicsApi_Vulkan:
+			return &_vulkan_graphics_context;
+		default:
+			break;
 	};
 	return nullptr;
 }
@@ -167,7 +164,8 @@ inline const std::string T5Service::get_glasses_name(int glasses_idx) const {
 }
 
 inline void T5Service::set_upside_down_texture(int glasses_idx, bool is_upside_down) {
-	if(glasses_idx < _glasses_list.size()) _glasses_list[glasses_idx]->set_upside_down_texture(is_upside_down);
+	if (glasses_idx < _glasses_list.size())
+		_glasses_list[glasses_idx]->set_upside_down_texture(is_upside_down);
 }
 
-}
+} //namespace T5Integration

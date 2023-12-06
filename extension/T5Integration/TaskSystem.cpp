@@ -42,26 +42,25 @@ TaskStatus Task::get_status() {
 	return _status;
 }
 
-
 TaskStatus Cotask::run_background_task() {
 	auto& promise = _handle.promise();
-	while(true) {
-		if(promise._sub_task) {
+	while (true) {
+		if (promise._sub_task) {
 			auto status = promise._sub_task->run_background_task();
-			if(!status.is_done())
+			if (!status.is_done())
 				return status;
 			promise._sub_task.reset();
 
-			if(status.is_error())
+			if (status.is_error())
 				return status;
-			if(is_foreground()) {
+			if (is_foreground()) {
 				return run_in_foreground;
 			}
 		}
 		_handle.resume();
-		if(!promise._sub_task)
+		if (!promise._sub_task)
 			return promise._status;
-		if(promise._sub_task->is_foreground()) {
+		if (promise._sub_task->is_foreground()) {
 			return run_in_foreground;
 		}
 	}
@@ -69,28 +68,27 @@ TaskStatus Cotask::run_background_task() {
 
 TaskStatus Cotask::run_foreground_task() {
 	auto& promise = _handle.promise();
-	while(true) {
-		if(promise._sub_task) {
+	while (true) {
+		if (promise._sub_task) {
 			auto status = promise._sub_task->run_foreground_task();
-			if(!status.is_done())
+			if (!status.is_done())
 				return status;
 			promise._sub_task.reset();
 
-			if(status.is_error())
+			if (status.is_error())
 				return status;
-			if(is_background()) {
+			if (is_background()) {
 				return run_now;
 			}
 		}
 		_handle.resume();
-		if(!promise._sub_task)
+		if (!promise._sub_task)
 			return _handle.promise()._status;
-		if(promise._sub_task->is_background()) {
+		if (promise._sub_task->is_background()) {
 			return task_sleep(0);
 		}
 	}
 }
-
 
 Scheduler::Scheduler() {}
 
@@ -105,33 +103,30 @@ void Scheduler::start() {
 }
 
 void Scheduler::stop() {
-	if(_is_running) {
+	if (_is_running) {
 		_is_running = false;
 		_background_release.notify_one();
-		if(_background_thread.joinable())
+		if (_background_thread.joinable())
 			_background_thread.join();
 		_background_run_list.clear();
 		_background_wait_list.clear();
 		_foreground_list.clear();
-
 	}
 }
 
 void Scheduler::add_task(TaskBase::Ptr&& task) {
-	if(task->is_background()) {
-		if(task->get_scheduled_time() < Clock::now() + _average_time) {
+	if (task->is_background()) {
+		if (task->get_scheduled_time() < Clock::now() + _average_time) {
 			{
 				std::lock_guard<std::mutex> lk(_background_run_mutex);
 				_background_run_list.push_front(std::forward<TaskBase::Ptr>(task));
 			}
 			_background_release.notify_one();
-		}
-		else {
+		} else {
 			std::lock_guard<std::mutex> lk(_background_wait_mutex);
 			_background_wait_list.push_front(std::forward<TaskBase::Ptr>(task));
 		}
-	}
-	else {
+	} else {
 		std::lock_guard<std::mutex> lk(_foreground_mutex);
 		_foreground_list.push_front(std::forward<TaskBase::Ptr>(task));
 	}
@@ -139,11 +134,10 @@ void Scheduler::add_task(TaskBase::Ptr&& task) {
 
 void Scheduler::schedule_tasks() {
 	auto time_now = Clock::now();
-	if(_is_initial_run) {
+	if (_is_initial_run) {
 		_average_time = Duration(0);
 		_is_initial_run = false;
-	}
-	else {
+	} else {
 		auto delta = std::chrono::duration_cast<Duration>(time_now - _last_run);
 
 		_average_time = (delta + _run_count * _average_time) / (_run_count + 1);
@@ -156,7 +150,7 @@ void Scheduler::schedule_tasks() {
 }
 
 void Scheduler::do_background_tasks() {
-	while(_is_running) {
+	while (_is_running) {
 		// Swap all tasks to local stack
 		std::list<TaskBase::Ptr> do_list;
 		{
@@ -165,12 +159,12 @@ void Scheduler::do_background_tasks() {
 			std::swap(_background_run_list, do_list);
 		}
 		// run them
-		for(auto& task : do_list) {
-			if(!_is_running) break;
+		for (auto& task : do_list) {
+			if (!_is_running)
+				break;
 			try {
 				task->set_status(task->run_background_task());
-			}
-			catch(...) {
+			} catch (...) {
 				task->set_status(capture_exception());
 			}
 		}
@@ -189,8 +183,8 @@ void Scheduler::do_background_tasks() {
 			_foreground_list.splice(_foreground_list.end(), to_foreground);
 		}
 		std::list<std::exception_ptr> to_exception;
-		for(auto& task : do_list) {
-			if(task->is_exception()) {
+		for (auto& task : do_list) {
+			if (task->is_exception()) {
 				to_exception.push_back(task->get_status()._exception);
 			}
 			std::lock_guard lk(_exception_mutex);
@@ -215,7 +209,7 @@ void Scheduler::queue_background_tasks() {
 	splice_if(test_list, do_background, [time_now](const TaskBase::Ptr& task) { return task->get_scheduled_time() <= time_now; });
 
 	// If we have some then move them to the run list
-	if(!do_background.empty()) {
+	if (!do_background.empty()) {
 		{
 			std::lock_guard lk(_background_run_mutex);
 			_background_run_list.splice(_background_run_list.end(), do_background);
@@ -224,25 +218,24 @@ void Scheduler::queue_background_tasks() {
 	}
 
 	// Put the ones that are left back
-	if(!test_list.empty()) {
+	if (!test_list.empty()) {
 		std::lock_guard lk(_background_wait_mutex);
 		_background_wait_list.splice(_background_wait_list.end(), test_list);
 	}
 }
 
 void Scheduler::do_foreground_tasks() {
-	// Swap all tasks to local 
+	// Swap all tasks to local
 	std::list<TaskBase::Ptr> do_list;
 	{
 		std::lock_guard lk(_foreground_mutex);
 		std::swap(_foreground_list, do_list);
 	}
 	// run them
-	for(auto& task : do_list) {
+	for (auto& task : do_list) {
 		try {
 			task->set_status(task->run_foreground_task());
-		}
-		catch(...) {
+		} catch (...) {
 			task->set_status(capture_exception());
 		}
 	}
@@ -261,8 +254,8 @@ void Scheduler::do_foreground_tasks() {
 		_foreground_list.splice(_foreground_list.end(), to_foreground);
 	}
 	std::list<std::exception_ptr> to_exception;
-	for(auto& task : do_list) {
-		if(task->is_exception()) {
+	for (auto& task : do_list) {
+		if (task->is_exception()) {
 			to_exception.push_back(task->get_status()._exception);
 		}
 		std::lock_guard lk(_exception_mutex);
@@ -282,8 +275,8 @@ void Scheduler::log_exceptions(ExceptionLogger func) {
 		std::lock_guard lk(_exception_mutex);
 		std::swap(except_list, _exception_list);
 	}
-	for(auto exc_ptr : except_list) {
+	for (auto exc_ptr : except_list) {
 		func(what(exc_ptr));
 	}
 }
-}
+} //namespace TaskSystem

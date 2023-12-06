@@ -1,13 +1,13 @@
 #pragma once
 
 #include <chrono>
-#include <thread>
-#include <mutex>
 #include <condition_variable>
-#include <memory>
-#include <list>
 #include <coroutine>
 #include <exception>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <thread>
 
 namespace TaskSystem {
 
@@ -43,7 +43,7 @@ inline TaskStatus task_sleep(Duration duration) {
 }
 
 inline TaskStatus task_sleep(int duration) {
-	return { Clock::now() + Duration{duration}, TaskStatus::BACKGROUND, nullptr };
+	return { Clock::now() + Duration{ duration }, TaskStatus::BACKGROUND, nullptr };
 }
 
 inline TaskStatus capture_exception() {
@@ -56,7 +56,6 @@ inline TaskStatus return_exception(std::exception_ptr exception) {
 class Scheduler;
 class TaskBase {
 public:
-
 	friend Scheduler;
 	using Ptr = std::unique_ptr<TaskBase>;
 
@@ -79,7 +78,6 @@ public:
 
 class Task : public TaskBase {
 public:
-
 	Task();
 	~Task() override = default;
 
@@ -94,22 +92,20 @@ public:
 	TaskStatus get_status() override;
 
 private:
-
 	TaskStatus _status;
 };
 
-inline Task::Task()
-	: _status(run_now) {}
-
+inline Task::Task() :
+		_status(run_now) {}
 
 class CotaskPtr;
 struct CotaskPromiseType {
 	CotaskPtr get_return_object();
-	std::suspend_always initial_suspend() { return{}; }
+	std::suspend_always initial_suspend() { return {}; }
 
 	void return_void();
 	void unhandled_exception();
-	std::suspend_always final_suspend() noexcept { return{}; }
+	std::suspend_always final_suspend() noexcept { return {}; }
 
 	std::suspend_always await_transform(const TaskStatus& status);
 	std::suspend_always await_transform(Task::Ptr&& sub_task);
@@ -120,16 +116,16 @@ struct CotaskPromiseType {
 
 class Cotask : public TaskBase {
 public:
-
 	std::coroutine_handle<CotaskPromiseType> _handle = nullptr;
 
-	Cotask(std::coroutine_handle<CotaskPromiseType> handle)
-		: _handle(handle) {}
+	Cotask(std::coroutine_handle<CotaskPromiseType> handle) :
+			_handle(handle) {}
 
 	Cotask() = default;
 
 	Cotask(Cotask&& rhs) noexcept
-		: _handle(std::exchange(rhs._handle, nullptr)) {}
+			:
+			_handle(std::exchange(rhs._handle, nullptr)) {}
 
 	Cotask& operator=(Cotask&& rhs) noexcept {
 		_handle = std::exchange(rhs._handle, nullptr);
@@ -137,7 +133,7 @@ public:
 	}
 
 	~Cotask() override {
-		if(_handle) {
+		if (_handle) {
 			_handle.destroy();
 		}
 	}
@@ -158,7 +154,9 @@ public:
 
 class CotaskPtr : public std::unique_ptr<Cotask> {
 	friend CotaskPromiseType;
-	CotaskPtr(Cotask* task_ptr) : std::unique_ptr<Cotask>(task_ptr) {}
+	CotaskPtr(Cotask* task_ptr) :
+			std::unique_ptr<Cotask>(task_ptr) {}
+
 public:
 	using promise_type = CotaskPromiseType;
 };
@@ -187,66 +185,66 @@ inline std::suspend_always CotaskPromiseType::await_transform(Task::Ptr&& sub_ta
 
 inline TaskTime Cotask::get_scheduled_time() {
 	auto& promise = _handle.promise();
-	if(promise._sub_task)
+	if (promise._sub_task)
 		return promise._sub_task->get_scheduled_time();
 	return promise._status._scheduled_time;
 }
 
 inline bool Cotask::is_foreground() {
 	auto& promise = _handle.promise();
-	if(promise._sub_task)
+	if (promise._sub_task)
 		return promise._sub_task->is_foreground();
 	return promise._status.is_foreground();
 }
 
 inline bool Cotask::is_background() {
 	auto& promise = _handle.promise();
-	if(promise._sub_task)
+	if (promise._sub_task)
 		return promise._sub_task->is_background();
 	return promise._status.is_background();
 }
 
 inline bool Cotask::is_done() {
 	auto& promise = _handle.promise();
-	if(promise._sub_task)
+	if (promise._sub_task)
 		return promise._sub_task->is_done();
 	return promise._status.is_done();
 }
 
 inline bool Cotask::is_error() {
 	auto& promise = _handle.promise();
-	if(promise._sub_task)
+	if (promise._sub_task)
 		return promise._sub_task->is_error();
 	return promise._status.is_error();
 }
 
 inline bool Cotask::is_exception() {
 	auto& promise = _handle.promise();
-	if(promise._sub_task)
+	if (promise._sub_task)
 		return promise._sub_task->is_exception();
 	return promise._status.is_exception();
 }
 
 inline void Cotask::set_status(const TaskStatus& status) {
 	auto& promise = _handle.promise();
-	if(promise._sub_task)
+	if (promise._sub_task)
 		promise._sub_task->set_status(status);
 	promise._status = status;
 }
 
 inline TaskStatus Cotask::get_status() {
 	auto& promise = _handle.promise();
-	if(promise._sub_task)
+	if (promise._sub_task)
 		return promise._sub_task->get_status();
 	return promise._status;
 }
 
-template<typename T, typename F>
+template <typename T, typename F>
 void splice_if(std::list<T>& from_list, std::list<T>& to_list, F pred) {
 	auto it = from_list.begin();
-	while(it != from_list.end()) {
+	while (it != from_list.end()) {
 		auto cur = it++;
-		if(pred(*cur)) {
+		if (pred(*cur)) {
 			to_list.splice(to_list.begin(), from_list, cur);
 		}
 	}
@@ -255,17 +253,28 @@ void splice_if(std::list<T>& from_list, std::list<T>& to_list, F pred) {
 std::string what(const std::exception_ptr& eptr);
 template <typename T>
 inline std::string nested_what(const T& e) {
-	try { std::rethrow_if_nested(e); }
-	catch(...) { return " (" + what(std::current_exception()) + ")"; }
+	try {
+		std::rethrow_if_nested(e);
+	} catch (...) {
+		return " (" + what(std::current_exception()) + ")";
+	}
 	return {};
 }
 inline std::string what(const std::exception_ptr& eptr) {
-	if(!eptr) { throw std::bad_exception(); }
-	try { std::rethrow_exception(eptr); }
-	catch(const std::exception& e) { return e.what() + nested_what(e); }
-	catch(const std::string& e) { return e; }
-	catch(const char* e) { return e; }
-	catch(...) { return "unknown exception type"; }
+	if (!eptr) {
+		throw std::bad_exception();
+	}
+	try {
+		std::rethrow_exception(eptr);
+	} catch (const std::exception& e) {
+		return e.what() + nested_what(e);
+	} catch (const std::string& e) {
+		return e;
+	} catch (const char* e) {
+		return e;
+	} catch (...) {
+		return "unknown exception type";
+	}
 }
 
 class Scheduler {
@@ -286,7 +295,6 @@ public:
 	void log_exceptions(ExceptionLogger func);
 
 private:
-
 	void do_background_tasks();
 	void queue_background_tasks();
 	void do_foreground_tasks();
@@ -312,5 +320,4 @@ private:
 	std::list<TaskBase::Ptr> _foreground_list;
 	std::list<std::exception_ptr> _exception_list;
 };
-} // namespace TaskSystem 
-
+} // namespace TaskSystem

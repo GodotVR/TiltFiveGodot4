@@ -27,28 +27,34 @@ static func _define_project_setting(
 
 static func setup_properties():
 	if not _initialized:
-		_define_project_setting("xr/tilt_five/application_id", TYPE_STRING, PROPERTY_HINT_NONE, "", "my.game.com")
-		_define_project_setting("xr/tilt_five/application_version", TYPE_STRING, PROPERTY_HINT_NONE, "", "0.1.0")
-		_define_project_setting("xr/tilt_five/default_display_name", TYPE_STRING, PROPERTY_HINT_NONE, "", "Game: Player One")
+		_define_project_setting("xr/tilt_five/default_display_name", TYPE_STRING)
 		_define_project_setting("xr/tilt_five/trigger_click_threshhold", TYPE_FLOAT, PROPERTY_HINT_RANGE, "0,1,0.01", 0.3)
 		_initialized = true
 
 static var application_id : String:
 	get:
-		setup_properties()
-		return ProjectSettings.get_setting_with_override("xr/tilt_five/application_id")
+		var app_id := ProjectSettings.get_setting_with_override("application/config/name")
+		if not app_id or app_id == "":
+			return "tiltfive.godot.game"
+		return app_id
 
 static var application_version : String:
 	get:
-		setup_properties()
-		return ProjectSettings.get_setting_with_override("xr/tilt_five/application_version")
-
+		var version := ProjectSettings.get_setting_with_override("application/config/version")
+		if not version or version == "":
+			return "unknown"
+		return version
+		
 static var default_display_name : String:
 	get:
 		setup_properties()
-		return ProjectSettings.get_setting_with_override("xr/tilt_five/default_display_name")
+		var disp_name := ProjectSettings.get_setting_with_override("xr/tilt_five/default_display_name")
+		if not disp_name or disp_name == "":
+			return T5ProjectSettings.application_id
+		return disp_name
 
 static var trigger_click_threshhold : float:
 	get:
 		setup_properties()
 		return ProjectSettings.get_setting_with_override("xr/tilt_five/trigger_click_threshhold")
+		

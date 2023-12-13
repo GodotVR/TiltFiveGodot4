@@ -27,9 +27,7 @@ public static class T5ProjectSettings
 
 	public static void setup_properties() {
 		if (!isInitialized) {
-			DefineProjectSetting("xr/tilt_five/application_id", Variant.Type.String, PropertyHint.None, "", "my.game.com");
-			DefineProjectSetting("xr/tilt_five/application_version", Variant.Type.String, PropertyHint.None, "", "0.1.0");
-			DefineProjectSetting("xr/tilt_five/default_display_name", Variant.Type.String, PropertyHint.None, "", "Game: Player One");
+			DefineProjectSetting("xr/tilt_five/default_display_name", Variant.Type.String, PropertyHint.None, "", "");
 			DefineProjectSetting("xr/tilt_five/trigger_click_threshhold", Variant.Type.Float, PropertyHint.Range, "0,1,0.01", 0.3);
 
 			isInitialized = true;
@@ -38,17 +36,33 @@ public static class T5ProjectSettings
 
 	public static String ApplicationID
 	{
-		get { setup_properties();  return ProjectSettings.GetSettingWithOverride("xr/tilt_five/application_id").AsString(); }
+		get {
+			var app_id = ProjectSettings.GetSettingWithOverride("application/config/name").AsString();
+			if (app_id == null || app_id == "")
+				return "tiltfive.godot.game";
+			return  app_id;
+		}
 	}
 
 	public static String ApplicationVersion
 	{
-		get { setup_properties(); return ProjectSettings.GetSettingWithOverride("xr/tilt_five/application_version").AsString(); }
+		get {
+			var version = ProjectSettings.GetSettingWithOverride("application/config/version").AsString();
+			if (version == null || version == "")
+				return "unknown";
+			return  version;
+		}
 	}
 
 	public static String DefaultDisplayName
 	{
-		get { setup_properties(); return ProjectSettings.GetSettingWithOverride("xr/tilt_five/default_display_name").AsString(); }
+		get { 
+			setup_properties(); 
+			var disp_name = ProjectSettings.GetSettingWithOverride("xr/tilt_five/default_display_name").AsString();
+			if (disp_name == null || disp_name == "")
+				return ApplicationID;
+			return disp_name; 
+		}
 	}
 
 	public static float TriggerClickThreshhold

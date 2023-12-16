@@ -31,6 +31,7 @@ static func setup_properties():
 		_define_project_setting("xr/tilt_five/application_version", TYPE_STRING, PROPERTY_HINT_NONE, "", "0.1.0")
 		_define_project_setting("xr/tilt_five/default_display_name", TYPE_STRING, PROPERTY_HINT_NONE, "", "Game: Player One")
 		_define_project_setting("xr/tilt_five/trigger_click_threshhold", TYPE_FLOAT, PROPERTY_HINT_RANGE, "0,1,0.01", 0.3)
+		_define_project_setting("xr/tilt_five/debug_logging", TYPE_BOOL, PROPERTY_HINT_NONE, "", false)
 		_initialized = true
 
 static var application_id : String:
@@ -52,3 +53,8 @@ static var trigger_click_threshhold : float:
 	get:
 		setup_properties()
 		return ProjectSettings.get_setting_with_override("xr/tilt_five/trigger_click_threshhold")
+
+static var is_debug_logging : bool:
+	get:
+		setup_properties()
+		return ProjectSettings.get_setting_with_override("xr/tilt_five/debug_logging")

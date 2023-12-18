@@ -29,6 +29,7 @@ public static class T5ProjectSettings
 		if (!isInitialized) {
 			DefineProjectSetting("xr/tilt_five/default_display_name", Variant.Type.String, PropertyHint.None, "", "");
 			DefineProjectSetting("xr/tilt_five/trigger_click_threshhold", Variant.Type.Float, PropertyHint.Range, "0,1,0.01", 0.3);
+			DefineProjectSetting("xr/tilt_five/debug_logging", Variant.Type.Bool, PropertyHint.None, "", false);
 
 			isInitialized = true;
 		}
@@ -68,6 +69,11 @@ public static class T5ProjectSettings
 	public static float TriggerClickThreshhold
 	{
 		get { setup_properties(); return (float)ProjectSettings.GetSettingWithOverride("xr/tilt_five/trigger_click_threshhold").AsDouble(); }
+	}
+
+	public static bool IsDebugLogging
+	{
+		get { setup_properties(); return ProjectSettings.GetSettingWithOverride("xr/tilt_five/debug_logging").AsBool(); }
 	}
 }
 

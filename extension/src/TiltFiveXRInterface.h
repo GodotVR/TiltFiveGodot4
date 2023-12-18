@@ -92,6 +92,9 @@ public:
 	float get_trigger_click_threshold();
 	void set_trigger_click_threshold(float threshold);
 
+	bool get_debug_logging();
+	void set_debug_logging(bool is_debug);
+
 	// Functions.
 
 	void reserve_glasses(const StringName glasses_id, const String display_name);
@@ -153,12 +156,16 @@ protected:
 	GlassesIndexEntry *lookup_glasses_by_viewport(RID render_target);
 
 private:
+	void log_service_events();
+	void log_glasses_events();
+
 	bool _initialised = false;
 	XRServer *xr_server = nullptr;
 
 	String application_id;
 	String application_version;
 	float _trigger_click_threshold = 0.5;
+	bool _is_debug_logging = false;
 
 	std::vector<GlassesIndexEntry> _glasses_index;
 	std::vector<GlassesEvent> _glasses_events;

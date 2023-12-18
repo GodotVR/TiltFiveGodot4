@@ -51,6 +51,7 @@ public partial class T5Interface : Node
 		xrInterface.Set("application_id", T5ProjectSettings.ApplicationID);
 		xrInterface.Set("application_version", T5ProjectSettings.ApplicationVersion);
 		xrInterface.Set("trigger_click_threshold", T5ProjectSettings.TriggerClickThreshhold);
+		xrInterface.Set("debug_logging", T5ProjectSettings.IsDebugLogging);
 
 		XRServer.AddInterface(xrInterface as XRInterface);
 
@@ -118,26 +119,14 @@ public partial class T5Interface : Node
 
 		switch ((GlassesEventType)eventNum)
 		{
-			case GlassesEventType.E_GLASSES_ADDED:
-			{
-				GD.Print(glassesID, " E_GLASSES_ADDED");
-				break;
-			}
-			case GlassesEventType.E_GLASSES_LOST:
-			{
-				GD.Print(glassesID, " E_GLASSES_LOST");
-				break;
-			}
 			case GlassesEventType.E_GLASSES_AVAILABLE:
 			{ 
-				GD.Print(glassesID, " E_GLASSES_AVAILABLE");
 				xrRigState.available = true;
 				ProcessGlasses();
 				break;
 			}
 			case GlassesEventType.E_GLASSES_UNAVAILABLE:
 			{ 
-				GD.Print(glassesID, " E_GLASSES_UNAVAILABLE");
 				xrRigState.available = false;
 				if(xrRigState.attemptingToReserve)
 				{
@@ -148,8 +137,6 @@ public partial class T5Interface : Node
 			}
 			case GlassesEventType.E_GLASSES_RESERVED:
 			{ 
-				GD.Print(glassesID, " E_GLASSES_RESERVED");
-
 				xrRigState.reserved = true;
 				xrRigState.attemptingToReserve = false;
 
@@ -170,8 +157,6 @@ public partial class T5Interface : Node
 			}
 			case GlassesEventType.E_GLASSES_DROPPED:
 			{ 
-				GD.Print(glassesID, " E_DROPPED");
-
 				xrRigState.reserved = false;
 				xrRigState.attemptingToReserve = false;
 
@@ -187,7 +172,6 @@ public partial class T5Interface : Node
 			}
 			case GlassesEventType.E_GLASSES_TRACKING:
 			{
-				GD.Print(glassesID, " E_GLASSES_TRACKING");
 				var gbt = xrInterface.Call("get_gameboard_type", glassesID).As<T5Def.GameboardType>();
 				if(xrRigState.gameboardType != gbt)
 				{
@@ -201,16 +185,8 @@ public partial class T5Interface : Node
 				}
 				break;
 			}
-			case GlassesEventType.E_GLASSES_NOT_TRACKING:
-			{
-				GD.Print(glassesID, " E_GLASSES_NOT_TRACKING");
-				break;
-			}
-			default:
-			{
-				GD.PrintErr(glassesID, " unknown event");
-				break;
-			}
+			// This is the only set of events that needs to be handled
+			default: break;
 		}
 
 	}

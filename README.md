@@ -1,19 +1,32 @@
 # TiltFiveGodot4
 
-TiltFiveGodot4 is **GDExtension** for the Godot 4 engine to connect to the [Tilt Five](https://www.tiltfive.com/) 
-system. It extends Godot's **XRInterface** and has functions to connect glasses and signals for connection events.
-
-This extension is in an Alpha state and needs that latest Godot 4.1 to run. It currently needs the OpenGL renderer
-Vulkan support is coming. 
+TiltFiveGodot4 is **GDExtension** for the Godot 4 engine to connect to the [Tilt Five](https://www.tiltfive.com/) system. It extends Godot's **XRInterface** and adds T5 Nodes to handle the creation of the XR rigs in the scene.
 
 ## Platforms
 
-Currently only Windows 10/11 is supported. Tilt Five Linux and Android support are recent additions and and support 
-for those platforms will investigated. 
+| | Renderer</br> Forward+ | Renderer</br> Mobile | Renderer</br> Compatibility |
+| - | - | - | - |
+| Windows |✅| ✅ | ✅  |
+| Linux<sup>1</sup> |  &checkmark; |&checkmark; | &checkmark;  |
+| Android | | &#10060; |  |
+
+1. [Experimental Version](https://github.com/patrickdown/TiltFiveGodot4/releases/tag/1.1.0-linux-experimental3)
+
+## Usage
+
+TiltFiveGodot4 is available in the Godot Asset Library. 
+
+Installable [Releases can also be found here](https://github.com/GodotVR/TiltFiveGodot4/releases). 
+- Use `gdtiltfive_gdscript.zip` for gdscript projects
+- Use `gdtiltfive_csharp.zip` for C# projects
+
+Please refer to this [documentation](https://patrickdown.github.io/godot/tilt-five-godot-4.html) for installation.
 
 ## Build
 
 ### Prerequisites
+
+This extension requires a C++20 capable compiler.
 
 Things you will need to know how to do.
 * Use [scons](https://scons.org/) 
@@ -21,30 +34,11 @@ Things you will need to know how to do.
 
 ### Building the extension
 
-Scons should be run from an environment that has the Microsoft x64 development tools setup.
+To build the plugin invoke `scons` from the root directory of the project. The build product will in `build\bin`.  Invoking `scons example` will build the product and copy the binaries to the `example.gd\addons\tilt-five\bin` and `example.csharp\addons\tilt-five\bin` directories. 
 
-> `scons target=[template_debug | template_release]` Build the shared library. Result is in `build\bin`
+## Using the build products
 
-> `scons example target=[template_debug | template_release]` Copy build products to the `example.gd\addons\tilt-five\bin`
+When built with the `example` option the `addons\tilt-five` directory can be copied from the `example.gd` or `example.csharp` directories into the root directory of a new Godot project.
 
-## Starting with a new project
-
-To use this plugin in your own project:
-- Copy the `addons/tiltfive` folder into your project
-- Open Project->Project Settings
-  - Click on the Plugins tab 
-  - Make sure the Tilt Five plugin is enabled
-  - You may need to restart Godot
-- In the main scene add a T5Manager node
-- In the main scene add a T5Gameboard node
-- On the T5Manager node set the start location to the T5Gameboard node
-- Add lights and other items to your scene
-
-Running should now show your scene on the Tilt Five system
-
-## Dependencies
-
-- Uses the godot-cpp headers
-- Uses the Tilt Five NDK
 
 

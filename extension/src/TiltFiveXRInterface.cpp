@@ -1,4 +1,5 @@
 #include "TiltFiveXRInterface.h"
+#include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -33,6 +34,10 @@ void TiltFiveXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_trigger_click_threshold", "threshold"), &TiltFiveXRInterface::set_trigger_click_threshold);
 	ClassDB::bind_method(D_METHOD("get_trigger_click_threshold"), &TiltFiveXRInterface::get_trigger_click_threshold);
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "trigger_click_threshold"), "set_trigger_click_threshold", "get_trigger_click_threshold");
+
+	ClassDB::bind_method(D_METHOD("set_debug_logging", "debug_logging"), &TiltFiveXRInterface::set_debug_logging);
+	ClassDB::bind_method(D_METHOD("get_debug_logging"), &TiltFiveXRInterface::get_debug_logging);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "debug_logging"), "set_debug_logging", "get_debug_logging");
 
 	// Signals.
 	ADD_SIGNAL(MethodInfo("service_event", PropertyInfo(Variant::INT, "event")));
@@ -88,6 +93,14 @@ void TiltFiveXRInterface::set_trigger_click_threshold(float threshold) {
 			entry.glasses.lock()->set_trigger_click_threshold(_trigger_click_threshold);
 		}
 	}
+}
+
+bool TiltFiveXRInterface::get_debug_logging() {
+	return GodotT5ObjectRegistry::logger()->get_debug();
+}
+
+void TiltFiveXRInterface::set_debug_logging(bool is_debug) {
+	GodotT5ObjectRegistry::logger()->set_debug(is_debug);
 }
 
 TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_entry(StringName glasses_id) {
@@ -448,6 +461,66 @@ PackedStringArray TiltFiveXRInterface::_get_suggested_pose_names(const StringNam
 	return tracker_names;
 }
 
+void TiltFiveXRInterface::log_service_events() {
+	if (get_debug_logging() || OS::get_singleton()->is_stdout_verbose()) {
+		for (auto& event : _service_events) {
+			switch (event.event) {
+				case T5ServiceEvent::E_RUNNING:
+					LOG_MESSAGE("Tilt Five Running");
+					break;
+				case T5ServiceEvent::E_STOPPED:
+					LOG_MESSAGE("Tilt Five Stopped");
+					break;
+				case T5ServiceEvent::E_T5_UNAVAILABLE:
+					LOG_MESSAGE("Tilt Five Unavailable");
+					break;
+				case T5ServiceEvent::E_T5_INCOMPATIBLE_VERSION:
+					LOG_MESSAGE("Tilt Five Incompatible Version");
+					break;
+			}
+		}
+	}
+}
+
+void TiltFiveXRInterface::log_glasses_events() {
+	if (get_debug_logging() || OS::get_singleton()->is_stdout_verbose()) {
+		for (auto& event : _glasses_events) {
+			auto glasses = t5_service->get_glasses(event.glasses_num);
+			if (!glasses)
+				continue;
+			switch (event.event) {
+				case GlassesEventType::E_GLASSES_ADDED:
+					LOG_MESSAGE(glasses->get_id(), " Added");
+					break;
+				case GlassesEventType::E_GLASSES_LOST:
+					LOG_MESSAGE(glasses->get_id(), " Lost");
+					break;
+				case GlassesEventType::E_GLASSES_AVAILABLE:
+					LOG_MESSAGE(glasses->get_id(), " Available to use");
+					break;
+				case GlassesEventType::E_GLASSES_UNAVAILABLE:
+					LOG_MESSAGE(glasses->get_id(), " Unavailable to use");
+					break;
+				case GlassesEventType::E_GLASSES_RESERVED:
+					LOG_MESSAGE(glasses->get_id(), " Reserved for application");
+					break;
+				case GlassesEventType::E_GLASSES_DROPPED:
+					LOG_MESSAGE(glasses->get_id(), " Reservation dropped");
+					break;
+				case GlassesEventType::E_GLASSES_TRACKING:
+					LOG_MESSAGE(glasses->get_id(), " Tracking pose");
+					break;
+				case GlassesEventType::E_GLASSES_NOT_TRACKING:
+					LOG_MESSAGE(glasses->get_id(), " Not tracking pose");
+					break;
+				case GlassesEventType::E_GLASSES_STOPPED_ON_ERROR:
+					LOG_MESSAGE(glasses->get_id(), " Stopped with unknown error");
+					break;
+			}
+		}
+	}
+}
+
 void TiltFiveXRInterface::_process() {
 	if (!t5_service)
 		return;
@@ -457,12 +530,14 @@ void TiltFiveXRInterface::_process() {
 
 	_service_events.clear();
 	t5_service->get_service_events(_service_events);
+	log_service_events();
 	for (int i = 0; i < _service_events.size(); i++) {
 		emit_signal("service_event", _service_events[i].event);
 	}
 
 	_glasses_events.clear();
 	t5_service->get_glasses_events(_glasses_events);
+	log_glasses_events();
 	for (int i = 0; i < _glasses_events.size(); i++) {
 		auto glasses_idx = _glasses_events[i].glasses_num;
 		switch (_glasses_events[i].event) {
@@ -523,6 +598,9 @@ int32_t TiltFiveXRInterface::_get_camera_feed_id() const {
 }
 
 TiltFiveXRInterface::TiltFiveXRInterface() {
+#ifdef DEV_ENABLED
+	UtilityFunctions::print("Tilt Five DEV_BUILD");
+#endif
 }
 
 TiltFiveXRInterface::~TiltFiveXRInterface() {

@@ -100,12 +100,15 @@ void GodotT5Logger::log_error(const char* message, const char* func_name, const 
 }
 
 void GodotT5Logger::log_warning(const char* message, const char* func_name, const char* file_name, int line_num) {
-	godot::_err_print_error(func_name, file_name, line_num, "TiltFiveXRInterface", message, true, false);
+	godot::_err_print_error(func_name, file_name, line_num, "TiltFiveXRInterface", message, true, true);
 }
 
 void GodotT5Logger::log_string(const char* message) {
 	Variant v_msg = message;
-	UtilityFunctions::print_verbose(v_msg);
+	if (get_debug())
+		UtilityFunctions::print(v_msg);
+	else
+		UtilityFunctions::print_verbose(v_msg);
 }
 
 GodotT5Service::Ptr GodotT5ObjectRegistry::service() {
@@ -135,15 +138,15 @@ T5Integration::T5Math::Ptr GodotT5ObjectRegistry::get_math() {
 	return math;
 }
 
+GodotT5Logger::Ptr g_logger;
+
 T5Integration::Logger::Ptr GodotT5ObjectRegistry::get_logger() {
-	GodotT5Logger::Ptr logger;
-	if (_logger.expired()) {
-		logger = std::make_shared<GodotT5Logger>();
-		_logger = logger;
-	} else {
-		logger = std::static_pointer_cast<GodotT5Logger>(_logger.lock());
+	if (!g_logger) {
+		g_logger = std::make_shared<GodotT5Logger>();
+		_logger = g_logger;
 	}
-	return logger;
+
+	return g_logger;
 }
 
 } //namespace GodotT5Integration

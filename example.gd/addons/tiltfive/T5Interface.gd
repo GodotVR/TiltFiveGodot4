@@ -1,5 +1,5 @@
 extends Node
-## It will instantiate the TileFive interface and register it with the XRServer.
+## It will instantiate the TiltFive interface and register it with the XRServer.
 ##
 ## This script should be configured be automatically added as an autoload script
 ## when the plugin is enabled. This  
@@ -26,19 +26,14 @@ var t5_manager : T5ManagerBase:
 
 func get_tilt_five_xr_interface() -> TiltFiveXRInterface:
 	return tilt_five_xr_interface
-	
-func get_setting_or_default(name : String, default):
-	var val = ProjectSettings.get_setting_with_override(name)
-	if not val:
-		val = default
-	return val
-
+		
 func _enter_tree():
-	tilt_five_xr_interface = TiltFiveXRInterface.new();
+	tilt_five_xr_interface = TiltFiveXRInterface.new()
 	if tilt_five_xr_interface:
 		tilt_five_xr_interface.application_id = T5ProjectSettings.application_id
 		tilt_five_xr_interface.application_version = T5ProjectSettings.application_version
 		tilt_five_xr_interface.trigger_click_threshold = T5ProjectSettings.trigger_click_threshhold
+		tilt_five_xr_interface.debug_logging = T5ProjectSettings.is_debug_logging
 
 		XRServer.add_interface(tilt_five_xr_interface)
 		tilt_five_xr_interface.glasses_event.connect(_on_glasses_event)
@@ -83,7 +78,7 @@ func _on_service_event(event_num):
 			t5_manager.service_unvailable()
 		TiltFiveXRInterface.E_SERVICE_T5_INCOMPATIBLE_VERSION:
 			t5_manager.service_incorrect_version()
-	
+
 func _on_glasses_event(glasses_id, event_num):
 	var xr_rig_state = id_to_state.get(glasses_id) as XRRigState
 	if not xr_rig_state:
@@ -91,19 +86,16 @@ func _on_glasses_event(glasses_id, event_num):
 		id_to_state[glasses_id] = xr_rig_state
 	match event_num:
 		TiltFiveXRInterface.E_GLASSES_AVAILABLE:
-			print_verbose(glasses_id, " E_AVAILABLE")
 			xr_rig_state.available = true
 			_process_glasses()
 
 		TiltFiveXRInterface.E_GLASSES_UNAVAILABLE:
-			print_verbose(glasses_id, " E_UNAVAILABLE")
 			xr_rig_state.available = false
 			if xr_rig_state.attempting_to_reserve:
 				xr_rig_state.attempting_to_reserve = false
 				_process_glasses()
 
 		TiltFiveXRInterface.E_GLASSES_RESERVED:
-			print_verbose(glasses_id, " E_RESERVED")
 			xr_rig_state.reserved = true
 			xr_rig_state.attempting_to_reserve = false
 			
@@ -116,7 +108,6 @@ func _on_glasses_event(glasses_id, event_num):
 				tilt_five_xr_interface.release_glasses(glasses_id)
 				
 		TiltFiveXRInterface.E_GLASSES_DROPPED:
-			print_verbose(glasses_id, " E_DROPPED")
 			xr_rig_state.reserved = false
 
 			var xr_rig = xr_rig_state.xr_rig
@@ -132,10 +123,6 @@ func _on_glasses_event(glasses_id, event_num):
 				xr_rig._gameboard_type = gbt
 				xr_rig._gameboard_size = tilt_five_xr_interface.get_gameboard_extents(gbt)
 				t5_manager.set_gameboard_type(xr_rig, gbt)
-			print_verbose(glasses_id, " E_TRACKING, Gameboard size = ", )
-
-		TiltFiveXRInterface.E_GLASSES_NOT_TRACKING:
-			print_verbose(glasses_id, " E_NOT_TRACKING")
-
+			
 		_:
-			print_verbose(glasses_id, " - unknown event: ", event_num)
+			pass # These are the only events that need to be handled

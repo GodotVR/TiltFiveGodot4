@@ -1,5 +1,6 @@
 #pragma once
 #include <TiltFiveNative.h>
+#include <iostream>
 #include <memory>
 #include <sstream>
 
@@ -12,6 +13,13 @@ public:
 	virtual void log_error(const char* message, const char* func_name, const char* file_name, int line_num) = 0;
 	virtual void log_warning(const char* message, const char* func_name, const char* file_name, int line_num) = 0;
 	virtual void log_string(const char* message) = 0;
+	void set_debug(bool is_debug_) {
+		is_debug = is_debug_;
+	}
+	bool get_debug() { return is_debug; }
+
+private:
+	bool is_debug = false;
 };
 
 class DefaultLogger : public Logger {

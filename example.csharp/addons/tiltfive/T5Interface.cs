@@ -45,7 +45,38 @@ public partial class T5Interface : Node
 	public override void _EnterTree()
 	{
 		base._EnterTree();
+		CreateXRInterface();
+	}
 
+	public override void _ExitTree()
+	{
+		DestroyXRInterface();
+		base._ExitTree();
+	}
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationApplicationPaused)
+		{
+			DestroyXRInterface();
+		}
+		else if (what == NotificationApplicationResumed)
+		{
+			CreateXRInterface();
+
+			if(!xrInterface.IsInitialized())
+			{
+				xrInterface.Initialize();
+			}
+		}
+	}
+
+	private void CreateXRInterface() 
+	{
+		if (xrInterface != null)
+		{
+			return;
+		}
 		xrInterface = ClassDB.Instantiate("TiltFiveXRInterface").As<XRInterface>();
 
 		xrInterface.Set("application_id", T5ProjectSettings.ApplicationID);
@@ -59,8 +90,12 @@ public partial class T5Interface : Node
 		xrInterface.Connect("service_event", Callable.From<int>(_OnServiceEvent));
 	}
 
-	public override void _ExitTree()
+	private void DestroyXRInterface() 
 	{
+		if (xrInterface == null)
+		{
+			return;
+		}
 		xrInterface.Disconnect("service_event", Callable.From<int>(_OnServiceEvent));
 		xrInterface.Disconnect("glasses_event", Callable.From<String, int>(_OnGlassesEvent));
 
@@ -69,8 +104,8 @@ public partial class T5Interface : Node
 			xrInterface.Call("uninitialize");
 		}
 		XRServer.RemoveInterface(xrInterface as XRInterface);
-
-		base._ExitTree();
+		xrInterface = null;
+		glassesDictionary.Clear();
 	}
 
 	public override void _Ready()

@@ -6,11 +6,11 @@ TiltFiveGodot4 is **GDExtension** for the Godot 4 engine to connect to the [T
 
 | | Renderer</br> Forward+ | Renderer</br> Mobile | Renderer</br> Compatibility |
 | - | - | - | - |
-| Windows |✅| ✅ | ✅  |
-| Linux<sup>1</sup> |  &checkmark; |&checkmark; | &checkmark;  |
-| Android | | &#10060; |  |
+| Windows | ✅ | ✅ | ✅ |
+| Linux<sup>1</sup> | ✅ |✅ | ✅ |
+| Android<sup>1</sup> |&#10060;| &#10060; | ✅ |
 
-1. [Experimental Version](https://github.com/patrickdown/TiltFiveGodot4/releases/tag/1.1.0-linux-experimental3)
+ 1. Experimental Support
 
 ## Usage
 
@@ -26,15 +26,16 @@ Please refer to this [documentation](https://patrickdown.github.io/godot/tilt-fi
 
 ### Prerequisites
 
-This extension requires a C++20 capable compiler.
+This extension requires a C++20 capable compiler. To build for Android you will need Java 17 and the Android SDK along with the r26c NDK.
 
 Things you will need to know how to do.
 * Use [scons](https://scons.org/) 
 * [Build GDExtensions](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html)
+* Install the Android SDK and NDK (For android builds)
 
 ### Building the extension
 
-To build the plugin invoke `scons` from the root directory of the project. The build product will in `build\bin`.  Invoking `scons example` will build the product and copy the binaries to the `example.gd\addons\tilt-five\bin` and `example.csharp\addons\tilt-five\bin` directories. 
+To build the plugin invoke `scons` from the root directory of the project. The build product will in `build\bin`.  Invoking `scons --assemble` will build the product and copy the binaries to the `example.gd\addons\tilt-five\bin` and `example.csharp\addons\tilt-five\bin` directories. 
 
 ## Using the build products
 

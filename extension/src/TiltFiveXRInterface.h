@@ -146,6 +146,8 @@ public:
 	~TiltFiveXRInterface();
 
 protected:
+	bool setup_android();
+
 	static void _bind_methods();
 
 	void _start_display(GlassesIndexEntry &entry, SubViewport *viewport, T5Origin3D *xr_origin);
@@ -166,6 +168,7 @@ private:
 	String application_version;
 	float _trigger_click_threshold = 0.5;
 	bool _is_debug_logging = false;
+	long _platform_context = 0;
 
 	std::vector<GlassesIndexEntry> _glasses_index;
 	std::vector<GlassesEvent> _glasses_events;

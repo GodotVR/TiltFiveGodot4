@@ -1,4 +1,5 @@
 #include "TiltFiveXRInterface.h"
+#include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
@@ -139,6 +140,23 @@ TiltFiveXRInterface::GlassesIndexEntry* TiltFiveXRInterface::lookup_glasses_by_v
 	return nullptr;
 }
 
+bool TiltFiveXRInterface::setup_android() {
+	if (OS::get_singleton()->get_name() == "Android") {
+		if (Engine::get_singleton()->has_singleton("gdtiltfive")) {
+			auto gdtiltfive = Engine::get_singleton()->get_singleton("gdtiltfive");
+			String pc_string = gdtiltfive->call("getPlatformContextString");
+			_platform_context = pc_string.to_int();
+			LOG_MESSAGE("Platform context: ", _platform_context);
+		} else {
+			LOG_ERROR("gdtiltfive plugin was not found and is required for Tilt Five to work on Android");
+			return false;
+		}
+	} else {
+		_platform_context = 0;
+	}
+	return true;
+}
+
 bool TiltFiveXRInterface::_is_initialized() const {
 	return _initialised;
 }
@@ -155,6 +173,8 @@ bool TiltFiveXRInterface::_initialize() {
 	t5_service = GodotT5ObjectRegistry::service();
 	ERR_FAIL_COND_V_MSG(!t5_service, false, "Couldn't obtain GodotT5Service singleton");
 
+	ERR_FAIL_COND_V_MSG(!setup_android(), false, "Couldn't setup Android platform context");
+
 	RenderingServer* rendering_server = RenderingServer::get_singleton();
 	ERR_FAIL_NULL_V(rendering_server, false);
 	RenderingDevice* rendering_device = rendering_server->get_rendering_device();
@@ -167,7 +187,11 @@ bool TiltFiveXRInterface::_initialize() {
 	auto ai = application_id.ascii();
 	auto av = application_version.ascii();
 
-	bool is_started = t5_service->start_service(ai.get_data(), av.get_data(), kSdkTypeCommunityGodot);
+	// I don't like this but long is how it is returned from the T5 Java API.
+	auto platform_context = reinterpret_cast<void*>(_platform_context);
+	LOG_MESSAGE("Platform context: ", _platform_context);
+
+	bool is_started = t5_service->start_service(ai.get_data(), av.get_data(), kSdkTypeCommunityGodot, platform_context);
 	ERR_FAIL_COND_V_MSG(!is_started, false, "Couldn't start T5 Service");
 
 	_initialised = true;

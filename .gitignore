@@ -26,5 +26,12 @@ build
 *.includes
 *.idb
 *.exp
+*.aar
 
+# project specific ignores
 !extension/TiltFiveNDK/lib/*/*/*
+
+example.gd/android/
+example.gd/export_presets.cfg
+example.csharp/android/
+example.csharp/export_presets.cfg

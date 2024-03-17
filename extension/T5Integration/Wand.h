@@ -1,8 +1,11 @@
 #pragma once
 #include <TiltFiveNative.h>
 #include <chrono>
+#include <mutex>
 #include <thread>
 #include <vector>
+
+#include <jthread.h>
 
 using namespace std::chrono_literals;
 
@@ -66,12 +69,12 @@ public:
 
 private:
 	bool configure_wand_tracking(bool enable);
-	void monitor_wands(std::stop_token s_token);
+	void monitor_wands(jthrd::stop_token s_token);
 
 	T5_Glasses _glasses_handle;
 	WandList _wand_list;
 
-	std::jthread _thread;
+	jthrd::jthread _thread;
 	std::mutex _list_access;
 	std::atomic_bool _running;
 

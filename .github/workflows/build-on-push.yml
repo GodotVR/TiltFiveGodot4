@@ -17,20 +17,23 @@ jobs:
       matrix:
         include:
           # Unsupported platforms are commented out.
-          #- name: 🐧 Linux (GCC)
-          #  os: ubuntu-20.04
-          #  platform: linux
-          #  artifact-name: gdtiltfive.linux
-          #  artifact-path: build/bin/libgdtiltfive.linux.*
+          - name: 🐧 Linux (GCC)
+            os: ubuntu-20.04
+            platform: linux
+            artifact-name: gdtiltfive.linux
+            artifact-path:  |
+                build/bin/linux/x86_64/libgdtiltfive.linux.template_debug.x86_64.so
+                build/bin/linux/x86_64/libgdtiltfive.linux.template_release.x86_64.so
+                extension/TiltFiveNDK/lib/linux/x86_64/libTiltFiveNative.so
 
           - name: 🏁 Windows (x86_64, MSVC)
             os: windows-2019
             platform: windows
             artifact-name: gdtiltfive.windows
             artifact-path: |
-              build/bin/libgdtiltfive.windows.template_debug.x86_64.dll
-              build/bin/libgdtiltfive.windows.template_release.x86_64.dll
-              extension/TiltFiveNDK/lib/win/x86_64/TiltFiveNative.dll
+                build/bin/windows/x86_64/libgdtiltfive.windows.template_debug.x86_64.dll
+                build/bin/windows/x86_64/libgdtiltfive.windows.template_release.x86_64.dll
+                extension/TiltFiveNDK/lib/win/x86_64/TiltFiveNative.dll
 
           #- name: 🍎 macOS (universal)
           #  os: macos-11
@@ -39,12 +42,14 @@ jobs:
           #  artifact-name: gdtiltfive.macos
           #  artifact-path: build/bin/libgdtiltfive.macos.*
 
-          #- name: 🤖 Android (arm64)
-          #  os: ubuntu-20.04
-          #  platform: android
-          #  flags: ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64
-          #  artifact-name: gdtiltfive.android
-          #  artifact-path: build/bin/libgdtiltfive.android.*
+          - name: 🤖 Android (arm64)
+            os: ubuntu-20.04
+            platform: android
+            #flags: ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME arch=arm64
+            artifact-name: gdtiltfive.android
+            artifact-path: |
+                build/bin/android/arm64/libgdtiltfive.android.*
+                androidplugin/plugin/build/outputs/aar/gdtiltfive*
 
           #- name: 🍏 iOS (arm64)
           #  os: macos-11
@@ -72,17 +77,52 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -qqq build-essential pkg-config
 
+      - name: Set up GCC
+        if: ${{ matrix.platform == 'linux' }}
+        uses: egor-tensin/setup-gcc@v1
+        with:
+            version: 11
+            platform: x64
+
+      - name: Android dependencies
+        if: ${{ matrix.platform == 'android' }}
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+            ndk-version: r26c
+            add-to-path: false
+
       - name: Install scons
         run: |
-          python -m pip install scons==4.0.0
+            python -m pip install scons==4.0.0
 
       - name: Build debug build
         run: |
-          scons platform=${{ matrix.platform }} target=template_debug ${{ matrix.flags }}
+            scons platform=${{ matrix.platform }} target=template_debug ${{ matrix.flags }} --no-gradle
+        env:
+            ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
 
       - name: Build release build
         run: |
-          scons platform=${{ matrix.platform }} target=template_release ${{ matrix.flags }}
+            scons platform=${{ matrix.platform }} target=template_release ${{ matrix.flags }} --no-gradle
+        env:
+            ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+      - name: Set up Java
+        if: ${{ matrix.platform == 'android' }}   
+        uses: actions/setup-java@v4
+        with:
+            distribution: 'zulu' # See 'Supported distributions' for available options
+            java-version: '17'
+
+      - name: Gradle build
+        if: ${{ matrix.platform == 'android' }}   
+        run: |
+            mkdir plugin/libs
+            cp ../extension/TiltFiveNDK/lib/android/TiltFiveAndroidClient.jar plugin/libs/TiltFiveAndroidClient.jar
+            chmod +x ./gradlew
+            ./gradlew build 
+        working-directory: ./androidplugin
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -117,12 +157,20 @@ jobs:
           cp source/CONTRIBUTORS.md plugin/addons/tiltfive
           cp source/CHANGES.md plugin/addons/tiltfive
           mkdir plugin/addons/tiltfive/bin
-          # cp gdtiltfive.linux/*.so plugin/addons/tiltfive/bin/
-          cp gdtiltfive.windows/build/bin/*.dll plugin/addons/tiltfive/bin/
-          cp gdtiltfive.windows/extension/TiltFiveNDK/lib/win/x86_64/*.dll plugin/addons/tiltfive/bin/
-          # cp gdtiltfive.android/*.so plugin/addons/tiltfive/bin/
-          # cp gdtiltfive.ios/*.dylib plugin/addons/tiltfive/bin/
-          # cp -R gdtiltfive.macos/libgdtiltfive.macos.* plugin/addons/tiltfive/bin/
+          mkdir plugin/addons/tiltfive/bin/linux
+          mkdir plugin/addons/tiltfive/bin/linux/x86_64
+          mkdir plugin/addons/tiltfive/bin/windows
+          mkdir plugin/addons/tiltfive/bin/windows/x86_64
+          mkdir plugin/addons/tiltfive/bin/android/
+          mkdir plugin/addons/tiltfive/bin/android/arm64
+          cp gdtiltfive.linux/build/bin/linux/x86_64/*.so plugin/addons/tiltfive/bin/linux/x86_64/
+          cp gdtiltfive.linux/extension/TiltFiveNDK/lib/linux/x86_64/*.so plugin/addons/tiltfive/bin/linux/x86_64/
+          cp gdtiltfive.windows/build/bin/windows/x86_64/*.dll plugin/addons/tiltfive/bin/windows/x86_64/
+          cp gdtiltfive.windows/extension/TiltFiveNDK/lib/win/x86_64/*.dll plugin/addons/tiltfive/bin/windows/x86_64/
+          cp gdtiltfive.android/build/bin/android/arm64/*.so plugin/addons/tiltfive/bin/android/arm64/
+          cp source/extension/TiltFiveNDK/lib/android/arm64-v8a/*.so plugin/addons/tiltfive/bin/android/arm64/
+          cp gdtiltfive.android/androidplugin/plugin/build/outputs/aar/gdtiltfive-debug.aar plugin/addons/tiltfive/bin/android
+          cp gdtiltfive.android/androidplugin/plugin/build/outputs/aar/gdtiltfive-release.aar plugin/addons/tiltfive/bin/android
       - name: Copy files to destination for csharp
         run: |
           mkdir plugin_cs
@@ -132,12 +180,20 @@ jobs:
           cp source/CONTRIBUTORS.md plugin_cs/addons/tiltfive
           cp source/CHANGES.md plugin_cs/addons/tiltfive
           mkdir plugin_cs/addons/tiltfive/bin
-          # cp gdtiltfive.linux/*.so plugin_cs/addons/tiltfive/bin/
-          cp gdtiltfive.windows/build/bin/*.dll plugin_cs/addons/tiltfive/bin/
-          cp gdtiltfive.windows/extension/TiltFiveNDK/lib/win/x86_64/*.dll plugin_cs/addons/tiltfive/bin/
-          # cp gdtiltfive.android/*.so plugin_cs/addons/tiltfive/bin/
-          # cp gdtiltfive.ios/*.dylib plugin_cs/addons/tiltfive/bin/
-          # cp -R gdtiltfive.macos/libgdtiltfive.macos.* plugin_cs/addons/tiltfive/bin/
+          mkdir plugin_cs/addons/tiltfive/bin/linux
+          mkdir plugin_cs/addons/tiltfive/bin/linux/x86_64
+          mkdir plugin_cs/addons/tiltfive/bin/windows
+          mkdir plugin_cs/addons/tiltfive/bin/windows/x86_64
+          mkdir plugin_cs/addons/tiltfive/bin/android/
+          mkdir plugin_cs/addons/tiltfive/bin/android/arm64
+          cp gdtiltfive.linux/build/bin/linux/x86_64/*.so plugin_cs/addons/tiltfive/bin/linux/x86_64/
+          cp gdtiltfive.linux/extension/TiltFiveNDK/lib/linux/x86_64/*.so plugin_cs/addons/tiltfive/bin/linux/x86_64/
+          cp gdtiltfive.windows/build/bin/windows/x86_64/*.dll plugin_cs/addons/tiltfive/bin/windows/x86_64/
+          cp gdtiltfive.windows/extension/TiltFiveNDK/lib/win/x86_64/*.dll plugin_cs/addons/tiltfive/bin/windows/x86_64/
+          cp gdtiltfive.android/build/bin/android/arm64/*.so plugin_cs/addons/tiltfive/bin/android/arm64/
+          cp source/extension/TiltFiveNDK/lib/android/arm64-v8a/*.so plugin_cs/addons/tiltfive/bin/android/arm64/
+          cp gdtiltfive.android/androidplugin/plugin/build/outputs/aar/gdtiltfive-debug.aar plugin_cs/addons/tiltfive/bin/android
+          cp gdtiltfive.android/androidplugin/plugin/build/outputs/aar/gdtiltfive-release.aar plugin_cs/addons/tiltfive/bin/android
       - name: Calculate GIT short ref
         run: |
           cd source

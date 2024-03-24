@@ -8,15 +8,32 @@ T5Gameboard = "res://addons/tiltfive/assets/board.svg"
 
 [libraries]
 
-windows.x86_64.debug = "res://addons/tiltfive/bin/libgdtiltfive.windows.template_debug.x86_64.dll"
-windows.x86_64.release = "res://addons/tiltfive/bin/libgdtiltfive.windows.template_release.x86_64.dll"
+windows.x86_64.debug = "res://addons/tiltfive/bin/windows/x86_64/libgdtiltfive.windows.template_debug.x86_64.dll"
+windows.x86_64.release = "res://addons/tiltfive/bin/windows/x86_64/libgdtiltfive.windows.template_release.x86_64.dll"
+linux.x86_64.debug = "res://addons/tiltfive/bin/linux/x86_64/libgdtiltfive.linux.template_debug.x86_64.so"
+linux.x86_64.release = "res://addons/tiltfive/bin/linux/x86_64/libgdtiltfive.linux.template_release.x86_64.so"
+android.debug.arm64 = "res://addons/tiltfive/bin/android/arm64/libgdtiltfive.android.template_debug.arm64.so"
+android.release.arm64 = "res://addons/tiltfive/bin/android/arm64/libgdtiltfive.android.template_release.arm64.so"
+
 
 [dependencies]
 
 windows.x86_64.debug = {
-    "res://addons/tiltfive/bin/TiltFiveNative.dll" : ""
+    "res://addons/tiltfive/bin/windows/x86_64/TiltFiveNative.dll" : ""
 }
 windows.x86_64.release = {
-    "res://addons/tiltfive/bin/TiltFiveNative.dll" : ""
+    "res://addons/tiltfive/bin/windows/x86_64/TiltFiveNative.dll" : ""
+}
+linux.x86_64.debug = {
+    "res://addons/tiltfive/bin/linux/x86_64/libTiltFiveNative.so" : ""
+}
+linux.x86_64.release = {
+    "res://addons/tiltfive/bin/linux/x86_64/libTiltFiveNative.so" : ""
+}
+android.arm64.debug = {
+    "res://addons/tiltfive/bin/android/arm64/libTiltFiveNative.so" : ""
+}
+android.arm64.release = {
+    "res://addons/tiltfive/bin/android/arm64/libTiltFiveNative.so" : ""
 }
 

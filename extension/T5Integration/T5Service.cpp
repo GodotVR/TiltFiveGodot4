@@ -20,7 +20,7 @@ T5Service::~T5Service() {
 	stop_service();
 }
 
-bool T5Service::start_service(const std::string_view application_id, std::string_view application_version, uint8_t sdk_type) {
+bool T5Service::start_service(const std::string_view application_id, std::string_view application_version, uint8_t sdk_type, void* platform_context) {
 	if (_state.is_current(T5ServiceState::RUNNING))
 		return true;
 	if (_state.set_and_was_toggled(T5ServiceState::STARTING)) {
@@ -34,7 +34,7 @@ bool T5Service::start_service(const std::string_view application_id, std::string
 		clientInfo.applicationVersion = application_version.data();
 		clientInfo.sdkType = sdk_type;
 
-		auto result = t5CreateContext(&_context, &clientInfo, nullptr);
+		auto result = t5CreateContext(&_context, &clientInfo, platform_context);
 
 		if (result != T5_SUCCESS) {
 			LOG_T5_ERROR(result);

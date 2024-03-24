@@ -75,7 +75,7 @@ bool WandService::start(T5_Glasses handle) {
 	_glasses_handle = handle;
 	_last_wand_error = T5_SUCCESS;
 	_running = true;
-	_thread = std::jthread([this](std::stop_token s_token) { monitor_wands(s_token); });
+	_thread = jthrd::jthread([this](jthrd::stop_token s_token) { monitor_wands(s_token); });
 	return _running;
 }
 
@@ -122,7 +122,7 @@ T5_Result WandService::get_last_error() {
 	return tmp;
 }
 
-void WandService::monitor_wands(std::stop_token s_token) {
+void WandService::monitor_wands(jthrd::stop_token s_token) {
 	if (!configure_wand_tracking(true))
 		return;
 

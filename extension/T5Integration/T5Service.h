@@ -59,7 +59,7 @@ public:
 	T5Service();
 	virtual ~T5Service();
 
-	bool start_service(const std::string_view applicationID, std::string_view applicationVersion, uint8_t sdk_type = 0);
+	bool start_service(const std::string_view applicationID, std::string_view applicationVersion, uint8_t sdk_type = 0, void* platform_context = nullptr);
 	void stop_service();
 	bool is_service_started();
 

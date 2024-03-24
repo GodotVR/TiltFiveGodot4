@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+import os
+import sys
+
+Import("env")
+
+def gradle_build(target, source, env):
+	os.system('gradlew build --no-daemon')
+
+android_outputs = ['plugin/build/outputs/aar/gdtiltfive-debug.aar', 'plugin/build/outputs/aar/gdtiltfive-release.aar']
+android_inputs = ['plugin/libs/TiltFiveAndroidClient.jar', 'plugin/src/main/java/org/tiltfivegodot/plugin/GodotAndroidPlugin.java']
+Default(env.Command(android_outputs, android_inputs, gradle_build))
+

@@ -116,7 +116,7 @@ public partial class T5Interface : Node
 			if(entry.Value.CanAttemptToReserve && Manager.ShouldUseGlasses(entry.Key))
 			{
 				entry.Value.attemptingToReserve = true;
-				xrInterface.Call("reserve_glasses", entry.Key, Manager.GetUIDisplayName(entry.Key));
+				xrInterface.Call("reserve_glasses", entry.Key, ProjectSettings.GetSetting("application/config/name"));
 			}
 		}
 	}

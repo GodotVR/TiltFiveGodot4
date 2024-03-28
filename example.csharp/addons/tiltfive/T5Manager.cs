@@ -77,7 +77,10 @@ public partial class T5Manager : Node, T5ManagerInterface
 
 	public string GetUIDisplayName(string glassesID)
 	{
-		return T5ProjectSettings.DefaultDisplayName;
+		var uiDisplayName = t5Interface.GetUIDisplayName(glassesID);
+		return string.IsNullOrEmpty(uiDisplayName)
+			? T5ProjectSettings.DefaultDisplayName
+			: uiDisplayName;
 	}
 
 	public T5XRRig CreateXRRig(string glassesID)

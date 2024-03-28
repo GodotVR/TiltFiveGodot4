@@ -19,6 +19,7 @@ void TiltFiveXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("release_glasses", "glasses_id"), &TiltFiveXRInterface::release_glasses);
 	ClassDB::bind_method(D_METHOD("get_available_glasses_ids"), &TiltFiveXRInterface::get_available_glasses_ids);
 	ClassDB::bind_method(D_METHOD("get_reserved_glasses_ids"), &TiltFiveXRInterface::get_reserved_glasses_ids);
+	ClassDB::bind_method(D_METHOD("get_glasses_name", "glasses_id"), &TiltFiveXRInterface::get_glasses_name);
 	ClassDB::bind_method(D_METHOD("get_gameboard_type", "glasses_id"), &TiltFiveXRInterface::get_gameboard_type);
 	ClassDB::bind_method(D_METHOD("get_gameboard_extents", "gameboard_type"), &TiltFiveXRInterface::get_gameboard_extents);
 
@@ -282,6 +283,17 @@ PackedStringArray TiltFiveXRInterface::get_reserved_glasses_ids() {
 			reserved_list.append(glasses->get_id().c_str());
 	}
 	return reserved_list;
+}
+
+String TiltFiveXRInterface::get_glasses_name(const StringName glasses_id) {
+	if(!t5_service)
+		return String("");
+
+	auto entry = lookup_glasses_entry(glasses_id);
+	ERR_FAIL_COND_V_MSG(!entry, String(""), "Glasses id was not found");
+
+	std::string glasses_name = t5_service->get_glasses_name(entry->idx);
+	return String(glasses_name.c_str());
 }
 
 TiltFiveXRInterface::GameBoardType TiltFiveXRInterface::get_gameboard_type(const StringName glasses_id) {

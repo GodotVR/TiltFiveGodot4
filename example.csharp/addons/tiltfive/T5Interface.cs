@@ -89,6 +89,19 @@ public partial class T5Interface : Node
 		}
 	}
 
+	public string GetUIDisplayName(string glassesID)
+	{
+		if(string.IsNullOrEmpty(glassesID)
+			|| !xrInterface.Get("is_initialized").AsBool()
+			|| !glassesDictionary.TryGetValue(glassesID, out var xrRigState)
+			|| !xrRigState.available)
+		{
+			return string.Empty;
+		}
+
+		return xrInterface.Call("get_glasses_name", glassesID).AsString();
+	}
+
 	void StartDisplay(string glassesID, T5XRRig xrRig) {
 		
 		xrInterface.Call("start_display", glassesID, xrRig, xrRig.Origin);

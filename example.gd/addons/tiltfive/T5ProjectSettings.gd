@@ -27,7 +27,6 @@ static func _define_project_setting(
 
 static func setup_properties():
 	if not _initialized:
-		_define_project_setting("xr/tilt_five/default_display_name", TYPE_STRING)
 		_define_project_setting("xr/tilt_five/trigger_click_threshhold", TYPE_FLOAT, PROPERTY_HINT_RANGE, "0,1,0.01", 0.3)
 		_define_project_setting("xr/tilt_five/debug_logging", TYPE_BOOL, PROPERTY_HINT_NONE, "", false)
 		_initialized = true
@@ -46,14 +45,6 @@ static var application_version : String:
 			return "unknown"
 		return version
 		
-static var default_display_name : String:
-	get:
-		setup_properties()
-		var disp_name := ProjectSettings.get_setting_with_override("xr/tilt_five/default_display_name")
-		if not disp_name or disp_name == "":
-			return T5ProjectSettings.application_id
-		return disp_name
-
 static var trigger_click_threshhold : float:
 	get:
 		setup_properties()

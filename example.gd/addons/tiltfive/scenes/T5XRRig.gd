@@ -12,6 +12,10 @@ var _wand : T5Controller3D
 func get_glasses_id() -> StringName:
 	return _glasses_id
 
+## Get the friendly name of the glasses defined in the Tilt Five control panel
+func get_glasses_name() -> String:
+	return T5Interface.get_glasses_name(_glasses_id)
+
 ## Type of gameboard that is set up 
 func get_gameboard_type() -> T5Def.GameboardType:
 	return _gameboard_type

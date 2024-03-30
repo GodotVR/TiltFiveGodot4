@@ -42,12 +42,6 @@ func service_incorrect_version():
 ## game
 func should_use_glasses(glasses_id : String) -> bool:
 	return true
-	
-## Invoked by the T5Interface to get the display name to be assigned to 
-## the glasses. This is the name that shows up in the Tilt Five control
-## panel
-func get_glasses_display_name(glasses_id : String) -> String:
-	return T5ProjectSettings.default_display_name
 
 ## Invoked by the T5Interface to get an T5XRRig derived node
 func create_xr_rig(glasses_id : String) -> T5XRRig:

@@ -52,6 +52,14 @@ public partial class T5Manager : Node, T5ManagerInterface
 		GetTree().Root.CallDeferred(MethodName.AddChild, rigs);
 	}
 
+	[Obsolete("Use T5XRRig.GlassesName instead")]
+	public string GetUIDisplayName(string glassesID)
+	{
+		return t5Interface?.GetGlassesName(glassesID) ?? "";
+	}
+
+
+	#region T5ManagerInterface implementation
 	public void ServiceStarted()
 	{
 	}
@@ -73,11 +81,6 @@ public partial class T5Manager : Node, T5ManagerInterface
 	public bool ShouldUseGlasses(string glassesID)
 	{
 		return true;
-	}
-
-	public string GetUIDisplayName(string glassesID)
-	{
-		return T5ProjectSettings.DefaultDisplayName;
 	}
 
 	public T5XRRig CreateXRRig(string glassesID)
@@ -108,4 +111,5 @@ public partial class T5Manager : Node, T5ManagerInterface
 	public void SetGameboardType(T5XRRig rig, T5Def.GameboardType gameboard_type)
 	{
 	}
+	#endregion
 }

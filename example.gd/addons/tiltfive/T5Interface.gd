@@ -26,7 +26,12 @@ var t5_manager : T5ManagerBase:
 
 func get_tilt_five_xr_interface() -> TiltFiveXRInterface:
 	return tilt_five_xr_interface
-		
+
+func get_glasses_name(glasses_id: StringName):
+	if tilt_five_xr_interface:
+		return tilt_five_xr_interface.get_glasses_name(glasses_id)
+	return ""
+
 func _enter_tree():
 	tilt_five_xr_interface = TiltFiveXRInterface.new()
 	if tilt_five_xr_interface:
@@ -66,7 +71,7 @@ func _process_glasses():
 		var xr_rig_state = id_to_state.get(glasses_id) as XRRigState
 		if xr_rig_state.can_attempt_to_reserve() and t5_manager.should_use_glasses(glasses_id):
 			xr_rig_state.attempting_to_reserve = true
-			tilt_five_xr_interface.reserve_glasses(glasses_id, t5_manager.get_glasses_display_name(glasses_id))
+			tilt_five_xr_interface.reserve_glasses(glasses_id, T5ProjectSettings.application_id)
 
 func _on_service_event(event_num):
 	match event_num:

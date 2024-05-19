@@ -7,6 +7,7 @@ var _gameboard_size := AABB()
 var _origin : T5Origin3D
 var _camera : T5Camera3D
 var _wand : T5Controller3D
+var _image_capture : T5ImageCapture
 
 ## Get the ID attached to a pair of Tilt Five glasses
 func get_glasses_id() -> StringName:
@@ -36,10 +37,14 @@ func get_camera() -> T5Camera3D:
 func get_wand() -> T5Controller3D:
 	return _wand
 
+func get_image_capture() -> T5ImageCapture:
+	return _image_capture
+
 func _enter_tree():
 	_origin = $Origin
 	_camera = $Origin/Camera
 	_wand = $Origin/Wand_1
+	_image_capture = $Origin.get_node("T5ImageCapture")
 
 func _process(_delta):
 	if _wand: _wand.visible = _wand.get_has_tracking_data()

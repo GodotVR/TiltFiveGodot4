@@ -61,7 +61,7 @@ void log_message(T var1, Types... var2) {
 #define LOG_CHECK_POINT_ONCE                       \
 	{                                              \
 		static bool once##__LINE__ = false;        \
-		if (!once##__LINE__) {                     \
+		if (!once##__LINE__) [[unlikely]] {        \
 			LOG_CHECK_POINT once##__LINE__ = true; \
 		}                                          \
 	}
@@ -95,9 +95,23 @@ void log_message(T var1, Types... var2) {
 #define LOG_ERROR_ONCE(MSG)                 \
 	{                                       \
 		static bool once##__LINE__ = false; \
-		if (!once##__LINE__) {              \
+		if (!once##__LINE__) [[unlikely]] { \
 			LOG_ERROR(MSG);                 \
 			once##__LINE__ = true;          \
 		}                                   \
 	}
 #endif
+
+#define LOG_FAIL_COND(m_cond)                                                                         \
+	if (m_cond) [[unlikely]] {                                                                        \
+		T5Integration::log_error("Condition \"" #m_cond "\" is true.", __func__, __FILE__, __LINE__); \
+		return;                                                                                       \
+	} else                                                                                            \
+		((void)0)
+
+#define LOG_FAIL_COND_V(m_cond, m_retval)                                                                                   \
+	if (m_cond) [[unlikely]] {                                                                                              \
+		T5Integration::log_error("Condition \"" #m_cond "\" is true. Returning: " #m_retval, __func__, __FILE__, __LINE__); \
+		return m_retval;                                                                                                    \
+	} else                                                                                                                  \
+		((void)0)

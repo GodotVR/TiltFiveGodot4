@@ -13,6 +13,7 @@
 #include <T5Origin3D.h>
 
 using godot::AABB;
+using godot::Node;
 using godot::ObjectID;
 using godot::PackedFloat64Array;
 using godot::PackedStringArray;
@@ -152,6 +153,8 @@ protected:
 
 	void _start_display(GlassesIndexEntry &entry, SubViewport *viewport, T5Origin3D *xr_origin);
 	void _stop_display(GlassesIndexEntry &entry);
+
+	void _setup_scene_nodes(GodotT5Glasses::Ptr glasses, Node *node);
 
 	GlassesIndexEntry *lookup_glasses_entry(StringName glasses_id);
 	GlassesIndexEntry *lookup_glasses_by_render_target(RID render_target);

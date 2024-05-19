@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://ckbe6draoen0x"]
+[gd_scene load_steps=18 format=3 uid="uid://ckbe6draoen0x"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_xvgge"]
 [ext_resource type="Script" path="res://addons/tiltfive/T5Manager.gd" id="2_dibvp"]
@@ -33,6 +33,8 @@ albedo_color = Color(0.862745, 0, 0.0235294, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qrhlq"]
 albedo_color = Color(0.741176, 0, 0.686275, 1)
+
+[sub_resource type="ImageTexture" id="ImageTexture_0jitc"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_xvgge")
@@ -120,5 +122,34 @@ surface_material_override/0 = SubResource("StandardMaterial3D_qrhlq")
 transform = Transform3D(0.670983, -0.138786, 0.728368, 0, 0.982326, 0.187176, -0.741472, -0.125592, 0.659125, 14.0459, 4.9572, 12.9908)
 cull_mask = 3
 
-[connection signal="xr_rig_was_added" from="T5Manager" to="." method="_on_t5_manager_xr_rig_was_added"]
-[connection signal="xr_rig_will_be_removed" from="T5Manager" to="." method="_on_t5_manager_xr_rig_will_be_removed"]
+[node name="ScreenUI" type="Control" parent="."]
+visibility_layer = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CameraView" type="TextureRect" parent="ScreenUI"]
+visible = false
+visibility_layer = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("ImageTexture_0jitc")
+
+[node name="Label" type="Label" parent="ScreenUI"]
+visibility_layer = 4
+layout_mode = 1
+offset_left = 17.0
+offset_top = 14.0
+offset_right = 197.0
+offset_bottom = 37.0
+text = "C - Toggle Camera View"
+
+[connection signal="xr_rig_was_added" from="T5Manager" to="." method="_on_t_5_manager_xr_rig_was_added"]
+[connection signal="xr_rig_will_be_removed" from="T5Manager" to="." method="_on_t_5_manager_xr_rig_will_be_removed"]

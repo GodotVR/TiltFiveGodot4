@@ -1,4 +1,5 @@
 #include "TiltFiveXRInterface.h"
+#include <T5ImageCapture.h>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
@@ -227,8 +228,19 @@ void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry&
 	entry.viewport_id = viewport->get_instance_id();
 	entry.gameboard_id = gameboard->get_instance_id();
 
+	_setup_scene_nodes(glasses, gameboard);
+
 	viewport->set_use_xr(true);
 	viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_ALWAYS);
+}
+
+void TiltFiveXRInterface::_setup_scene_nodes(GodotT5Glasses::Ptr glasses, Node* node) {
+	for (int i = 0; i < node->get_child_count(); i++) {
+		auto image_capture = Object::cast_to<T5ImageCapture>(node->get_child(i));
+		if (image_capture) {
+			image_capture->set_glasses(glasses);
+		}
+	}
 }
 
 void TiltFiveXRInterface::stop_display(const StringName glasses_id) {

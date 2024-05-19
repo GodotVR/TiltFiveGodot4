@@ -82,7 +82,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.77558, 0)
 mesh = SubResource("BoxMesh_aaxuw")
 surface_material_override/0 = SubResource("StandardMaterial3D_iuako")
 
-[node name="Pivot" type="Node3D" parent="Origin" index="3"]
+[node name="T5ImageCapture" type="T5ImageCapture" parent="Origin" index="3"]
+
+[node name="Pivot" type="Node3D" parent="Origin" index="4"]
 
 [node name="GlassesName" type="Label3D" parent="Origin/Pivot" index="0"]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 4.52651)

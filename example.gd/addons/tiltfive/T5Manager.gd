@@ -23,6 +23,9 @@ signal xr_rig_was_added(xr_rig : T5XRRig)
 ## Signal when the T5XRRig scene is removed to the main scene
 signal xr_rig_will_be_removed(xr_rig : T5XRRig)
 
+## Signal when a new pair of glasses is evaluated prior to getting reserved
+signal t5_glasses_candidate_examined(cancellable_event_args : CancellableGlassesEventArgs)
+
 ## [PackedScene] inherited from T5XRRig.tcsn. 
 @export var glasses_scene : PackedScene = preload("res://addons/tiltfive/scenes/T5XRRig.tscn")
 
@@ -37,6 +40,11 @@ func _ready():
 	glasses_node = Node3D.new()
 	glasses_node.name = "TiltFiveGlasses"
 	get_parent().add_child.call_deferred(glasses_node)
+
+func should_use_glasses(glasses_id : String) -> bool:
+	var cancellable_event_args : CancellableGlassesEventArgs = CancellableGlassesEventArgs.new(glasses_id)
+	t5_glasses_candidate_examined.emit(cancellable_event_args)
+	return not cancellable_event_args.is_cancelled()
 
 func create_xr_rig(glasses_id : String) -> T5XRRig:
 	var xr_rig = glasses_scene.instantiate() as T5XRRig
@@ -56,3 +64,19 @@ func release_xr_rig(xr_rig : T5XRRig) -> void:
 	glasses_node.remove_child(xr_rig)
 	xr_rig.queue_free()
 	
+
+class CancellableGlassesEventArgs extends Object:
+	var _cancelled : bool = false
+	var _glasses_id : String
+
+	func _init(glasses_id : String):
+		_glasses_id = glasses_id
+
+	func get_glasses_id() -> String:
+		return _glasses_id
+
+	func is_cancelled() -> bool:
+		return _cancelled
+
+	func cancel() -> void:
+		_cancelled = true

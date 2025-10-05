@@ -24,7 +24,7 @@ jobs:
           #  artifact-path: build/bin/libgdtiltfive.linux.*
 
           - name: 🏁 Windows (x86_64, MSVC)
-            os: windows-2019
+            os: windows-2025
             platform: windows
             artifact-name: gdtiltfive.windows
             artifact-path: |
@@ -57,7 +57,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Setup actions
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
@@ -74,7 +74,7 @@ jobs:
 
       - name: Install scons
         run: |
-          python -m pip install scons==4.0.0
+          python -m pip install scons~=4.0
 
       - name: Build debug build
         run: |
@@ -85,7 +85,7 @@ jobs:
           scons platform=${{ matrix.platform }} target=template_release ${{ matrix.flags }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
           path: ${{ matrix.artifact-path }}
@@ -107,7 +107,7 @@ jobs:
         with:
           path: source
       - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
       - name: Copy files to destination for gdscript
         run: |
           mkdir plugin

@@ -92,7 +92,7 @@ mesh = SubResource("BoxMesh_gbwc2")
 surface_material_override/0 = SubResource("StandardMaterial3D_dji1h")
 
 [node name="Label3D" type="Label3D" parent="Boxes/Positive Z"]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 1.08084)
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 1.13267)
 pixel_size = 0.01
 text = "Backwards (Z+)"
 
@@ -119,3 +119,6 @@ surface_material_override/0 = SubResource("StandardMaterial3D_qrhlq")
 [node name="SpectatorCam" type="Camera3D" parent="."]
 transform = Transform3D(0.670983, -0.138786, 0.728368, 0, 0.982326, 0.187176, -0.741472, -0.125592, 0.659125, 14.0459, 4.9572, 12.9908)
 cull_mask = 3
+
+[connection signal="xr_rig_was_added" from="T5Manager" to="." method="_on_t5_manager_xr_rig_was_added"]
+[connection signal="xr_rig_will_be_removed" from="T5Manager" to="." method="_on_t5_manager_xr_rig_will_be_removed"]

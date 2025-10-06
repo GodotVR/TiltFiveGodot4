@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://ba8h6c1mtb3h0"]
+[gd_scene load_steps=9 format=3 uid="uid://ba8h6c1mtb3h0"]
 
 [ext_resource type="PackedScene" uid="uid://dpbt52d0p5wjw" path="res://addons/tiltfive/scenes/T5XRRig.tscn" id="1_x7gas"]
+[ext_resource type="Script" path="res://ExampleRig.cs" id="2_af07c"]
 [ext_resource type="PackedScene" uid="uid://b1cd3jc00rhal" path="res://addons/tiltfive/assets/T5GlassesModel.tscn" id="2_dp1ep"]
 [ext_resource type="Script" path="res://WandControl.cs" id="2_epf7w"]
 [ext_resource type="PackedScene" uid="uid://dnx42xctfl3mx" path="res://Controls.tscn" id="2_ge6xw"]
@@ -13,6 +14,7 @@ albedo_color = Color(0.580392, 0.396078, 0.278431, 1)
 albedo_color = Color(0.0352941, 1, 0, 1)
 
 [node name="T5XRRig" instance=ExtResource("1_x7gas")]
+script = ExtResource("2_af07c")
 
 [node name="Camera" parent="Origin" index="0"]
 cull_mask = 1048573
@@ -28,3 +30,10 @@ selected = SubResource("StandardMaterial3D_kgxv6")
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0.585525, -0.00207818, 0.223126)
 
 [node name="T5-wand" parent="Origin/Wand_1" index="1" instance=ExtResource("5_j53ao")]
+
+[node name="Pivot" type="Node3D" parent="Origin" index="2"]
+
+[node name="GlassesName" type="Label3D" parent="Origin/Pivot" index="0"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 4.46927)
+pixel_size = 0.01
+text = "Name"

@@ -36,12 +36,6 @@ public interface T5ManagerInterface
     // game
     public bool ShouldUseGlasses(string glassesID);
 
-    // Invoked by the T5Interface to get the display name to be assigned to 
-    // the glasses. This is the name that shows up in the Tilt Five control
-    // panel
-    public string GetUIDisplayName(string glassesID);
-    //return T5ProjectSettings.default_display_name
-
     // Invoked by the T5Interface to get the XR rig scene to be associated with 
     // tilt five glasses. This scene should contain a SubViewport -> T5Origin -> Camera3D and T5Controller3D(s)
     public T5XRRig CreateXRRig(string glassesID);

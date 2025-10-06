@@ -13,6 +13,14 @@ public partial class T5XRRig : SubViewport
 	public T5OriginCS Origin {  get { return origin; } }
 	public T5CameraCS Camera{ get { return camera; } }
 	public T5ControllerCS Wand { get { return wand; } }
+	
+	// Returns the friendly name of the glasses defined in the Tilt Five control panel
+	public string GlassesName { 
+		get {
+			var t5Interface = GetNode<T5Interface>("/root/T5Interface");
+			return t5Interface?.GetGlassesName(GlassesID) ?? "";
+		}
+	}
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _EnterTree()

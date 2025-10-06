@@ -108,6 +108,8 @@ public:
 	PackedStringArray get_available_glasses_ids();
 	PackedStringArray get_reserved_glasses_ids();
 
+	String get_glasses_name(const StringName glasses_id);
+
 	// Overriden from XRInterfaceExtension
 	virtual StringName _get_name() const override;
 	virtual uint32_t _get_capabilities() const override;

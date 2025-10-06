@@ -27,7 +27,6 @@ public static class T5ProjectSettings
 
 	public static void setup_properties() {
 		if (!isInitialized) {
-			DefineProjectSetting("xr/tilt_five/default_display_name", Variant.Type.String, PropertyHint.None, "", "");
 			DefineProjectSetting("xr/tilt_five/trigger_click_threshhold", Variant.Type.Float, PropertyHint.Range, "0,1,0.01", 0.3);
 			DefineProjectSetting("xr/tilt_five/debug_logging", Variant.Type.Bool, PropertyHint.None, "", false);
 
@@ -52,17 +51,6 @@ public static class T5ProjectSettings
 			if (version == null || version == "")
 				return "unknown";
 			return  version;
-		}
-	}
-
-	public static String DefaultDisplayName
-	{
-		get { 
-			setup_properties(); 
-			var disp_name = ProjectSettings.GetSettingWithOverride("xr/tilt_five/default_display_name").AsString();
-			if (disp_name == null || disp_name == "")
-				return ApplicationID;
-			return disp_name; 
 		}
 	}
 

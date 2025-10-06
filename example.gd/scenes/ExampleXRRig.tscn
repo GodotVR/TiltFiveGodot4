@@ -1,6 +1,7 @@
-[gd_scene load_steps=17 format=3 uid="uid://dl3mv76qkuscf"]
+[gd_scene load_steps=18 format=3 uid="uid://dl3mv76qkuscf"]
 
 [ext_resource type="PackedScene" uid="uid://je0clrdu7o76" path="res://addons/tiltfive/scenes/T5XRRig.tscn" id="1_mer1r"]
+[ext_resource type="Script" path="res://scenes/ExampleXRRig.gd" id="2_8v3h1"]
 [ext_resource type="Script" path="res://scenes/XROrigin3D.gd" id="2_ovq7h"]
 [ext_resource type="PackedScene" uid="uid://b1cd3jc00rhal" path="res://addons/tiltfive/assets/T5GlassesModel.tscn" id="3_dh820"]
 [ext_resource type="Script" path="res://scenes/pointer_control.gd" id="4_bhwvx"]
@@ -32,6 +33,7 @@ albedo_color = Color(0.862745, 0, 0.0235294, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_aaxuw"]
 
 [node name="T5Glasses" instance=ExtResource("1_mer1r")]
+script = ExtResource("2_8v3h1")
 
 [node name="Origin" parent="." index="0"]
 script = ExtResource("2_ovq7h")
@@ -79,6 +81,13 @@ surface_material_override/0 = SubResource("StandardMaterial3D_0arwu")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.77558, 0)
 mesh = SubResource("BoxMesh_aaxuw")
 surface_material_override/0 = SubResource("StandardMaterial3D_iuako")
+
+[node name="Pivot" type="Node3D" parent="Origin" index="3"]
+
+[node name="GlassesName" type="Label3D" parent="Origin/Pivot" index="0"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 4.52651)
+pixel_size = 0.01
+text = "Name"
 
 [connection signal="button_pressed" from="Origin/Wand_1" to="Origin/Wand_1" method="_on_button_pressed"]
 [connection signal="button_released" from="Origin/Wand_1" to="Origin/Wand_1" method="_on_button_released"]

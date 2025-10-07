@@ -1,6 +1,7 @@
 #include <T5Camera3D.h>
 #include <T5Controller3D.h>
 #include <T5Gameboard.h>
+#include <T5ImageCapture.h>
 #include <T5Origin3D.h>
 #include <TiltFiveXRInterface.h>
 #include <gdextension_interface.h>
@@ -19,6 +20,7 @@ void initialize_tiltfive_types(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<TiltFiveXRInterface>();
 	ClassDB::register_class<T5Origin3D>();
 	ClassDB::register_class<T5Camera3D>();
+	ClassDB::register_class<T5ImageCapture>();
 	ClassDB::register_class<T5Node3D>();
 	ClassDB::register_class<T5Controller3D>();
 	ClassDB::register_class<T5Gameboard>();

@@ -1,5 +1,6 @@
-[gd_scene load_steps=10 format=3 uid="uid://cc7yui6nxllyl"]
+[gd_scene load_steps=11 format=3 uid="uid://cc7yui6nxllyl"]
 
+[ext_resource type="Script" path="res://main.cs" id="1_55n0b"]
 [ext_resource type="Script" path="res://addons/tiltfive/T5Manager.cs" id="1_e8x2j"]
 [ext_resource type="PackedScene" uid="uid://ba8h6c1mtb3h0" path="res://ExampleRig.tscn" id="2_vyjmk"]
 
@@ -24,6 +25,7 @@ albedo_color = Color(0.0313726, 0, 1, 1)
 albedo_color = Color(0.45098, 0, 1, 1)
 
 [node name="Main" type="Node3D"]
+script = ExtResource("1_55n0b")
 
 [node name="T5Manager" type="Node3D" parent="." node_paths=PackedStringArray("startLocation")]
 script = ExtResource("1_e8x2j")
@@ -72,3 +74,34 @@ transform = Transform3D(0.99099, 0.062492, 0.118462, -0.133934, 0.462383, 0.8765
 [node name="SpectatorCamera" type="Camera3D" parent="."]
 transform = Transform3D(0.518176, -0.550674, 0.654409, -7.45058e-09, 0.765146, 0.643857, -0.855274, -0.333631, 0.396481, 8.04684, 5.20446, 5.82711)
 cull_mask = 3
+
+[node name="ScreenUI" type="Control" parent="."]
+visibility_layer = 4
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CameraView" type="TextureRect" parent="ScreenUI"]
+visible = false
+visibility_layer = 4
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="ScreenUI"]
+visibility_layer = 4
+layout_mode = 1
+offset_left = 16.0
+offset_top = 18.0
+offset_right = 196.0
+offset_bottom = 41.0
+text = "C - Toggle Camera View"
+
+[connection signal="XRRigWasAdded" from="T5Manager" to="." method="_on_t_5_manager_xr_rig_was_added"]
+[connection signal="XRRigWillBeRemoved" from="T5Manager" to="." method="_on_t_5_manager_xr_rig_will_be_removed"]

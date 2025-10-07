@@ -11,6 +11,7 @@ namespace T5Integration {
 using namespace std::chrono_literals;
 using GlassesFlags = StateFlags<uint16_t>;
 class T5Service;
+class Camera;
 using TaskSystem::CotaskPtr;
 using TaskSystem::Scheduler;
 
@@ -58,6 +59,7 @@ struct GlassesEvent {
 
 class Glasses {
 	friend T5Service;
+	friend Camera;
 
 protected:
 	struct SwapChainFrame {

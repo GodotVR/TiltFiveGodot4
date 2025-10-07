@@ -37,6 +37,17 @@ func _ready():
 	glasses_node = Node3D.new()
 	glasses_node.name = "TiltFiveGlasses"
 	get_parent().add_child.call_deferred(glasses_node)
+	
+func _input(event):
+	# JSTEVENS@T5: As I'm porting this logic from C#, my instinct is to mirror
+	# the `base._Input(@event)` line at the beginning of T5Manager._Input().
+	# However, if I understand correctly, the following is not needed in GDScript?
+	# super._input(event)
+	for child_node in glasses_node.get_children():
+		var xr_rig : T5XRRig = child_node as T5XRRig
+		if not xr_rig:
+			continue
+		xr_rig.push_input(event)
 
 func create_xr_rig(glasses_id : String) -> T5XRRig:
 	var xr_rig = glasses_scene.instantiate() as T5XRRig

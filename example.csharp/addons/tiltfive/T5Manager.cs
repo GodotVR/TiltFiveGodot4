@@ -10,6 +10,9 @@ public partial class T5Manager : Node, T5ManagerInterface
 	[Signal]
 	public delegate void XRRigWillBeRemovedEventHandler(T5XRRig rig);
 
+	[Signal]
+	public delegate void T5GlassesCandidateExaminedEventHandler(CancellableGlassesEventArgs cancellableGlassesEventArgs);
+
 	[Export]
 	public PackedScene xrRigScene;
 
@@ -80,7 +83,9 @@ public partial class T5Manager : Node, T5ManagerInterface
 
 	public bool ShouldUseGlasses(string glassesID)
 	{
-		return true;
+		var eventArgs = new CancellableGlassesEventArgs(glassesID);
+		EmitSignal(SignalName.T5GlassesCandidateExamined, eventArgs);
+		return !eventArgs.Cancelled;
 	}
 
 	public T5XRRig CreateXRRig(string glassesID)
@@ -110,6 +115,22 @@ public partial class T5Manager : Node, T5ManagerInterface
 
 	public void SetGameboardType(T5XRRig rig, T5Def.GameboardType gameboard_type)
 	{
+	}
+
+	public partial class CancellableGlassesEventArgs : GodotObject
+	{
+		private bool _cancelled = false;
+		public bool Cancelled { get => _cancelled; }
+		public readonly string GlassesId;
+		public CancellableGlassesEventArgs(string glassesId)
+		{
+			GlassesId = glassesId;
+		}
+
+		public void Cancel()
+		{
+			_cancelled = true;
+		}
 	}
 	#endregion
 }

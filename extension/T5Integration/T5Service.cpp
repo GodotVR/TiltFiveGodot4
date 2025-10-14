@@ -54,7 +54,7 @@ void T5Service::stop_service() {
 			_state.clear_and_was_toggled(T5ServiceState::STARTING)) {
 		_scheduler->stop();
 		for (int i = 0; i < _glasses_list.size(); i++) {
-			_glasses_list[i]->stop_display();
+			_glasses_list[i]->dealloc_render_textures();
 			_glasses_list[i]->disconnect();
 			_glasses_list[i]->destroy_handle();
 		}
@@ -157,6 +157,7 @@ CotaskPtr T5Service::query_glasses_list() {
 	buffer.resize(64);
 	T5_Result result;
 	bool first_resize = true;
+	std::vector<int> failed_exists_checks;
 
 	for (;;) {
 		size_t bufferSize = buffer.size();
@@ -190,6 +191,9 @@ CotaskPtr T5Service::query_glasses_list() {
 			str_view.remove_prefix(pos + 1);
 		}
 
+		for (auto& count : failed_exists_checks)
+			count++;
+
 		co_await run_in_foreground;
 
 		for (auto& id : parsed_id_list) {
@@ -200,8 +204,23 @@ CotaskPtr T5Service::query_glasses_list() {
 
 			if (found == _glasses_list.cend()) {
 				auto new_glasses = create_glasses(id);
-				if (new_glasses->allocate_handle(_context))
+				if (new_glasses->allocate_handle(_context)) {
+					LOG_MESSAGE("Found new glasses: ", id);
+					new_glasses->set_existing(true);
 					_glasses_list.emplace_back(std::move(new_glasses));
+					failed_exists_checks.push_back(0);
+				}
+			} else {
+				int index = std::distance(_glasses_list.cbegin(), found);
+				if (!_glasses_list[index]->is_existing()) {
+					_glasses_list[index]->set_existing(true);
+				}
+				failed_exists_checks[index] = 0;
+			}
+		}
+		for (int i = 0; i < failed_exists_checks.size(); ++i) {
+			if (failed_exists_checks[i] * _poll_rate_for_monitoring > 30s) {
+				_glasses_list[i]->set_existing(false);
 			}
 		}
 

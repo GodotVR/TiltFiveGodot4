@@ -157,11 +157,22 @@ bool Glasses::allocate_handle(T5_Context context) {
 		LOG_T5_ERROR(result);
 		return false;
 	}
-	_state.set(GlassesState::CREATED);
-	_state.clear(GlassesState::UNAVAILABLE);
-	_scheduler->add_task(monitor_parameters());
 
 	return true;
+}
+
+void Glasses::set_existing(bool exists) {
+	if (exists == is_existing())
+		return;
+	if (exists) {
+		if (_state.set_and_was_toggled(GlassesState::EXISTS))
+			_scheduler->add_task(monitor_parameters());
+		_state.clear(GlassesState::UNAVAILABLE);
+	} else {
+		_state.clear(GlassesState::EXISTS);
+		_state.set(GlassesState::UNAVAILABLE);
+		disconnect();
+	}
 }
 
 void Glasses::destroy_handle() {
@@ -174,6 +185,11 @@ void Glasses::destroy_handle() {
 }
 
 CotaskPtr Glasses::monitor_connection() {
+	//Shouldn't be possible to have multiple of these running at once
+	MonitorFlags::ScopeGuard guard(_async_functions_running, CONNECTION_MONITOR_FUNC_RUNNING);
+	if (!guard.was_toggled())
+		co_return;
+
 	T5_Result result;
 
 	while (_glasses_handle && _state.is_current(GlassesState::SUSTAIN_CONNECTION)) {
@@ -201,19 +217,14 @@ CotaskPtr Glasses::monitor_connection() {
 					std::lock_guard lock(g_t5_exclusivity_group_1);
 					result = t5ReserveGlasses(_glasses_handle, _application_name.c_str());
 				}
-				if (result == T5_SUCCESS || result == T5_ERROR_ALREADY_CONNECTED)
+				if (result == T5_SUCCESS || result == T5_ERROR_ALREADY_CONNECTED) {
+					_state.clear(GlassesState::UNAVAILABLE);
 					continue;
-				else if (result == T5_ERROR_UNAVAILABLE) {
+				} else if (result == T5_ERROR_UNAVAILABLE) {
 					// Some else has the glasses so stop
 					// trying to connect
 					_state.clear(GlassesState::SUSTAIN_CONNECTION);
 					_state.set(GlassesState::UNAVAILABLE);
-					co_return;
-				} else if (result == T5_ERROR_DEVICE_LOST) {
-					_state.clear(GlassesState::SUSTAIN_CONNECTION);
-					co_await run_in_foreground;
-					LOG_T5_ERROR(result);
-					destroy_handle();
 					co_return;
 				}
 				_state.reset(GlassesState::ERROR);
@@ -221,8 +232,8 @@ CotaskPtr Glasses::monitor_connection() {
 				LOG_T5_ERROR(result);
 				co_return;
 			}
-			case kT5_ConnectionState_ExclusiveReservation:
-			case kT5_ConnectionState_Disconnected: {
+			case kT5_ConnectionState_Disconnected:
+			case kT5_ConnectionState_ExclusiveReservation: {
 				_state.clear(GlassesState::READY);
 
 				{
@@ -239,11 +250,6 @@ CotaskPtr Glasses::monitor_connection() {
 					// trying to connect
 					_state.clear(GlassesState::SUSTAIN_CONNECTION);
 					_state.set(GlassesState::UNAVAILABLE);
-				} else if (result == T5_ERROR_DEVICE_LOST) {
-					_state.clear(GlassesState::SUSTAIN_CONNECTION);
-					co_await run_in_foreground;
-					LOG_T5_ERROR(result);
-					destroy_handle();
 				} else {
 					_state.reset(GlassesState::ERROR);
 					co_await run_in_foreground;
@@ -278,14 +284,79 @@ CotaskPtr Glasses::monitor_connection() {
 	}
 }
 
+CotaskPtr Glasses::monitor_unavailable() {
+	//Shouldn't be possible to have multiple of these running at once
+	MonitorFlags::ScopeGuard guard(_async_functions_running, UNAVAILABLE_MONITOR_FUNC_RUNNING);
+	if (!guard.was_toggled())
+		co_return;
+
+	T5_Result result;
+
+	while (_glasses_handle && _state.is_current(GlassesState::EXISTS | GlassesState::UNAVAILABLE)) {
+		T5_ConnectionState connectionState;
+
+		{
+			std::lock_guard lock(g_t5_exclusivity_group_1);
+			result = t5GetGlassesConnectionState(_glasses_handle, &connectionState);
+		}
+		if (result != T5_SUCCESS) {
+			// Doesn't seem to be anything recoverable here
+			co_await run_in_foreground;
+			LOG_T5_ERROR(result);
+			_state.reset(GlassesState::ERROR);
+			co_return;
+		}
+
+		switch (connectionState) {
+			case kT5_ConnectionState_NotExclusivelyConnected: {
+				_state.clear(GlassesState::READY);
+				{
+					std::lock_guard lock(g_t5_exclusivity_group_1);
+					result = t5ReserveGlasses(_glasses_handle, _application_name.c_str());
+				}
+				if (result == T5_SUCCESS) {
+					_state.clear(GlassesState::UNAVAILABLE);
+					{
+						std::lock_guard lock(g_t5_exclusivity_group_1);
+						result = t5ReleaseGlasses(_glasses_handle);
+					}
+					co_return;
+				} else if (result == T5_ERROR_ALREADY_CONNECTED) {
+					_state.clear(GlassesState::UNAVAILABLE);
+					co_return;
+				} else if (result != T5_ERROR_UNAVAILABLE) {
+					_state.reset(GlassesState::ERROR);
+					co_await run_in_foreground;
+					LOG_T5_ERROR(result);
+					co_return;
+				}
+				break;
+			}
+			case kT5_ConnectionState_Disconnected:
+			case kT5_ConnectionState_ExclusiveReservation:
+			case kT5_ConnectionState_ExclusiveConnection: {
+				_state.clear(GlassesState::UNAVAILABLE);
+				co_return;
+			}
+		}
+
+		co_await task_sleep(_poll_rate_for_monitoring);
+	}
+}
+
 CotaskPtr Glasses::monitor_parameters() {
+	//Shouldn't be possible to have multiple of these running at once
+	MonitorFlags::ScopeGuard guard(_async_functions_running, PARAMETER_MONITOR_FUNC_RUNNING);
+	if (!guard.was_toggled())
+		co_return;
+
 	co_await query_ipd();
 	co_await query_friendly_name();
 
 	T5_Result result;
 	std::vector<T5_ParamGlasses> _changed_params;
 
-	while (_glasses_handle && _state.is_current(GlassesState::CREATED)) {
+	while (_glasses_handle && _state.is_current(GlassesState::EXISTS)) {
 		co_await task_sleep(_poll_rate_for_monitoring);
 
 		uint16_t buffer_size = 16;
@@ -320,6 +391,11 @@ CotaskPtr Glasses::monitor_parameters() {
 }
 
 CotaskPtr Glasses::monitor_wands() {
+	//Shouldn't be possible to have multiple of these running at once
+	MonitorFlags::ScopeGuard guard(_async_functions_running, WAND_MONITOR_FUNC_RUNNING);
+	if (!guard.was_toggled())
+		co_return;
+
 	WandService wand_service;
 
 	if (!wand_service.start(_glasses_handle))
@@ -333,7 +409,7 @@ CotaskPtr Glasses::monitor_wands() {
 		co_return;
 	}
 
-	while (_glasses_handle && _state.is_current(GlassesState::SUSTAIN_CONNECTION) && wand_service.is_running()) {
+	while (_glasses_handle && _state.is_current(GlassesState::READY | GlassesState::SUSTAIN_CONNECTION) && wand_service.is_running()) {
 		auto err = wand_service.get_last_error();
 		if (err != T5_SUCCESS) {
 			LOG_T5_ERROR(err);
@@ -414,6 +490,11 @@ void Glasses::connect(const std::string_view application_name) {
 }
 
 void Glasses::disconnect() {
+	release_glasses();
+	_state.clear(GlassesState::SUSTAIN_CONNECTION);
+}
+
+void Glasses::release_glasses() {
 	if (_state.is_current(GlassesState::READY)) {
 		T5_Result result;
 		{
@@ -424,19 +505,19 @@ void Glasses::disconnect() {
 			LOG_T5_ERROR(result);
 		}
 	}
-	_state.clear(GlassesState::READY | GlassesState::GRAPHICS_INIT | GlassesState::SUSTAIN_CONNECTION);
+	_state.clear(GlassesState::CONNECTED | GlassesState::READY | GlassesState::GRAPHICS_INIT);
 	on_glasses_released();
 }
 
-void Glasses::start_display() {
-	if (_state.set_and_was_toggled(GlassesState::DISPLAY_STARTED)) {
-		on_start_display();
+void Glasses::alloc_render_textures() {
+	if (_state.set_and_was_toggled(GlassesState::TEXTURES_ALLOCATED)) {
+		on_allocate_render_textures();
 	}
 }
 
-void Glasses::stop_display() {
-	if (_state.clear_and_was_toggled(GlassesState::DISPLAY_STARTED)) {
-		on_stop_display();
+void Glasses::dealloc_render_textures() {
+	if (_state.clear_and_was_toggled(GlassesState::TEXTURES_ALLOCATED)) {
+		on_deallocate_render_textures();
 	}
 }
 
@@ -477,7 +558,7 @@ void Glasses::update_pose() {
 		if (result == T5_ERROR_TRY_AGAIN)
 			return;
 		else if (result == T5_ERROR_NOT_CONNECTED) {
-			_state.clear(GlassesState::CONNECTED);
+			_state.clear(GlassesState::CONNECTED | GlassesState::READY);
 			LOG_T5_ERROR(result);
 		} else {
 			LOG_T5_ERROR(result);
@@ -512,7 +593,7 @@ void Glasses::get_eye_position(Eye eye, T5_Vec3& pos) {
 }
 
 void Glasses::send_frame() {
-	if (_state.is_current(GlassesState::TRACKING | GlassesState::CONNECTED)) {
+	if (_state.is_current(GlassesState::TRACKING | GlassesState::CONNECTED | GlassesState::TEXTURES_ALLOCATED)) {
 		on_send_frame(_current_frame_idx);
 
 		T5_FrameInfo frameInfo;
@@ -552,7 +633,7 @@ void Glasses::send_frame() {
 			return;
 		LOG_T5_ERROR(result);
 		if (result == T5_ERROR_NOT_CONNECTED) {
-			_state.clear(GlassesState::CONNECTED);
+			_state.clear(GlassesState::CONNECTED | GlassesState::READY);
 		}
 		// not sure how we might get here
 		else if (result == T5_ERROR_GFX_CONTEXT_INIT_FAIL || result == T5_ERROR_INVALID_GFX_CONTEXT) {
@@ -568,8 +649,10 @@ bool Glasses::update_connection() {
 		on_glasses_reserved();
 	}
 	if (_state.became_clear(_previous_update_state, GlassesState::CONNECTED)) {
-		stop_display();
 		on_glasses_dropped();
+	}
+	if (_state.became_set(_previous_update_state, GlassesState::UNAVAILABLE)) {
+		_scheduler->add_task(monitor_unavailable());
 	}
 	_previous_update_state.sync_from(_state);
 
@@ -583,10 +666,10 @@ bool Glasses::update_tracking() {
 }
 
 void Glasses::get_events(int index, std::vector<GlassesEvent>& out_events) {
-	if (_state.became_set(_previous_event_state, GlassesState::CREATED)) {
+	if (_state.became_set(_previous_event_state, GlassesState::EXISTS)) {
 		out_events.push_back(GlassesEvent(index, GlassesEvent::E_ADDED));
 	}
-	if (_state.became_clear(_previous_event_state, GlassesState::CREATED)) {
+	if (_state.became_clear(_previous_event_state, GlassesState::EXISTS)) {
 		out_events.push_back(GlassesEvent(index, GlassesEvent::E_LOST));
 	}
 

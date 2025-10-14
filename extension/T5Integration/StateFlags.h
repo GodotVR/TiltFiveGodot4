@@ -69,6 +69,31 @@ public:
 		_current.store(from._current.load());
 	}
 
+	class ScopeGuard final {
+	public:
+		ScopeGuard(const ScopeGuard&) = delete;
+		ScopeGuard& operator=(const ScopeGuard&) = delete;
+		ScopeGuard(ScopeGuard&&) = delete;
+		ScopeGuard& operator=(ScopeGuard&&) = delete;
+
+		ScopeGuard(StateFlags<FlagType>& flags, FlagType state) :
+				_flags(flags), _state(state) {
+			_was_toggled = _flags.set_and_was_toggled(_state);
+		}
+		~ScopeGuard() {
+			if (_was_toggled)
+				_flags.clear(_state);
+		}
+		bool was_toggled() const {
+			return _was_toggled;
+		}
+
+	private:
+		StateFlags<FlagType>& _flags;
+		FlagType _state;
+		bool _was_toggled = false;
+	};
+
 private:
 	std::atomic<FlagType> _current;
 };

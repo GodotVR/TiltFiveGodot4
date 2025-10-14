@@ -103,11 +103,11 @@ void VulkanGlasses::deallocate_textures() {
 	}
 }
 
-void VulkanGlasses::on_start_display() {
+void VulkanGlasses::on_allocate_render_textures() {
 	allocate_textures();
 }
 
-void VulkanGlasses::on_stop_display() {
+void VulkanGlasses::on_deallocate_render_textures() {
 	deallocate_textures();
 }
 

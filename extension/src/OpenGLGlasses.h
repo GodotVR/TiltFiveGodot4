@@ -28,8 +28,8 @@ private:
 	void allocate_textures();
 	void deallocate_textures();
 
-	virtual void on_start_display() override;
-	virtual void on_stop_display() override;
+	virtual void on_allocate_render_textures() override;
+	virtual void on_deallocate_render_textures() override;
 
 private:
 	std::vector<SwapChainTextures> _swap_chain_textures;

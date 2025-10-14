@@ -223,7 +223,7 @@ void TiltFiveXRInterface::_start_display(TiltFiveXRInterface::GlassesIndexEntry&
 		WARN_PRINT("Glasses need to be reserved to display viewport");
 		return;
 	}
-	glasses->start_display();
+	glasses->alloc_render_textures();
 	entry.viewport_id = viewport->get_instance_id();
 	entry.gameboard_id = gameboard->get_instance_id();
 
@@ -244,7 +244,7 @@ void TiltFiveXRInterface::_stop_display(GlassesIndexEntry& entry) {
 		viewport->set_use_xr(false);
 		viewport->set_update_mode(godot::SubViewport::UpdateMode::UPDATE_DISABLED);
 	}
-	glasses->stop_display();
+	glasses->dealloc_render_textures();
 	entry.viewport_id = ObjectID();
 	entry.gameboard_id = ObjectID();
 }
@@ -286,7 +286,7 @@ PackedStringArray TiltFiveXRInterface::get_reserved_glasses_ids() {
 }
 
 String TiltFiveXRInterface::get_glasses_name(const StringName glasses_id) {
-	if(!t5_service)
+	if (!t5_service)
 		return String("");
 
 	auto entry = lookup_glasses_entry(glasses_id);
@@ -554,10 +554,9 @@ void TiltFiveXRInterface::_process() {
 		auto glasses_idx = _glasses_events[i].glasses_num;
 		switch (_glasses_events[i].event) {
 			case GlassesEvent::E_ADDED: {
-				if (_glasses_index.size() != glasses_idx) {
-					WARN_PRINT("Glasses index");
+				if (_glasses_index.size() <= glasses_idx) {
+					_glasses_index.resize(glasses_idx + 1);
 				}
-				_glasses_index.resize(glasses_idx + 1);
 				auto glasses = t5_service->get_glasses(glasses_idx);
 				glasses->set_trigger_click_threshold(_trigger_click_threshold);
 

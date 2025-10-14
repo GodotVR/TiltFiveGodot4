@@ -101,3 +101,19 @@ void log_message(T var1, Types... var2) {
 		}                                   \
 	}
 #endif
+
+struct __LogScope {
+	const char* function;
+	int line;
+	__LogScope(const char* func, int l) :
+			function(func), line(l) {
+		T5Integration::log_message("===> Entering ", function, " : ", line);
+	}
+	~__LogScope() {
+		T5Integration::log_message("<=== Leaving ", function, " : ", line);
+	}
+};
+
+#ifndef LOG_SCOPE
+#define LOG_SCOPE __LogScope __log_scope_instance##__LINE__(__func__, __LINE__);
+#endif

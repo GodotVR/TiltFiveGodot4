@@ -10,6 +10,7 @@ namespace T5Integration {
 
 using namespace std::chrono_literals;
 using GlassesFlags = StateFlags<uint16_t>;
+using MonitorFlags = StateFlags<uint8_t>;
 class T5Service;
 using TaskSystem::CotaskPtr;
 using TaskSystem::Scheduler;
@@ -22,13 +23,13 @@ namespace GlassesState {
 	const uint16_t GRAPHICS_INIT		= 0x00000002; //0000000010
 	const uint16_t SUSTAIN_CONNECTION	= 0x00000004; //0000000100
 
-	const uint16_t CREATED				= 0x00000008; //0000001000
+	const uint16_t EXISTS				= 0x00000008; //0000001000
 	const uint16_t UNAVAILABLE			= 0x00000010; //0000010000
 	const uint16_t TRACKING				= 0x00000020; //0000100000
 	const uint16_t CONNECTED			= 0x00000040; //0001000000
 	const uint16_t TRACKING_WANDS		= 0x00000080; //0010000000
 	const uint16_t ERROR				= 0x00000100; //0100000000
-	const uint16_t DISPLAY_STARTED		= 0x00000200; //1000000000
+	const uint16_t TEXTURES_ALLOCATED	= 0x00000200; //1000000000
 }
 // clang-format on
 
@@ -81,16 +82,18 @@ public:
 
 	const std::string get_id();
 	const std::string get_name();
+	bool is_existing();
 	bool is_connected();
 	bool is_available();
 	bool is_tracking();
 
 	bool allocate_handle(T5_Context context);
+	void set_existing(bool exists);
 	void destroy_handle();
 	void connect(const std::string_view application_name);
 	void disconnect();
-	void start_display();
-	void stop_display();
+	void alloc_render_textures();
+	void dealloc_render_textures();
 
 	float get_ipd();
 	float get_fov();
@@ -132,8 +135,10 @@ protected:
 	void set_swap_chain_texture_pair(int swap_chain_idx, intptr_t left_eye_handle, intptr_t right_eye_handle);
 	void set_swap_chain_texture_array(int swap_chain_idx, intptr_t array_handle);
 
-	virtual void on_start_display() {}
-	virtual void on_stop_display() {}
+	void release_glasses();
+
+	virtual void on_allocate_render_textures() {}
+	virtual void on_deallocate_render_textures() {}
 	virtual void on_glasses_reserved() {}
 	virtual void on_glasses_released() {}
 	virtual void on_glasses_dropped() {}
@@ -148,9 +153,8 @@ private:
 	CotaskPtr monitor_wands();
 	CotaskPtr query_ipd();
 	CotaskPtr query_friendly_name();
+	CotaskPtr monitor_unavailable();
 
-	bool reserve();
-	bool make_ready();
 	bool initialize_graphics();
 
 	void configure_wand_tracking();
@@ -158,9 +162,6 @@ private:
 	void update_pose();
 
 	void get_eye_position(Eye eye, T5_Vec3& pos);
-
-	void begin_reserved_state();
-	void end_reserved_state();
 
 private:
 	Scheduler::Ptr _scheduler;
@@ -188,6 +189,15 @@ private:
 	std::chrono::milliseconds _poll_rate_for_connecting = 100ms;
 	std::chrono::milliseconds _poll_rate_for_monitoring = 2s;
 	std::chrono::milliseconds _wait_time_for_wand_IO = 100s;
+
+	std::chrono::steady_clock::time_point _last_time_available_checked;
+
+	const uint8_t CONNECTION_MONITOR_FUNC_RUNNING = 0x01;
+	const uint8_t PARAMETER_MONITOR_FUNC_RUNNING = 0x02;
+	const uint8_t WAND_MONITOR_FUNC_RUNNING = 0x04;
+	const uint8_t UNAVAILABLE_MONITOR_FUNC_RUNNING = 0x08;
+
+	MonitorFlags _async_functions_running;
 };
 
 inline const std::string Glasses::get_id() {
@@ -196,6 +206,10 @@ inline const std::string Glasses::get_id() {
 
 inline const std::string Glasses::get_name() {
 	return _friendly_name;
+}
+
+inline bool Glasses::is_existing() {
+	return _state.is_current(GlassesState::EXISTS);
 }
 
 inline bool Glasses::is_connected() {

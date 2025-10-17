@@ -30,6 +30,10 @@ signal xr_rig_will_be_removed(xr_rig : T5XRRig)
 ## [T5Origin] in the glasses scene
 @export var start_location : T5Gameboard
 
+## Enables T5Manager to forward all observed input events to its child XR Rigs.
+## This allows children of XR rigs to receive input events.
+@export var forward_inputs_to_child_xr_rigs : bool
+
 # We'll add our glasses scenes as children of this node
 var glasses_node: Node3D
 
@@ -37,6 +41,21 @@ func _ready():
 	glasses_node = Node3D.new()
 	glasses_node.name = "TiltFiveGlasses"
 	get_parent().add_child.call_deferred(glasses_node)
+	
+func _input(event):
+	# JSTEVENS@T5: As I'm porting this logic from C#, my instinct is to mirror
+	# the `base._Input(@event)` line at the beginning of T5Manager._Input().
+	# However, if I understand correctly, the following is not needed in GDScript?
+	# super._input(event)
+
+	if not forward_inputs_to_child_xr_rigs:
+		return
+
+	for child_node in glasses_node.get_children():
+		var xr_rig : T5XRRig = child_node as T5XRRig
+		if not xr_rig:
+			continue
+		xr_rig.push_input(event)
 
 func create_xr_rig(glasses_id : String) -> T5XRRig:
 	var xr_rig = glasses_scene.instantiate() as T5XRRig

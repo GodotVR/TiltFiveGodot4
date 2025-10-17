@@ -16,6 +16,9 @@ public partial class T5Manager : Node, T5ManagerInterface
 	[Export]
 	public Node3D startLocation;
 
+	[Export]
+	public bool forwardInputsToChildXRRigs;
+
 	Node3D rigs;
 
 	T5Interface t5Interface;
@@ -51,6 +54,25 @@ public partial class T5Manager : Node, T5ManagerInterface
 		rigs.Name = "T5XRRigs";
 		GetTree().Root.CallDeferred(MethodName.AddChild, rigs);
 	}
+
+	public override void _Input(InputEvent @event)
+	{
+		base._Input(@event);
+
+		if(!forwardInputsToChildXRRigs)
+		{
+			return;
+		}
+
+		foreach (var rig in rigs.GetChildren())
+		{
+			if(rig is T5XRRig t5XRRig)
+			{
+				t5XRRig.PushInput(@event);
+			}
+		}
+	}
+
 
 	[Obsolete("Use T5XRRig.GlassesName instead")]
 	public string GetUIDisplayName(string glassesID)
